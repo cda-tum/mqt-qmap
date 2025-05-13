@@ -133,11 +133,31 @@ arch = ZonedNeutralAtomArchitecture(parse_json("""{
 }"""))
 ```
 
-Furthermore, the different stages of the compiler can be configured with a set of parameters.
+In the following, we will first create a compiler with default settings.
+Those can later be fine-tuned to fit the needs of the user, see further down.
 
 ```{code-cell} ipython3
 from mqt.qmap.na.zoned import RoutingAwareCompiler
 
+compiler = RoutingAwareCompiler(arch
+```
+
+Now, the created compiler can be used to compile the circuit from above.
+The output is in the `.naviz` format that can be read by the `MQT NAViz` tool
+at [github.com/cda-tum/mqt-naviz](https://github.com/cda-tum/mqt-naviz).
+This tool allows visualizing the resulting quantum computation.
+
+```{code-cell} ipython3
+from mqt.core import load
+circ = load(qc)
+code = compiler.compile(circ)
+print(code)
+```
+
+Above, we have used the default settings for the compiler.
+However, the different stages of the compiler can also be configured with a set of parameters.
+
+```{code-cell} ipython3
 compiler = RoutingAwareCompiler(arch, parse_json("""{
   "code_generator": {
     "parking_offset": 1,
@@ -155,16 +175,4 @@ compiler = RoutingAwareCompiler(arch, parse_json("""{
     "max_nodes": 50000000
   }
 }"""))
-```
-
-Now, the created compiler can be used to compile the circuit from above.
-The output is in the `.naviz` format that can be read by the `MQT NAViz` tool
-at [github.com/cda-tum/mqt-naviz](https://github.com/cda-tum/mqt-naviz).
-This tool allows visualizing the resulting quantum computation.
-
-```{code-cell} ipython3
-from mqt.core import load
-circ = load(qc)
-code = compiler.compile(circ)
-print(code)
 ```
