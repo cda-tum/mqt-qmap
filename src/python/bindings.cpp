@@ -15,10 +15,10 @@
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/OpType.hpp"
 #include "na/NAComputation.hpp"
-#include "na/azac/Architecture.hpp"
-#include "na/azac/Compiler.hpp"
 #include "na/nasp/CodeGenerator.hpp"
 #include "na/nasp/Solver.hpp"
+#include "na/zoned/Architecture.hpp"
+#include "na/zoned/Compiler.hpp"
 #include "qasm3/Importer.hpp"
 #include "sc/Architecture.hpp"
 #include "sc/Mapper.hpp"
@@ -1032,9 +1032,9 @@ Extract entangling operations as list of qubit pairs from the circuit.
   controls
 )");
 
-  // Advanced Zoned Atom Compiler
-  py::class_<na::azac::Architecture>(m, "ZonedNeutralAtomArchitecture", R"(
-The representation of the zoned neutral atom architecture used for AZAC.
+  // MQT QMAP's Zoned Neutral Atom Compiler
+  py::class_<na::zoned::Architecture>(m, "ZonedNeutralAtomArchitecture", R"(
+The representation of a zoned neutral atom architecture.
 )")
       .def(py::init<nlohmann::json>(), "properties"_a, R"(
 Create an architecture from a dictionary.
@@ -1042,21 +1042,22 @@ Create an architecture from a dictionary.
 :param properties: is a dictionary with properties
 )");
 
-  py::class_<na::azac::AZACompiler>(m, "AZACompiler", R"(
-The advanced zoned atom compiler (AZAC) is a general purpose compiler for the
-zoned neutral atom architecture.
+  py::class_<na::zoned::RoutingAgnosticCompiler>(m, "RoutingAgnosticCompiler",
+                                                 R"(
+MQT QMAP's routing-agnostic Zoned Neutral Atom Compiler is a general purpose compiler for Zoned Neutral Atom Architectures.
 )")
-      .def(py::init<const na::azac::Architecture&, const nlohmann::json&>(),
+      .def(py::init<const na::zoned::Architecture&, const nlohmann::json&>(),
            py::keep_alive<1, 2>(), py::keep_alive<1, 3>(), "architecture"_a,
            "settings"_a, R"(
-Create a AZACompiler for the given architecture and settings.
+Create a routing-agnostic compiler for the given architecture and settings.
 
 :param architecture: is the zoned neutral atom architecture
 :param settings: is a dictionary with the settings for the compiler
 )")
       .def(
           "compile",
-          [](na::azac::AZACompiler& self, const qc::QuantumComputation& qc) {
+          [](na::zoned::RoutingAgnosticCompiler& self,
+             const qc::QuantumComputation& qc) {
             return self.compile(qc).toString();
           },
           "qc"_a,
@@ -1068,7 +1069,42 @@ Compile a quantum circuit for the zoned neutral atom architecture.
 )")
       .def(
           "stats",
-          [](na::azac::AZACompiler& self) {
+          [](na::zoned::RoutingAgnosticCompiler& self) {
+            return self.getStatistics().asJson();
+          },
+          R"(
+Get the statistics of the last compilation.
+
+:returns: the statistics as a dictionary
+)");
+
+  py::class_<na::zoned::RoutingAwareCompiler>(m, "RoutingAwareCompiler", R"(
+MQT QMAP's routing-aware Zoned Neutral Atom Compiler is a general purpose compiler for Zoned Neutral Atom Architectures.
+)")
+      .def(py::init<const na::zoned::Architecture&, const nlohmann::json&>(),
+           py::keep_alive<1, 2>(), py::keep_alive<1, 3>(), "architecture"_a,
+           "settings"_a, R"(
+Create a routing-aware compiler for the given architecture and settings.
+
+:param architecture: is the zoned neutral atom architecture
+:param settings: is a dictionary with the settings for the compiler
+)")
+      .def(
+          "compile",
+          [](na::zoned::RoutingAwareCompiler& self,
+             const qc::QuantumComputation& qc) {
+            return self.compile(qc).toString();
+          },
+          "qc"_a,
+          R"(
+Compile a quantum circuit for the zoned neutral atom architecture.
+
+:param qc: is the quantum circuit
+:returns: the compilation results as an NAComputation.
+)")
+      .def(
+          "stats",
+          [](na::zoned::RoutingAwareCompiler& self) {
             return self.getStatistics().asJson();
           },
           R"(

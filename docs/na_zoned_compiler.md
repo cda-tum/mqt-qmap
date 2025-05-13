@@ -106,7 +106,7 @@ This compiler requires first a specification of the architecture.
 
 ```{code-cell} ipython3
 from json import loads as parse_json
-from mqt.qmap.na.azac import ZonedNeutralAtomArchitecture
+from mqt.qmap.na.zoned import ZonedNeutralAtomArchitecture
 
 arch = ZonedNeutralAtomArchitecture(parse_json("""{
   "name": "Architecture with one entanglement and one storage zone",
@@ -137,9 +137,9 @@ arch = ZonedNeutralAtomArchitecture(parse_json("""{
 Furthermore, the different stages of the compiler can be configured with a set of parameters.
 
 ```{code-cell} ipython3
-from mqt.qmap.na.azac import AZACompiler
+from mqt.qmap.na.zoned import RoutingAwareCompiler
 
-compiler = AZACompiler(arch, parse_json("""{
+compiler = RoutingAwareCompiler(arch, parse_json("""{
   "code_generator": {
     "parking_offset": 1,
     "warn_unsupported_gates": true

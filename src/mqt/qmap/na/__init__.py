@@ -6,9 +6,9 @@ See README.md or go to https://github.com/cda-tum/qmap for more information.
 
 from __future__ import annotations
 
-from . import azac, state_preparation
+from . import state_preparation, zoned
 
-__all__ = ["azac", "state_preparation"]
+__all__ = ["state_preparation", "zoned"]
 
 
 def __dir__() -> list[str]:

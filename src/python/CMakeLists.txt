@@ -33,7 +33,7 @@ target_link_libraries(
           MQT::QMapCliffordSynthesis
           MQT::QMapHybrid
           MQT::NASP
-          MQT::AZAC
+          MQT::QMapNAZoned
           MQT::CoreQASM
           MQT::ProjectOptions
           MQT::ProjectWarnings
