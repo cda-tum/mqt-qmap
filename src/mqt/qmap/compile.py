@@ -1,3 +1,11 @@
+# Copyright (c) 2023 - 2025 Chair for Design Automation, TUM
+# Copyright (c) 2025 Munich Quantum Software Company GmbH
+# All rights reserved.
+#
+# SPDX-License-Identifier: MIT
+#
+# Licensed under the MIT License
+
 """Main entry point for the compilation module."""
 
 from __future__ import annotations
@@ -7,12 +15,11 @@ from typing import TYPE_CHECKING, Union
 if TYPE_CHECKING:
     from os import PathLike
 
+    from mqt.core.ir import QuantumComputation
     from qiskit.circuit import QuantumCircuit
     from qiskit.providers import Backend
     from qiskit.providers.models import BackendProperties
     from qiskit.transpiler.target import Target
-
-    from mqt.core.ir import QuantumComputation
 
     from .visualization import SearchVisualizer
 

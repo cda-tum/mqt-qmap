@@ -1,13 +1,21 @@
+# Copyright (c) 2023 - 2025 Chair for Design Automation, TUM
+# Copyright (c) 2025 Munich Quantum Software Company GmbH
+# All rights reserved.
+#
+# SPDX-License-Identifier: MIT
+#
+# Licensed under the MIT License
+
 """Test the exact mapper."""
 
 from __future__ import annotations
 
 import pytest
+from mqt.qcec import verify
 from qiskit import QuantumCircuit
 from qiskit.providers.fake_provider import GenericBackendV2
 
 from mqt import qmap
-from mqt.qcec import verify
 
 
 @pytest.fixture

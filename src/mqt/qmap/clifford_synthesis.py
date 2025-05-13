@@ -1,3 +1,11 @@
+# Copyright (c) 2023 - 2025 Chair for Design Automation, TUM
+# Copyright (c) 2025 Munich Quantum Software Company GmbH
+# All rights reserved.
+#
+# SPDX-License-Identifier: MIT
+#
+# Licensed under the MIT License
+
 """Main entry point for the Clifford synthesis module."""
 
 from __future__ import annotations
@@ -9,10 +17,9 @@ if TYPE_CHECKING:
 
     from .compile import CircuitInputType
 
-from qiskit.quantum_info import Clifford, PauliList
-
 from mqt.core import load
 from mqt.core.plugins.qiskit import mqt_to_qiskit
+from qiskit.quantum_info import Clifford, PauliList
 
 from .pyqmap import (
     CliffordSynthesizer,
