@@ -106,9 +106,9 @@ This compiler requires first a specification of the architecture.
 
 ```{code-cell} ipython3
 from json import loads as parse_json
-from mqt.qmap.na.azac import AZACArchitecture
+from mqt.qmap.na.azac import ZonedNeutralAtomArchitecture
 
-arch = AZACArchitecture(parse_json("""{
+arch = ZonedNeutralAtomArchitecture(parse_json("""{
   "name": "Architecture with one entanglement and one storage zone",
   "operation_duration": {"rydberg": 0.36, "1q_gate": 52, "atom_transfer": 15},
   "operation_fidelity": {"two_qubit_gate": 0.995, "single_qubit_gate": 0.9997, "atom_transfer": 0.999},

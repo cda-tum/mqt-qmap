@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from ..pyqmap import AZACArchitecture, AZACompiler
+from ..pyqmap import AZACompiler, ZonedNeutralAtomArchitecture
 
-__all__ = ["AZACArchitecture", "AZACompiler"]
+__all__ = ["AZACompiler", "ZonedNeutralAtomArchitecture"]
 
 
 def __dir__() -> list[str]:

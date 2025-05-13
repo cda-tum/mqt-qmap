@@ -1033,7 +1033,7 @@ Extract entangling operations as list of qubit pairs from the circuit.
 )");
 
   // Advanced Zoned Atom Compiler
-  py::class_<na::azac::Architecture>(m, "AZACArchitecture", R"(
+  py::class_<na::azac::Architecture>(m, "ZonedNeutralAtomArchitecture", R"(
 The representation of the zoned neutral atom architecture used for AZAC.
 )")
       .def(py::init<nlohmann::json>(), "properties"_a, R"(

@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from mqt.core import load
-from mqt.qmap.na.azac import AZACArchitecture, AZACompiler
+from mqt.qmap.na.azac import AZACompiler, ZonedNeutralAtomArchitecture
 
 # get circuit directory of the project
 circ_dir = Path(__file__).resolve().parent.parent.parent / "na/azac/circuits"
@@ -63,7 +63,7 @@ def compiler() -> AZACompiler:
     """Return an advanced zoned atom compiler initialized with the above architecture and settings."""
     # get dict from json string settings
     settings_dict = loads(settings)
-    architecture = AZACArchitecture(settings_dict["architecture"])
+    architecture = ZonedNeutralAtomArchitecture(settings_dict["architecture"])
     return AZACompiler(architecture, settings_dict)
 
 
