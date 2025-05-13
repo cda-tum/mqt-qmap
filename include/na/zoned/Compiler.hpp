@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023 - 2025 Chair for Design Automation, TUM
+ * Copyright (c) 2025 Munich Quantum Software Company GmbH
+ * All rights reserved.
+ *
+ * SPDX-License-Identifier: MIT
+ *
+ * Licensed under the MIT License
+ */
+
 #pragma once
 
 #include "Architecture.hpp"
@@ -44,12 +54,15 @@ public:
 
 private:
   std::reference_wrapper<const Architecture> architecture_;
-  nlohmann::json config_;
+  nlohmann::json config_{};
   Statistics statistics_;
 
   Compiler(const Architecture& architecture, const nlohmann::json& config)
       : Mixins(architecture, config)..., architecture_(architecture),
         config_(config) {}
+
+  explicit Compiler(const Architecture& architecture)
+      : Mixins(architecture, config_)..., architecture_(architecture) {}
 
 public:
   [[nodiscard]] auto compile(const qc::QuantumComputation& qComp)
@@ -158,6 +171,8 @@ public:
   RoutingAgnosticCompiler(const Architecture& architecture,
                           const nlohmann::json& config)
       : Compiler(architecture, config) {}
+  RoutingAgnosticCompiler(const Architecture& architecture)
+      : Compiler(architecture) {}
 };
 
 class RoutingAwareCompiler final
@@ -167,5 +182,7 @@ public:
   RoutingAwareCompiler(const Architecture& architecture,
                        const nlohmann::json& config)
       : Compiler(architecture, config) {}
+  RoutingAwareCompiler(const Architecture& architecture)
+      : Compiler(architecture) {}
 };
 } // namespace na::zoned

@@ -1059,6 +1059,12 @@ Create a routing-agnostic compiler for the given architecture and settings.
 :param architecture: is the zoned neutral atom architecture
 :param settings: is a dictionary with the settings for the compiler
 )")
+      .def(py::init<const na::zoned::Architecture&>(), py::keep_alive<1, 2>(),
+           "architecture"_a, R"(
+Create a routing-agnostic compiler for the given architecture and settings.
+
+:param architecture: is the zoned neutral atom architecture
+)")
       .def(
           "compile",
           [](na::zoned::RoutingAgnosticCompiler& self,
@@ -1093,6 +1099,12 @@ Create a routing-aware compiler for the given architecture and settings.
 
 :param architecture: is the zoned neutral atom architecture
 :param settings: is a dictionary with the settings for the compiler
+)")
+      .def(py::init<const na::zoned::Architecture&>(), py::keep_alive<1, 2>(),
+           "architecture"_a, R"(
+Create a routing-aware compiler for the given architecture and settings.
+
+:param architecture: is the zoned neutral atom architecture
 )")
       .def(
           "compile",

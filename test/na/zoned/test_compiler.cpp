@@ -61,6 +61,11 @@ constexpr std::string_view settings = R"({
   }
 })";
 #define COMPILER_TEST(compiler_type)                                           \
+  TEST(compiler_type##Test, ConstructorWithoutSettings) {                      \
+    Architecture architecture(nlohmann::json::parse(settings));                \
+    /* expected not to lead to a segfault */                                   \
+    compiler_type compiler(architecture);                                      \
+  }                                                                            \
   class compiler_type##Test : public ::testing::TestWithParam<std::string> {   \
     nlohmann::json settings_;                                                  \
     Architecture architecture_;                                                \

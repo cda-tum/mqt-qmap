@@ -139,7 +139,7 @@ Those can later be fine-tuned to fit the needs of the user, see further down.
 ```{code-cell} ipython3
 from mqt.qmap.na.zoned import RoutingAwareCompiler
 
-compiler = RoutingAwareCompiler(arch
+compiler = RoutingAwareCompiler(arch)
 ```
 
 Now, the created compiler can be used to compile the circuit from above.
