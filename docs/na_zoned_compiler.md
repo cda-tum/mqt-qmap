@@ -129,7 +129,6 @@ arch = ZonedNeutralAtomArchitecture(parse_json("""{
     "dimension": [230, 60]
   }],
   "aods": [{"id": 0, "site_separation": 2, "r": 100, "c": 100}],
-  "arch_range": [[0, 0], [297, 162]],
   "rydberg_range": [[[30, 62], [270, 132]]]
 }"""))
 ```

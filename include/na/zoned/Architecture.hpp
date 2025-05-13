@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023 - 2025 Chair for Design Automation, TUM
+ * Copyright (c) 2025 Munich Quantum Software Company GmbH
+ * All rights reserved.
+ *
+ * SPDX-License-Identifier: MIT
+ *
+ * Licensed under the MIT License
+ */
+
 #pragma once
 
 #include "ir/Definitions.hpp"
@@ -136,21 +146,17 @@ struct Architecture {
   /// Operation fidelities.
   std::optional<OperationFidelities> operationFidelities;
   std::optional<double> qubitT1; ///< T1 time of the qubit in µs
-  /// Minimum X coordinate of the architecture's extent.
-  std::size_t archRangeMinX = 0;
-  /// Maximum X coordinate of the architecture's extent.
-  std::size_t archRangeMaxX = 0;
-  /// Minimum Y coordinate of the architecture's extent.
-  std::size_t archRangeMinY = 0;
-  /// Maximum Y coordinate of the architecture's extent.
-  std::size_t archRangeMaxY = 0;
-  /// Minimum X coordinates of the different Rydberg zones.
+  /// Minimum X coordinates of the different Rydberg zones, i.e., where the
+  /// Rydberg laser can affect the atoms.
   std::vector<std::size_t> rydbergRangeMinX;
-  /// Maximum X coordinates of the different Rydberg zones.
+  /// Maximum X coordinates of the different Rydberg zones, i.e., where the
+  /// Rydberg laser can affect the atoms.
   std::vector<std::size_t> rydbergRangeMaxX;
-  /// Minimum Y coordinates of the different Rydberg zones.
+  /// Minimum Y coordinates of the different Rydberg zones, i.e., where the
+  /// Rydberg laser can affect the atoms.
   std::vector<std::size_t> rydbergRangeMinY;
-  /// Maximum Y coordinates of the different Rydberg zones.
+  /// Maximum Y coordinates of the different Rydberg zones, i.e., where the
+  /// Rydberg laser can affect the atoms.
   std::vector<std::size_t> rydbergRangeMaxY;
   /// A map from an entanglement site to the nearest storage site.
   /// @see storageToNearestEntanglementSite

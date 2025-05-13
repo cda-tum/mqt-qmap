@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023 - 2025 Chair for Design Automation, TUM
+ * Copyright (c) 2025 Munich Quantum Software Company GmbH
+ * All rights reserved.
+ *
+ * SPDX-License-Identifier: MIT
+ *
+ * Licensed under the MIT License
+ */
+
 #include "circuit_optimizer/CircuitOptimizer.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "na/zoned/Compiler.hpp"
@@ -28,7 +38,6 @@ constexpr std::string_view settings = R"({
       "dimension": [50, 40]
     }],
     "aods":[{"id": 0, "site_separation": 2, "r": 20, "c": 20}],
-    "arch_range": [[0, 0], [60, 110]],
     "rydberg_range": [[[5, 70], [55, 110]]]
   },
   "vm_placer" : {

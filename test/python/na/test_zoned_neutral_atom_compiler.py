@@ -1,3 +1,11 @@
+# Copyright (c) 2023 - 2025 Chair for Design Automation, TUM
+# Copyright (c) 2025 Munich Quantum Software Company GmbH
+# All rights reserved.
+#
+# SPDX-License-Identifier: MIT
+#
+# Licensed under the MIT License
+
 """Test MQT QMAP's Zoned Neutral Atom Compiler."""
 
 from __future__ import annotations
@@ -6,8 +14,8 @@ from json import loads
 from pathlib import Path
 
 import pytest
-
 from mqt.core import load
+
 from mqt.qmap.na.zoned import RoutingAwareCompiler, ZonedNeutralAtomArchitecture
 
 # get circuit directory of the project
@@ -34,7 +42,6 @@ settings = """{
             "dimension": [50, 40]
         }],
         "aods":[{"id": 0, "site_separation": 2, "r": 20, "c": 20}],
-        "arch_range": [[0, 0], [60, 110]],
         "rydberg_range": [[[5, 70], [55, 110]]]
     },
     "vm_placer" : {

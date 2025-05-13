@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023 - 2025 Chair for Design Automation, TUM
+ * Copyright (c) 2025 Munich Quantum Software Company GmbH
+ * All rights reserved.
+ *
+ * SPDX-License-Identifier: MIT
+ *
+ * Licensed under the MIT License
+ */
+
 #include "na/zoned/AStarPlacer.hpp"
 
 #include <cstddef>
@@ -28,7 +38,6 @@ constexpr std::string_view architectureJson = R"({
     "dimension": [50, 40]
   }],
   "aods":[{"id": 0, "site_separation": 2, "r": 20, "c": 20}],
-  "arch_range": [[0, 0], [60, 110]],
   "rydberg_range": [[[5, 70], [55, 110]]]
 })";
 constexpr std::string_view configJson = R"({
@@ -298,7 +307,6 @@ TEST(AStarPlacerTest, InitialPlacementForTwoSlms) {
     "dimension": [50, 40]
   }],
   "aods":[{"id": 0, "site_separation": 2, "r": 20, "c": 20}],
-  "arch_range": [[0, 0], [60, 110]],
   "rydberg_range": [[[5, 70], [55, 110]]]
 })"_json);
   AStarPlacer placer(architecture, nlohmann::json::parse(configJson));

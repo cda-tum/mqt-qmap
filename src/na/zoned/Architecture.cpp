@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023 - 2025 Chair for Design Automation, TUM
+ * Copyright (c) 2025 Munich Quantum Software Company GmbH
+ * All rights reserved.
+ *
+ * SPDX-License-Identifier: MIT
+ *
+ * Licensed under the MIT License
+ */
+
 #include "na/zoned/Architecture.hpp"
 
 #include <algorithm>
@@ -296,39 +306,6 @@ Architecture::Architecture(nlohmann::json json) {
   } else {
     std::cout << "\033[1;35m[WARN]\033[0m The qubit spec is missed in "
                  "architecture spec. Using default values.\n";
-  }
-  // check if the architecture range exists and is valid, otherwise throw an
-  // error
-  // JSON Example:
-  // "arch_range": [
-  //   [
-  //     0,
-  //     0
-  //   ],
-  //   [
-  //     60,
-  //     110
-  //   ]
-  //
-  if (json.contains("arch_range")) {
-    if (json["arch_range"].is_array() && json["arch_range"].size() == 2 &&
-        json["arch_range"][0].is_array() && json["arch_range"][0].size() == 2 &&
-        json["arch_range"][1].is_array() && json["arch_range"][1].size() == 2 &&
-        json["arch_range"][0][0].is_number() &&
-        json["arch_range"][0][1].is_number() &&
-        json["arch_range"][1][0].is_number() &&
-        json["arch_range"][1][1].is_number()) {
-      archRangeMinX = json["arch_range"][0][0];
-      archRangeMinY = json["arch_range"][0][1];
-      archRangeMaxX = json["arch_range"][1][0];
-      archRangeMaxY = json["arch_range"][1][1];
-    } else {
-      throw std::invalid_argument(
-          "Architecture range must be a 2x2 number array in architecture spec");
-    }
-  } else {
-    throw std::invalid_argument(
-        "Architecture range is missed in architecture spec");
   }
   // check if the rydberg range exists and is valid, otherwise throw an error
   // JSON Example:

@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023 - 2025 Chair for Design Automation, TUM
+ * Copyright (c) 2025 Munich Quantum Software Company GmbH
+ * All rights reserved.
+ *
+ * SPDX-License-Identifier: MIT
+ *
+ * Licensed under the MIT License
+ */
+
 #include "na/zoned/Architecture.hpp"
 
 #include <cstddef>
@@ -45,7 +55,6 @@ constexpr std::string_view architectureJson = R"({
     "dimension": [50, 40]
   }],
   "aods":[{"id": 0, "site_separation": 2, "r": 20, "c": 20}],
-  "arch_range": [[0, 0], [60, 110]],
   "rydberg_range": [[[0, 57], [65, 105]]]
 })";
 class TwoZoneArchitectureTest : public ::testing::Test {
@@ -259,23 +268,9 @@ TEST(ArchitectureTest, MissingT1) {
 })"_json;
   EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
 }
-TEST(ArchitectureTest, InvalidRange) {
-  nlohmann::json spec = R"({
-  "name": "invalid_architecture",
-  "arch_range": [[2, 2]]
-})"_json;
-  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
-}
-TEST(ArchitectureTest, MissingRange) {
-  nlohmann::json spec = R"({
-  "name": "invalid_architecture"
-})"_json;
-  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
-}
 TEST(ArchitectureTest, InvalidRydbergRange1) {
   nlohmann::json spec = R"({
   "name": "invalid_architecture",
-  "arch_range": [[0, 0], [2, 2]],
   "rydberg_range": []
 })"_json;
   EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
@@ -283,22 +278,19 @@ TEST(ArchitectureTest, InvalidRydbergRange1) {
 TEST(ArchitectureTest, InvalidRydbergRange2) {
   nlohmann::json spec = R"({
   "name": "invalid_architecture",
-  "arch_range": [[0, 0], [2, 2]],
   "rydberg_range": [[[2, 1]]]
 })"_json;
   EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
 }
 TEST(ArchitectureTest, MissingRydbergRange) {
   nlohmann::json spec = R"({
-  "name": "invalid_architecture",
-  "arch_range": [[0, 0], [2, 2]]
+  "name": "invalid_architecture"
 })"_json;
   EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
 }
 TEST(ArchitectureTest, MissingStorage) {
   nlohmann::json spec = R"({
   "name": "invalid_architecture",
-  "arch_range": [[0, 0], [2, 2]],
   "rydberg_range": [[[0, 0], [2, 1]]]
 })"_json;
   EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
@@ -316,7 +308,6 @@ TEST(ArchitectureTest, InvalidStorage1) {
     "offset": [0, 0],
     "dimension": [60, 60]
   },
-  "arch_range": [[0, 0], [2, 2]],
   "rydberg_range": [[[0, 0], [2, 1]]]
 })"_json;
   EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
@@ -325,7 +316,6 @@ TEST(ArchitectureTest, InvalidStorage2) {
   nlohmann::json spec = R"({
   "name": "invalid_architecture",
   "storage_zones": [],
-  "arch_range": [[0, 0], [2, 2]],
   "rydberg_range": [[[0, 0], [2, 1]]]
 })"_json;
   EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
@@ -337,7 +327,6 @@ TEST(ArchitectureTest, InvalidStorage3) {
     "offset": [0, 0],
     "dimension": [60, 60]
   }],
-  "arch_range": [[0, 0], [2, 2]],
   "rydberg_range": [[[0, 0], [2, 1]]]
 })"_json;
   EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
@@ -355,7 +344,6 @@ TEST(ArchitectureTest, InvalidSLMId) {
     "offset": [0, 0],
     "dimension": [60, 60]
   }],
-  "arch_range": [[0, 0], [2, 2]],
   "rydberg_range": [[[0, 0], [2, 1]]]
 })"_json;
   EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
@@ -372,7 +360,6 @@ TEST(ArchitectureTest, MissingSLMId) {
     "offset": [0, 0],
     "dimension": [60, 60]
   }],
-  "arch_range": [[0, 0], [2, 2]],
   "rydberg_range": [[[0, 0], [2, 1]]]
 })"_json;
   EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
@@ -390,7 +377,6 @@ TEST(ArchitectureTest, InvalidSLMSeparation) {
     "offset": [0, 0],
     "dimension": [60, 60]
   }],
-  "arch_range": [[0, 0], [2, 2]],
   "rydberg_range": [[[0, 0], [2, 1]]]
 })"_json;
   EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
@@ -407,7 +393,6 @@ TEST(ArchitectureTest, MissingSLMSeparation) {
     "offset": [0, 0],
     "dimension": [60, 60]
   }],
-  "arch_range": [[0, 0], [2, 2]],
   "rydberg_range": [[[0, 0], [2, 1]]]
 })"_json;
   EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
@@ -425,7 +410,6 @@ TEST(ArchitectureTest, InvalidSLMLocation) {
     "offset": [0, 0],
     "dimension": [60, 60]
   }],
-  "arch_range": [[0, 0], [2, 2]],
   "rydberg_range": [[[0, 0], [2, 1]]]
 })"_json;
   EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
@@ -442,7 +426,6 @@ TEST(ArchitectureTest, MissingSLMLocation) {
     "offset": [0, 0],
     "dimension": [60, 60]
   }],
-  "arch_range": [[0, 0], [2, 2]],
   "rydberg_range": [[[0, 0], [2, 1]]]
 })"_json;
   EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
@@ -460,7 +443,6 @@ TEST(ArchitectureTest, InvalidSLMRows) {
     "offset": [0, 0],
     "dimension": [60, 60]
   }],
-  "arch_range": [[0, 0], [2, 2]],
   "rydberg_range": [[[0, 0], [2, 1]]]
 })"_json;
   EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
@@ -477,7 +459,6 @@ TEST(ArchitectureTest, MissingSLMRows) {
     "offset": [0, 0],
     "dimension": [60, 60]
   }],
-  "arch_range": [[0, 0], [2, 2]],
   "rydberg_range": [[[0, 0], [2, 1]]]
 })"_json;
   EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
@@ -495,7 +476,6 @@ TEST(ArchitectureTest, InvalidSLMColumns) {
     "offset": [0, 0],
     "dimension": [60, 60]
   }],
-  "arch_range": [[0, 0], [2, 2]],
   "rydberg_range": [[[0, 0], [2, 1]]]
 })"_json;
   EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
@@ -512,7 +492,6 @@ TEST(ArchitectureTest, MissingSLMColumns) {
     "offset": [0, 0],
     "dimension": [60, 60]
   }],
-  "arch_range": [[0, 0], [2, 2]],
   "rydberg_range": [[[0, 0], [2, 1]]]
 })"_json;
   EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
@@ -618,7 +597,6 @@ TEST(ArchitectureTest, InvalidAODId) {
     "dimension": [50, 40]
   }],
   "aods":[{"id": "one", "site_separation": 2, "r": 20, "c": 20}],
-  "arch_range": [[0, 0], [2, 2]],
   "rydberg_range": [[[0, 0], [2, 1]]]
 })"_json;
   EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
@@ -657,7 +635,6 @@ TEST(ArchitectureTest, MissingAODId) {
     "dimension": [50, 40]
   }],
   "aods":[{"site_separation": 2, "r": 20, "c": 20}],
-  "arch_range": [[0, 0], [2, 2]],
   "rydberg_range": [[[0, 0], [2, 1]]]
 })"_json;
   EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
@@ -696,7 +673,6 @@ TEST(ArchitectureTest, InvalidAODSeparation) {
     "dimension": [50, 40]
   }],
   "aods":[{"id": 0, "site_separation": "2 µm", "r": 20, "c": 20}],
-  "arch_range": [[0, 0], [2, 2]],
   "rydberg_range": [[[0, 0], [2, 1]]]
 })"_json;
   EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
@@ -735,7 +711,6 @@ TEST(ArchitectureTest, MissingAODSeparation) {
     "dimension": [50, 40]
   }],
   "aods":[{"id": 0, "r": 20, "c": 20}],
-  "arch_range": [[0, 0], [2, 2]],
   "rydberg_range": [[[0, 0], [2, 1]]]
 })"_json;
   EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
@@ -774,7 +749,6 @@ TEST(ArchitectureTest, InvalidAODRows) {
     "dimension": [50, 40]
   }],
   "aods":[{"id": 0, "site_separation": 2, "r": "twenty", "c": 20}],
-  "arch_range": [[0, 0], [2, 2]],
   "rydberg_range": [[[0, 0], [2, 1]]]
 })"_json;
   EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
@@ -813,7 +787,6 @@ TEST(ArchitectureTest, MissingAODRows) {
     "dimension": [50, 40]
   }],
   "aods":[{"id": 0, "site_separation": 2, "c": 20}],
-  "arch_range": [[0, 0], [2, 2]],
   "rydberg_range": [[[0, 0], [2, 1]]]
 })"_json;
   EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
@@ -852,7 +825,6 @@ TEST(ArchitectureTest, InvalidAODColumns) {
     "dimension": [50, 40]
   }],
   "aods":[{"id": 0, "site_separation": 2, "r": 20, "c": "twenty"}],
-  "arch_range": [[0, 0], [2, 2]],
   "rydberg_range": [[[0, 0], [2, 1]]]
 })"_json;
   EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
@@ -891,7 +863,6 @@ TEST(ArchitectureTest, MissingAODColumns) {
     "dimension": [50, 40]
   }],
   "aods":[{"id": 0, "site_separation": 2, "r": 20}],
-  "arch_range": [[0, 0], [2, 2]],
   "rydberg_range": [[[0, 0], [2, 1]]]
 })"_json;
   EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
