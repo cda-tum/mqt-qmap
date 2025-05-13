@@ -331,12 +331,22 @@ auto CodeGenerator::generate(
             static_cast<double>(architecture_.get().rydbergRangeMaxX.at(i)),
             static_cast<double>(architecture_.get().rydbergRangeMaxY.at(i))}));
   }
+  size_t minX = std::numeric_limits<size_t>::max();
+  size_t maxX = std::numeric_limits<size_t>::min();
+  size_t minY = std::numeric_limits<size_t>::max();
+  size_t maxY = std::numeric_limits<size_t>::min();
+  for (const auto& zone : architecture_.get().storageZones) {
+    minX = std::min(minX, zone->location.first);
+    maxX = std::max(maxX, zone->location.first +
+                              zone->siteSeparation.first * zone->nCols);
+    minY = std::min(minY, zone->location.second);
+    maxY = std::max(maxY, zone->location.second +
+                              zone->siteSeparation.second * zone->nRows);
+  }
   const auto& globalZone = code.emplaceBackZone(
       "global",
-      Zone::Extent{static_cast<double>(architecture_.get().archRangeMinX),
-                   static_cast<double>(architecture_.get().archRangeMinY),
-                   static_cast<double>(architecture_.get().archRangeMaxX),
-                   static_cast<double>(architecture_.get().archRangeMaxY)});
+      Zone::Extent{static_cast<double>(minX), static_cast<double>(minY),
+                   static_cast<double>(maxX), static_cast<double>(maxY)});
   const auto& initialPlacement = placement.front();
   std::vector<std::reference_wrapper<const Atom>> atoms;
   atoms.reserve(initialPlacement.size());
