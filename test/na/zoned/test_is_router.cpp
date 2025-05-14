@@ -38,7 +38,7 @@ constexpr std::string_view architectureJson = R"({
     "offset": [5, 70],
     "dimension": [50, 40]
   }],
-  "aods":[{"id": 0, "site_separation": 2, "r": 20, "c": 20}],,
+  "aods":[{"id": 0, "site_separation": 2, "r": 20, "c": 20}],
   "rydberg_range": [[[5, 70], [55, 110]]]
 })";
 class ISRouterRouteTest : public ::testing::Test {

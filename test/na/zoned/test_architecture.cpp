@@ -17,9 +17,9 @@
 namespace na::zoned {
 constexpr std::string_view architectureJson = R"({
   "name": "full_compute_store_architecture",
-  "operation_duration": {"rydberg": 0.36, "1q_gate": 52, "atom_transfer": 15},
+  "operation_duration": {"rydberg_gate": 0.36, "single_qubit_gate": 52, "atom_transfer": 15},
   "operation_fidelity": {
-    "two_qubit_gate": 0.995,
+    "rydberg_gate": 0.995,
     "single_qubit_gate": 0.9997,
     "atom_transfer": 0.999
   },
@@ -138,42 +138,42 @@ TEST(ArchitectureTest, InvalidDurations) {
 TEST(ArchitectureTest, InvalidRydbergDuration) {
   nlohmann::json spec = R"({
   "name": "invalid_architecture",
-  "operation_duration": {"rydberg": "0.36µs", "1q_gate": 52, "atom_transfer": 15}
+  "operation_duration": {"rydberg_gate": "0.36µs", "single_qubit_gate": 52, "atom_transfer": 15}
 })"_json;
   EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
 }
 TEST(ArchitectureTest, MissingRydbergDuration) {
   nlohmann::json spec = R"({
   "name": "invalid_architecture",
-  "operation_duration": {"1q_gate": 52, "atom_transfer": 15}
+  "operation_duration": {"single_qubit_gate": 52, "atom_transfer": 15}
 })"_json;
   EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
 }
 TEST(ArchitectureTest, InvalidTransferDuration) {
   nlohmann::json spec = R"({
   "name": "invalid_architecture",
-  "operation_duration": {"rydberg": 0.36, "1q_gate": 52, "atom_transfer": "15 µs"}
+  "operation_duration": {"rydberg_gate": 0.36, "single_qubit_gate": 52, "atom_transfer": "15 µs"}
 })"_json;
   EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
 }
 TEST(ArchitectureTest, MissingTransferDuration) {
   nlohmann::json spec = R"({
   "name": "invalid_architecture",
-  "operation_duration": {"rydberg": 0.36, "1q_gate": 52}
+  "operation_duration": {"rydberg_gate": 0.36, "single_qubit_gate": 52}
 })"_json;
   EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
 }
 TEST(ArchitectureTest, InvalidSingleQubitOperationDuration) {
   nlohmann::json spec = R"({
   "name": "invalid_architecture",
-  "operation_duration": {"rydberg": 0.36, "1q_gate": "52µs", "atom_transfer": 15}
+  "operation_duration": {"rydberg_gate": 0.36, "single_qubit_gate": "52µs", "atom_transfer": 15}
 })"_json;
   EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
 }
 TEST(ArchitectureTest, MissingSingleQubitOperationDuration) {
   nlohmann::json spec = R"({
   "name": "invalid_architecture",
-  "operation_duration": {"rydberg": 0.36, "atom_transfer": 15}
+  "operation_duration": {"rydberg_gate": 0.36, "atom_transfer": 15}
 })"_json;
   EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
 }
@@ -188,7 +188,7 @@ TEST(ArchitectureTest, InvalidRydbergFidelity) {
   nlohmann::json spec = R"({
   "name": "invalid_architecture",
   "operation_fidelity": {
-    "two_qubit_gate": "0.995",
+    "rydberg_gate": "0.995",
     "single_qubit_gate": 0.9997,
     "atom_transfer": 0.999
   }
@@ -209,7 +209,7 @@ TEST(ArchitectureTest, InvalidTransferFidelity) {
   nlohmann::json spec = R"({
   "name": "invalid_architecture",
   "operation_fidelity": {
-    "two_qubit_gate": 0.995,
+    "rydberg_gate": 0.995,
     "single_qubit_gate": 0.9997,
     "atom_transfer": "0.999"
   }
@@ -220,7 +220,7 @@ TEST(ArchitectureTest, MissingTransferFidelity) {
   nlohmann::json spec = R"({
   "name": "invalid_architecture",
   "operation_fidelity": {
-    "two_qubit_gate": 0.995,
+    "rydberg_gate": 0.995,
     "single_qubit_gate": 0.9997
   }
 })"_json;
@@ -230,7 +230,7 @@ TEST(ArchitectureTest, InvalidSingleQubitOperationFidelity) {
   nlohmann::json spec = R"({
   "name": "invalid_architecture",
   "operation_fidelity": {
-    "two_qubit_gate": 0.995,
+    "rydberg_gate": 0.995,
     "single_qubit_gate": "0.9997",
     "atom_transfer": 0.999
   }
@@ -241,7 +241,7 @@ TEST(ArchitectureTest, MissingSingleQubitOperationFidelity) {
   nlohmann::json spec = R"({
   "name": "invalid_architecture",
   "operation_fidelity": {
-    "two_qubit_gate": 0.995,
+    "rydberg_gate": 0.995,
     "atom_transfer": 0.999
   }
 })"_json;

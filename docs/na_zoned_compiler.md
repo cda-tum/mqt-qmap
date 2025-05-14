@@ -110,8 +110,8 @@ from mqt.qmap.na.zoned import ZonedNeutralAtomArchitecture
 
 arch = ZonedNeutralAtomArchitecture(parse_json("""{
   "name": "Architecture with one entanglement and one storage zone",
-  "operation_duration": {"rydberg": 0.36, "1q_gate": 52, "atom_transfer": 15},
-  "operation_fidelity": {"two_qubit_gate": 0.995, "single_qubit_gate": 0.9997, "atom_transfer": 0.999},
+  "operation_duration": {"rydberg_gate": 0.36, "single_qubit_gate": 52, "atom_transfer": 15},
+  "operation_fidelity": {"rydberg_gate": 0.995, "single_qubit_gate": 0.9997, "atom_transfer": 0.999},
   "qubit_spec": {"T": 1.5e6},
   "storage_zones": [{
     "zone_id": 0,

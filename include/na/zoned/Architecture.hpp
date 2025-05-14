@@ -132,14 +132,14 @@ struct Architecture {
   /// A struct to define the operation durations.
   struct OperationDurations {
     double timeAtomTransfer = 15;       ///< µs
-    double timeRydberg = 0.36;          ///< µs
+    double timeRydbergGate = 0.36;      ///< µs
     double timeSingleQubitGate = 0.625; ///< µs
   };
   /// Operation durations.
   std::optional<OperationDurations> operationDurations;
   /// A struct to define the operation fidelities.
   struct OperationFidelities {
-    double fidelityTwoQubitGate = 0.995;
+    double fidelityRydbergGate = 0.995;
     double fidelitySingleQubitGate = 0.9997;
     double fidelityAtomTransfer = 0.999;
   };

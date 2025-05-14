@@ -176,17 +176,17 @@ Architecture::Architecture(nlohmann::json json) {
   // throw an error if the specification is invalid
   // JSON Example:
   // "operation_duration": {
-  //   "rydberg": 0.36,
-  //   "1q_gate": 52,
+  //   "rydberg_gate": 0.36,
+  //   "single_qubit_gate": 52,
   //   "atom_transfer": 15
   // }
   if (json.contains("operation_duration")) {
     if (json["operation_duration"].is_object()) {
       operationDurations = OperationDurations{};
-      if (json["operation_duration"].contains("rydberg")) {
-        if (json["operation_duration"]["rydberg"].is_number()) {
-          operationDurations->timeRydberg =
-              json["operation_duration"]["rydberg"];
+      if (json["operation_duration"].contains("rydberg_gate")) {
+        if (json["operation_duration"]["rydberg_gate"].is_number()) {
+          operationDurations->timeRydbergGate =
+              json["operation_duration"]["rydberg_gate"];
         } else {
           throw std::invalid_argument(
               "Rydberg duration must be a number in architecture spec");
@@ -207,17 +207,17 @@ Architecture::Architecture(nlohmann::json json) {
         throw std::invalid_argument(
             "Operation duration must contain atom transfer duration");
       }
-      if (json["operation_duration"].contains("1q_gate")) {
-        if (json["operation_duration"]["1q_gate"].is_number()) {
+      if (json["operation_duration"].contains("single_qubit_gate")) {
+        if (json["operation_duration"]["single_qubit_gate"].is_number()) {
           operationDurations->timeSingleQubitGate =
-              json["operation_duration"]["1q_gate"];
+              json["operation_duration"]["single_qubit_gate"];
         } else {
           throw std::invalid_argument(
               "One qubit gate duration must be a number in architecture spec");
         }
       } else {
         throw std::invalid_argument(
-            "Operation duration must contain 1q_gate duration");
+            "Operation duration must contain single_qubit_gate duration");
       }
     } else {
       throw std::invalid_argument(
@@ -230,17 +230,17 @@ Architecture::Architecture(nlohmann::json json) {
   // check if the operation's fidelity exists, otherwise print a warning
   // throw an error if the specification is invalid
   // "operation_fidelity": {
-  //   "two_qubit_gate": 0.995,
+  //   "rydberg_gate": 0.995,
   //   "single_qubit_gate": 0.9997,
   //   "atom_transfer": 0.999
   // }
   if (json.contains("operation_fidelity")) {
     if (json["operation_fidelity"].is_object()) {
       operationFidelities = OperationFidelities{};
-      if (json["operation_fidelity"].contains("two_qubit_gate")) {
-        if (json["operation_fidelity"]["two_qubit_gate"].is_number()) {
-          operationFidelities->fidelityTwoQubitGate =
-              json["operation_fidelity"]["two_qubit_gate"];
+      if (json["operation_fidelity"].contains("rydberg_gate")) {
+        if (json["operation_fidelity"]["rydberg_gate"].is_number()) {
+          operationFidelities->fidelityRydbergGate =
+              json["operation_fidelity"]["rydberg_gate"];
         } else {
           throw std::invalid_argument("Two qubit gate fidelity must be a float "
                                       "in architecture spec");
