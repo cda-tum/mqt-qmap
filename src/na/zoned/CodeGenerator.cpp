@@ -115,7 +115,7 @@ auto CodeGenerator::appendSingleQubitGates(
           std::ostringstream oss;
           oss << "\033[1;35m[WARN]\033[0m Gate not part of basis gates will be "
                  "inserted as U3 gate: "
-              << op.get().getType();
+              << op.get().getType() << "\n";
           std::cout << oss.str();
         }
         if (op.get().getType() == qc::U) {
