@@ -10,7 +10,6 @@
 
 from __future__ import annotations
 
-from json import loads
 from pathlib import Path
 
 import pytest
@@ -22,27 +21,27 @@ circ_dir = Path(__file__).resolve().parent.parent.parent.parent / "na/zoned/circ
 # make list of contained .qasm files
 circuits = list(circ_dir.glob("*.qasm"))
 
+architecture_specification = """{
+    "name": "compiler_architecture",
+    "storage_zones": [{
+        "zone_id": 0,
+        "slms": [{"id": 0, "site_separation": [3, 3], "r": 20, "c": 20, "location": [0, 0]}],
+        "offset": [0, 0],
+        "dimension": [60, 60]
+    }],
+    "entanglement_zones": [{
+        "zone_id": 0,
+        "slms": [
+            {"id": 1, "site_separation": [12, 10], "r": 4, "c": 4, "location": [5, 70]},
+            {"id": 2, "site_separation": [12, 10], "r": 4, "c": 4, "location": [7, 70]}
+        ],
+        "offset": [5, 70],
+        "dimension": [50, 40]
+    }],
+    "aods":[{"id": 0, "site_separation": 2, "r": 20, "c": 20}],
+    "rydberg_range": [[[5, 70], [55, 110]]]
+}"""
 settings = """{
-    "architecture": {
-        "name": "compiler_architecture",
-        "storage_zones": [{
-            "zone_id": 0,
-            "slms": [{"id": 0, "site_separation": [3, 3], "r": 20, "c": 20, "location": [0, 0]}],
-            "offset": [0, 0],
-            "dimension": [60, 60]
-        }],
-        "entanglement_zones": [{
-            "zone_id": 0,
-            "slms": [
-                {"id": 1, "site_separation": [12, 10], "r": 4, "c": 4, "location": [5, 70]},
-                {"id": 2, "site_separation": [12, 10], "r": 4, "c": 4, "location": [7, 70]}
-            ],
-            "offset": [5, 70],
-            "dimension": [50, 40]
-        }],
-        "aods":[{"id": 0, "site_separation": 2, "r": 20, "c": 20}],
-        "rydberg_range": [[[5, 70], [55, 110]]]
-    },
     "vm_placer" : {
         "use_window" : true,
         "window_size" : 10,
@@ -66,11 +65,9 @@ settings = """{
 
 @pytest.fixture
 def compiler() -> RoutingAwareCompiler:
-    """Return a MQT QMAP's Zoned Neutral Atom Compiler initialized with the above architecture and settings."""
-    # get dict from json string settings
-    settings_dict = loads(settings)
-    architecture = ZonedNeutralAtomArchitecture(settings_dict["architecture"])
-    return RoutingAwareCompiler(architecture, settings_dict)
+    """Return an MQT QMAP's Zoned Neutral Atom Compiler initialized with the above architecture and settings."""
+    architecture = ZonedNeutralAtomArchitecture.from_json_string(architecture_specification)
+    return RoutingAwareCompiler(architecture)
 
 
 @pytest.mark.parametrize("circuit_filename", circuits)

@@ -23,7 +23,7 @@ pybind11_add_module(
   zoned.cpp)
 target_compile_definitions(${TARGET_NAME} PRIVATE MQT_QMAP_MODULE_NAME=${TARGET_NAME})
 target_link_libraries(${TARGET_NAME} PRIVATE MQT::QMapNAZoned MQT::CoreQASM MQT::ProjectOptions
-                                             MQT::ProjectWarnings)
+                                             MQT::ProjectWarnings pybind11_json)
 
 # Install directive for scikit-build-core
 install(
