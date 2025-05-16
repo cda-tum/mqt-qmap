@@ -17,7 +17,7 @@ from mqt.core import load
 from mqt.qmap.na.zoned import RoutingAwareCompiler, ZonedNeutralAtomArchitecture
 
 # get the circuit directory of the project
-circ_dir = Path(__file__).resolve().parent.parent.parent / "na/zoned/circuits"
+circ_dir = Path(__file__).resolve().parent.parent.parent / "na" / "zoned" / "circuits"
 # make list of contained .qasm files
 circuits = list(circ_dir.glob("*.qasm"))
 
