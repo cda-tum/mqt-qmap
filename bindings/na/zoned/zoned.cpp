@@ -15,7 +15,7 @@
 #include "na/zoned/Compiler.hpp"
 #include "na/zoned/VMPlacer.hpp"
 
-#include <nlohmann/json_fwd.hpp>
+#include <nlohmann/json.hpp>
 #include <pybind11/attr.h>
 #include <pybind11/cast.h>
 #include <pybind11/detail/common.h>

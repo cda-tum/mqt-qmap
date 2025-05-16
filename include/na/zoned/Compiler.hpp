@@ -26,7 +26,7 @@
 #include <functional>
 #include <iostream>
 #include <memory>
-#include <nlohmann/json_fwd.hpp>
+#include <nlohmann/json.hpp>
 
 namespace na::zoned {
 #define SELF (*static_cast<ConcreteType*>(this))

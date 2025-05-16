@@ -23,7 +23,7 @@
 #include <iostream>
 #include <limits>
 #include <memory>
-#include <nlohmann/json_fwd.hpp>
+#include <nlohmann/json.hpp>
 #include <optional>
 #include <queue>
 #include <sstream>

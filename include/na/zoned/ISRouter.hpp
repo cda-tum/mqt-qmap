@@ -16,7 +16,6 @@
 
 #include <cstddef>
 #include <functional>
-#include <nlohmann/json_fwd.hpp>
 #include <tuple>
 #include <unordered_map>
 #include <vector>

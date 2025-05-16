@@ -33,7 +33,7 @@
 #include <iostream>
 #include <iterator>
 #include <map>
-#include <nlohmann/json_fwd.hpp>
+#include <nlohmann/json.hpp>
 #include <sstream>
 #include <string>
 #include <utility>

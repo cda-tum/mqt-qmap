@@ -22,7 +22,6 @@
 #include <limits>
 #include <memory>
 #include <nlohmann/json.hpp>
-#include <nlohmann/json_fwd.hpp>
 #include <numeric>
 #include <sstream>
 #include <stdexcept>

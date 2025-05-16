@@ -16,7 +16,7 @@
 
 #include <cstddef>
 #include <limits>
-#include <nlohmann/json_fwd.hpp>
+#include <nlohmann/json.hpp>
 #include <ostream>
 #include <string>
 

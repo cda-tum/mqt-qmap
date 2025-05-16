@@ -22,7 +22,7 @@
 #include <functional>
 #include <map>
 #include <memory>
-#include <nlohmann/json_fwd.hpp>
+#include <nlohmann/json.hpp>
 #include <optional>
 #include <unordered_map>
 #include <unordered_set>

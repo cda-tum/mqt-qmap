@@ -23,7 +23,7 @@
 #include <functional>
 #include <iostream>
 #include <memory>
-#include <nlohmann/json_fwd.hpp>
+#include <nlohmann/json.hpp>
 #include <sstream>
 #include <stdexcept>
 #include <utility>

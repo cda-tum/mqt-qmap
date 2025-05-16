@@ -47,7 +47,7 @@
 #include <cstdint>
 #include <exception>
 #include <memory>
-#include <nlohmann/json_fwd.hpp>
+#include <nlohmann/json.hpp>
 #include <plog/Severity.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>

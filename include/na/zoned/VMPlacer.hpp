@@ -16,7 +16,7 @@
 
 #include <cstddef>
 #include <functional>
-#include <nlohmann/json_fwd.hpp>
+#include <nlohmann/json.hpp>
 #include <optional>
 #include <unordered_set>
 #include <utility>
