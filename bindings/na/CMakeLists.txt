@@ -6,14 +6,5 @@
 #
 # Licensed under the MIT License
 
-"""MQT QMAP Neutral Atom library."""
-
-from __future__ import annotations
-
-from . import state_preparation, zoned
-
-__all__ = ["state_preparation", "zoned"]
-
-
-def __dir__() -> list[str]:
-    return __all__
+add_subdirectory(nasp)
+add_subdirectory(zoned)

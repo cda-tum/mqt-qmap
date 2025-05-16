@@ -6,11 +6,11 @@
 #
 # Licensed under the MIT License
 
-"""Main entry point for neutral atom state preparation."""
+"""MQT QMAP's State Preparation for Neutral Atoms."""
 
 from __future__ import annotations
 
-from ..pyqmap import NAStatePreparationSolver, generate_code, get_ops_for_solver
+from .mqt_qmap_na_nasp_bindings import NAStatePreparationSolver, generate_code, get_ops_for_solver
 
 __all__ = ["NAStatePreparationSolver", "generate_code", "get_ops_for_solver"]
 

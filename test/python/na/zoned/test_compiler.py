@@ -15,11 +15,10 @@ from pathlib import Path
 
 import pytest
 from mqt.core import load
-
 from mqt.qmap.na.zoned import RoutingAwareCompiler, ZonedNeutralAtomArchitecture
 
 # get circuit directory of the project
-circ_dir = Path(__file__).resolve().parent.parent.parent / "na/zoned/circuits"
+circ_dir = Path(__file__).resolve().parent.parent.parent.parent / "na/zoned/circuits"
 # make list of contained .qasm files
 circuits = list(circ_dir.glob("*.qasm"))
 
@@ -81,5 +80,5 @@ def test_na_routing_aware_compiler(compiler: RoutingAwareCompiler, circuit_filen
     result = compiler.compile(qc)
     assert result is not None
     stats = compiler.stats()
-    assert "total_time" in stats
-    assert stats["total_time"] > 0
+    assert "totalTime" in stats
+    assert stats["totalTime"] > 0

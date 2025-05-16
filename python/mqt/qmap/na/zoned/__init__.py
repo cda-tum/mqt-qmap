@@ -6,13 +6,13 @@
 #
 # Licensed under the MIT License
 
-"""Main entry point for MQT QMAP's Zoned Neutral Atom Compiler."""
+"""MQT QMAP Neutral Atom library."""
 
 from __future__ import annotations
 
-from ..pyqmap import RoutingAwareCompiler, ZonedNeutralAtomArchitecture
+from .mqt_qmap_na_zoned_bindings import RoutingAgnosticCompiler, RoutingAwareCompiler, ZonedNeutralAtomArchitecture
 
-__all__ = ["RoutingAwareCompiler", "ZonedNeutralAtomArchitecture"]
+__all__ = ["RoutingAgnosticCompiler", "RoutingAwareCompiler", "ZonedNeutralAtomArchitecture"]
 
 
 def __dir__() -> list[str]:

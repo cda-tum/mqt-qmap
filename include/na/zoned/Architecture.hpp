@@ -174,13 +174,7 @@ struct Architecture {
   /// @param filename the name of the file given as a string
   [[nodiscard]] static auto fromJSONFile(const std::string& filename)
       -> Architecture {
-    return fromJSONFile(std::filesystem::path(filename));
-  }
-  /// Creates an Architecture from a file containing a JSON specification.
-  /// @param filepath the path to the file
-  [[nodiscard]] static auto fromJSONFile(const std::filesystem::path& filepath)
-      -> Architecture {
-    return fromJSON(std::ifstream(filepath));
+    return fromJSON(std::ifstream(filename));
   }
   /// Creates an Architecture from a JSON specification.
   /// @param ifs the input stream containing the JSON specification

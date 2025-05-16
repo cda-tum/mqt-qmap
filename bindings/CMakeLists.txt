@@ -52,3 +52,6 @@ install(
   TARGETS pyqmap
   DESTINATION .
   COMPONENT mqt-qmap_Python)
+
+# add all modules
+add_subdirectory(na)
