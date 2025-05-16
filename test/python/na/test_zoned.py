@@ -16,8 +16,8 @@ import pytest
 from mqt.core import load
 from mqt.qmap.na.zoned import RoutingAwareCompiler, ZonedNeutralAtomArchitecture
 
-# get circuit directory of the project
-circ_dir = Path(__file__).resolve().parent.parent.parent.parent / "na/zoned/circuits"
+# get the circuit directory of the project
+circ_dir = Path(__file__).resolve().parent.parent.parent / "na/zoned/circuits"
 # make list of contained .qasm files
 circuits = list(circ_dir.glob("*.qasm"))
 
@@ -41,24 +41,19 @@ architecture_specification = """{
     "aods":[{"id": 0, "site_separation": 2, "r": 20, "c": 20}],
     "rydberg_range": [[[5, 70], [55, 110]]]
 }"""
-settings = """{
-    "vm_placer" : {
-        "use_window" : true,
-        "window_size" : 10,
-        "dynamic_placement" : true
+routing_aware_configuration = """{
+    "placerConfig" : {
+        "useWindow" : true,
+        "windowMinWidth" : 4,
+        "windowRatio" : 1.5,
+        "windowShare" : 0.6,
+        "deepeningFactor" : 0.6,
+        "deepeningValue" : 0.2,
+        "lookaheadFactor": 0.2,
+        "reuseLevel": 5.0
     },
-    "code_generator" : {
-        "parking_offset" : 1
-    },
-    "a_star_placer" : {
-        "use_window" : true,
-        "window_min_width" : 4,
-        "window_ratio" : 1.5,
-        "window_share" : 0.6,
-        "deepening_factor" : 0.6,
-        "deepening_value" : 0.2,
-        "lookahead_factor": 0.2,
-        "reuse_level": 5.0
+    "codeGeneratorConfig" : {
+        "parkingOffset" : 1
     }
 }"""
 
@@ -67,7 +62,8 @@ settings = """{
 def compiler() -> RoutingAwareCompiler:
     """Return an MQT QMAP's Zoned Neutral Atom Compiler initialized with the above architecture and settings."""
     architecture = ZonedNeutralAtomArchitecture.from_json_string(architecture_specification)
-    return RoutingAwareCompiler(architecture)
+    configuration = RoutingAwareCompiler.Config.from_json_string(routing_aware_configuration)
+    return RoutingAwareCompiler(architecture, configuration)
 
 
 @pytest.mark.parametrize("circuit_filename", circuits)
