@@ -41,16 +41,14 @@ constexpr std::string_view architectureJson = R"({
   "rydberg_range": [[[5, 70], [55, 110]]]
 })";
 constexpr std::string_view configJson = R"({
-  "a_star_placer": {
-    "useWindow": true,
-    "windowMinWidth": 4,
-    "windowRatio": 1.5,
-    "windowShare": 0.6,
-    "deepeningFactor": 0.6,
-    "deepeningValue": 0.2,
-    "lookaheadFactor": 0.2,
-    "reuseLevel": 5.0
-  }
+  "useWindow": true,
+  "windowMinWidth": 4,
+  "windowRatio": 1.5,
+  "windowShare": 0.6,
+  "deepeningFactor": 0.6,
+  "deepeningValue": 0.2,
+  "lookaheadFactor": 0.2,
+  "reuseLevel": 5.0
 })";
 class AStarPlacerPlaceTest : public ::testing::Test {
 protected:
@@ -266,16 +264,14 @@ TEST(AStarPlacerTest, LimitSpace) {
 TEST(AStarPlacerTest, WindowExpansion) {
   Architecture architecture(Architecture::fromJSONString(architectureJson));
   AStarPlacer placer(architecture, R"({
-  "a_star_placer": {
-    "useWindow": true,
-    "windowMinWidth": 1,
-    "windowRatio": 1.0,
-    "windowShare": 1.0,
-    "deepeningFactor": 0.6,
-    "deepeningValue": 0.2,
-    "lookaheadFactor": 0.2,
-    "reuseLevel": 5.0
-  }
+  "useWindow": true,
+  "windowMinWidth": 1,
+  "windowRatio": 1.0,
+  "windowShare": 1.0,
+  "deepeningFactor": 0.6,
+  "deepeningValue": 0.2,
+  "lookaheadFactor": 0.2,
+  "reuseLevel": 5.0
 })"_json);
   constexpr size_t nQubits = 4;
   EXPECT_NO_THROW(std::ignore = placer.place(

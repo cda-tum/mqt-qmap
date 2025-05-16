@@ -58,14 +58,11 @@ public:
     std::chrono::microseconds routingTime;
     std::chrono::microseconds codeGenerationTime;
     std::chrono::microseconds totalTime;
-    [[nodiscard]] auto asJson() const -> nlohmann::json {
-      return {{"scheduling_time", schedulingTime.count()},
-              {"reuse_analysis_time", reuseAnalysisTime.count()},
-              {"placement_time", placementTime.count()},
-              {"routing_time", routingTime.count()},
-              {"code_generation_time", codeGenerationTime.count()},
-              {"total_time", totalTime.count()}};
-    }
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE_ONLY_SERIALIZE(Statistics, schedulingTime,
+                                                  reuseAnalysisTime,
+                                                  placementTime, routingTime,
+                                                  codeGenerationTime,
+                                                  totalTime);
   };
 
 private:
@@ -211,3 +208,11 @@ public:
       : Compiler(architecture) {}
 };
 } // namespace na::zoned
+
+NLOHMANN_JSON_NAMESPACE_BEGIN
+template <> struct adl_serializer<std::chrono::microseconds> {
+  static void to_json(json& j, const std::chrono::microseconds& ms) {
+    j = ms.count();
+  }
+};
+NLOHMANN_JSON_NAMESPACE_END

@@ -42,11 +42,9 @@ constexpr std::string_view architectureJson = R"({
   "rydberg_range": [[[5, 70], [55, 110]]]
 })";
 constexpr std::string_view configJson = R"({
-  "vm_placer" : {
-    "use_window" : true,
-    "window_size" : 10,
-    "dynamic_placement" : true
-  }
+  "useWindow" : true,
+  "windowSize" : 10,
+  "dynamicPlacement" : true
 })";
 class VMPlacerPlaceTest : public ::testing::Test {
 protected:
