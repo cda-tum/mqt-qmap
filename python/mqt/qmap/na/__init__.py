@@ -6,13 +6,13 @@
 #
 # Licensed under the MIT License
 
-"""MQT QMAP's State Preparation for Neutral Atoms."""
+"""The MQT QMAP's Neutral Atom Package."""
 
 from __future__ import annotations
 
-from .mqt_qmap_na_nasp_bindings import NAStatePreparationSolver, generate_code, get_ops_for_solver
+from . import state_preparation, zoned
 
-__all__ = ["NAStatePreparationSolver", "generate_code", "get_ops_for_solver"]
+__all__ = ["state_preparation", "zoned"]
 
 
 def __dir__() -> list[str]:
