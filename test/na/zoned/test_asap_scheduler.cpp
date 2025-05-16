@@ -214,20 +214,4 @@ TEST_F(ASAPSchedulerScheduleTest, UnsupportedCXGate) {
   qc.cx(0, 1);
   EXPECT_THROW(std::ignore = scheduler.schedule(qc), std::invalid_argument);
 }
-TEST(ASAPSchedulerTest, Config) {
-  Architecture architecture(Architecture::fromJSONString(architectureJson));
-  const auto config = R"({
-  "asap_scheduler": {
-    "unknown_key": 42
-  }
-})"_json;
-  std::stringstream buffer;
-  std::streambuf* oldCout = std::cout.rdbuf(buffer.rdbuf());
-  std::ignore = ASAPScheduler(architecture, config);
-  std::cout.rdbuf(oldCout);
-  EXPECT_EQ(
-      buffer.str(),
-      "\033[1;35m[WARN]\033[0m Configuration for ASAPScheduler contains an "
-      "unknown key: unknown_key. Ignoring.\n");
-}
 } // namespace na::zoned

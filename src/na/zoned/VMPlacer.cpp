@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023 - 2025 Chair for Design Automation, TUM
+ * Copyright (c) 2025 Munich Quantum Software Company GmbH
+ * All rights reserved.
+ *
+ * SPDX-License-Identifier: MIT
+ *
+ * Licensed under the MIT License
+ */
+
 #include "na/zoned/VMPlacer.hpp"
 
 #include "ir/Definitions.hpp"
@@ -667,9 +677,8 @@ auto VMPlacer::placeAtomsInStorageZone(
   }
   return newPlacement;
 }
-VMPlacer::VMPlacer(const Architecture& architecture,
-                   const nlohmann::json& config)
-    : architecture_(architecture) {
+VMPlacer::VMPlacer(const Architecture& architecture, const Config& config)
+    : architecture_(architecture), config_(config) {
   // get first storage SLM and first entanglement SLM
   const auto& firstStorageSlm = *architecture_.get().storageZones.front();
   const auto& firstEntanglementSlm =
@@ -681,88 +690,6 @@ VMPlacer::VMPlacer(const Architecture& architecture,
     // start initial placement of the atoms in the last row instead of the
     // first and hence revert initial placement
     reverseInitialPlacement_ = true;
-  }
-  if (const auto& configIt = config.find("vm_placer");
-      configIt != config.end() && configIt->is_object()) {
-    bool useWindowSet = false;
-    bool windowSizeSet = false;
-    bool dynamicPlacementSet = false;
-    for (const auto& [key, value] : configIt.value().items()) {
-      if (key == "use_window") {
-        useWindowSet = true;
-        if (value.is_boolean()) {
-          useWindow_ = value;
-        } else {
-          std::ostringstream oss;
-          oss << std::boolalpha;
-          oss << "\033[1;35m[WARN]\033[0m Configuration for VMPlacer contains "
-                 "an invalid "
-                 "value for use_window. Using default ("
-              << useWindow_ << ").\n";
-          std::cout << oss.str();
-        }
-      } else if (key == "window_size") {
-        windowSizeSet = true;
-        if (value.is_number_unsigned()) {
-          windowSize_ = value;
-        } else {
-          std::ostringstream oss;
-          oss << "\033[1;35m[WARN]\033[0m Configuration for VMPlacer contains "
-                 "an invalid "
-                 "value for window_size. Using default ("
-              << windowSize_ << ").\n";
-          std::cout << oss.str();
-        }
-      } else if (key == "dynamic_placement") {
-        dynamicPlacementSet = true;
-        if (value.is_boolean()) {
-          dynamicPlacement_ = value;
-        } else {
-          std::ostringstream oss;
-          oss << std::boolalpha;
-          oss << "\033[1;35m[WARN]\033[0m Configuration for VMPlacer contains "
-                 "an invalid "
-                 "value for dynamic_placement. Using default ("
-              << dynamicPlacement_ << ").\n";
-          std::cout << oss.str();
-        }
-      } else {
-        std::ostringstream oss;
-        oss << "\033[1;35m[WARN]\033[0m Configuration for VMPlacer contains an "
-               "unknown key: "
-            << key << ". Ignoring.\n";
-        std::cout << oss.str();
-      }
-    }
-    if (!useWindowSet) {
-      std::ostringstream oss;
-      oss << std::boolalpha;
-      oss << "\033[1;35m[WARN]\033[0m Configuration for VMPlacer does "
-             "not contain a value for use_window. Using default ("
-          << useWindow_ << ").\n";
-      std::cout << oss.str();
-    }
-    if (useWindow_) {
-      if (!windowSizeSet) {
-        std::ostringstream oss;
-        oss << "\033[1;35m[WARN]\033[0m Configuration for VMPlacer does "
-               "not contain a value for window_size. Using default ("
-            << windowSize_ << ").\n";
-        std::cout << oss.str();
-      }
-    }
-    if (!dynamicPlacementSet) {
-      std::ostringstream oss;
-      oss << std::boolalpha;
-      oss << "\033[1;35m[WARN]\033[0m Configuration for VMPlacer does "
-             "not contain a value for dynamic_placement. Using default ("
-          << dynamicPlacement_ << ").\n";
-      std::cout << oss.str();
-    }
-  } else {
-    std::cout
-        << "\033[1;35m[WARN]\033[0m Configuration does not contain "
-           "settings for VMPlacer or is malformed. Using default settings.\n";
   }
 }
 auto VMPlacer::place(
@@ -786,7 +713,7 @@ auto VMPlacer::place(
   for (size_t layer = 0; layer < twoQubitGateLayers.size(); ++layer) {
     // first compute the next qubit and gate placement without reusing atoms
     Placement qubitPlacementWithoutReuse;
-    if (dynamicPlacement_) {
+    if (config_.dynamicPlacement) {
       qubitPlacementWithoutReuse = placeAtomsInStorageZone(
           placement.front(), placement.back(), reuseQubits[layer],
           twoQubitGateLayers.size() > layer + 1 ? twoQubitGateLayers[layer + 1]
@@ -806,7 +733,7 @@ auto VMPlacer::place(
       // then compute the next qubit and gate placement with reusing atoms
       if (!reuseQubits[layer].empty()) {
         Placement qubitPlacementWithReuse;
-        if (dynamicPlacement_) {
+        if (config_.dynamicPlacement) {
           qubitPlacementWithReuse = placeAtomsInStorageZone(
               placement.front(), placement.back(), reuseQubits[layer],
               twoQubitGateLayers.size() > layer + 1

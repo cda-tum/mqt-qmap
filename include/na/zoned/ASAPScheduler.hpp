@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023 - 2025 Chair for Design Automation, TUM
+ * Copyright (c) 2025 Munich Quantum Software Company GmbH
+ * All rights reserved.
+ *
+ * SPDX-License-Identifier: MIT
+ *
+ * Licensed under the MIT License
+ */
+
 #pragma once
 
 #include "ir/QuantumComputation.hpp"
@@ -5,7 +15,7 @@
 #include "na/zoned/Types.hpp"
 
 #include <functional>
-#include <nlohmann/json_fwd.hpp>
+#include <nlohmann/json.hpp>
 #include <utility>
 #include <vector>
 
@@ -23,12 +33,22 @@ class ASAPScheduler {
   size_t maxTwoQubitGateNumPerLayer_ = 0;
 
 public:
+  /// The configuration of the ASAPScheduler
+  /// @note ASAPScheduler does not have any configuration parameters.
+  struct Config {
+    template <typename BasicJsonType>
+    friend void to_json(BasicJsonType& /* unused */,
+                        const Config& /* unused */) {}
+    template <typename BasicJsonType>
+    friend void from_json(const BasicJsonType& /* unused */,
+                          Config& /* unused */) {}
+  };
   /**
    * Create a new ASAPScheduler.
    * @note The second parameter of the constructor is unused.
    * @param architecture is the architecture of the neutral atom system
    */
-  ASAPScheduler(const Architecture& architecture, const nlohmann::json& config);
+  ASAPScheduler(const Architecture& architecture, const Config& /* unused */);
   /**
    * This function schedules the operations of a quantum computation.
    * @details Every operation is scheduled as soon as possible. The function

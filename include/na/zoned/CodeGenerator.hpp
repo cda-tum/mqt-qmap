@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023 - 2025 Chair for Design Automation, TUM
+ * Copyright (c) 2025 Munich Quantum Software Company GmbH
+ * All rights reserved.
+ *
+ * SPDX-License-Identifier: MIT
+ *
+ * Licensed under the MIT License
+ */
+
 #pragma once
 
 #include "na/NAComputation.hpp"
@@ -18,11 +28,22 @@ namespace na::zoned {
 class CodeGenerator {
   /// The architecture of the neutral atom system
   std::reference_wrapper<const Architecture> architecture_;
-  /// The offset for parking spots
-  size_t parkingOffset_ = 1;
-  /// Warn if a gate not belonging to the basis gates (local rz, global ry) is
-  /// used
-  bool warnUnsupportedGates_ = true;
+
+public:
+  /// The configuration of the CodeGenerator
+  struct Config {
+    /// The offset for parking spots
+    size_t parkingOffset = 1;
+    /// Warn if a gate not belonging to the basis gates (local rz, global ry) is
+    /// used
+    bool warnUnsupportedGates = true;
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(Config, parkingOffset,
+                                                warnUnsupportedGates);
+  };
+
+private:
+  /// The configuration of the CodeGenerator
+  Config config_;
 
 public:
   /**
@@ -33,7 +54,8 @@ public:
    * @param architecture is the architecture of the neutral atom system
    * @param config is the configuration of the code generator
    */
-  CodeGenerator(const Architecture& architecture, const nlohmann::json& config);
+  CodeGenerator(const Architecture& architecture, const Config& config)
+      : architecture_(architecture), config_(config) {}
   /**
    * Generate the neutral atom computation based on the results of the previous
    * steps in the compiler.

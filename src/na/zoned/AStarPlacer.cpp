@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023 - 2025 Chair for Design Automation, TUM
+ * Copyright (c) 2025 Munich Quantum Software Company GmbH
+ * All rights reserved.
+ *
+ * SPDX-License-Identifier: MIT
+ *
+ * Licensed under the MIT License
+ */
+
 #include "na/zoned/AStarPlacer.hpp"
 
 #include "ir/Definitions.hpp"
@@ -488,16 +498,16 @@ auto AStarPlacer::placeGatesInEntanglementZone(
     size_t rHigh = nearestSlm.get().nRows;
     size_t cLow = 0;
     size_t cHigh = nearestSlm.get().nCols;
-    if (useWindow_) {
+    if (config_.useWindow) {
       rLow = nearestRow > windowMinHeight_ / 2
                  ? nearestRow - (windowMinHeight_ / 2)
                  : 0;
       rHigh = std::min(nearestRow + (windowMinHeight_ / 2) + 1,
                        nearestSlm.get().nRows);
-      cLow = nearestCol > windowMinWidth_ / 2
-                 ? nearestCol - (windowMinWidth_ / 2)
+      cLow = nearestCol > config_.windowMinWidth / 2
+                 ? nearestCol - (config_.windowMinWidth / 2)
                  : 0;
-      cHigh = std::min(nearestCol + (windowMinWidth_ / 2) + 1,
+      cHigh = std::min(nearestCol + (config_.windowMinWidth / 2) + 1,
                        nearestSlm.get().nCols);
     }
     for (size_t r = rLow; r < rHigh; ++r) {
@@ -511,22 +521,23 @@ auto AStarPlacer::placeGatesInEntanglementZone(
       }
     }
     size_t expansion = 0;
-    while (useWindow_ && static_cast<double>(job.options.size()) <
-                             windowShare_ * static_cast<double>(nJobs)) {
+    while (config_.useWindow &&
+           static_cast<double>(job.options.size()) <
+               config_.windowShare * static_cast<double>(nJobs)) {
       // window does not contain enough options, so expand it
       ++expansion;
       size_t windowWidth = 0;
       size_t windowHeight = 0;
-      if (windowRatio_ < 1.0) {
+      if (config_.windowRatio < 1.0) {
         // landscape ==> expand width and adjust height
-        windowWidth = windowMinWidth_ + expansion;
+        windowWidth = config_.windowMinWidth + expansion;
         windowHeight = static_cast<size_t>(
-            std::round(windowRatio_ * static_cast<double>(windowWidth)));
+            std::round(config_.windowRatio * static_cast<double>(windowWidth)));
       } else {
         // portrait ==> expand height and adjust width
         windowHeight = windowMinHeight_ + expansion;
-        windowWidth = static_cast<size_t>(
-            std::round(static_cast<double>(windowHeight) / windowRatio_));
+        windowWidth = static_cast<size_t>(std::round(
+            static_cast<double>(windowHeight) / config_.windowRatio));
       }
       auto rLowNew =
           nearestRow > windowHeight / 2 ? nearestRow - (windowHeight / 2) : 0;
@@ -632,7 +643,7 @@ auto AStarPlacer::placeGatesInEntanglementZone(
             targetSites.at(row).at(col);
         const auto distance = static_cast<float>(architecture_.get().distance(
             nextSlm, nextRow, nextCol, targetSlm, targetRow, targetCol));
-        option.lookaheadCost = lookaheadFactor_ * std::sqrt(distance);
+        option.lookaheadCost = config_.lookaheadFactor * std::sqrt(distance);
         job.meanLookaheadCost += option.lookaheadCost;
       }
       job.meanLookaheadCost /= static_cast<float>(job.options.size());
@@ -692,8 +703,8 @@ auto AStarPlacer::placeGatesInEntanglementZone(
   std::deque<std::unique_ptr<GateNode>> nodes;
   // make the root node
   nodes.emplace_back(std::make_unique<GateNode>());
-  const auto deepeningFactor = deepeningFactor_;
-  const auto deepeningValue = deepeningValue_;
+  const auto deepeningFactor = config_.deepeningFactor;
+  const auto deepeningValue = config_.deepeningValue;
   const auto& path = aStarTreeSearch<GateNode>(
       *nodes.front(),
       [&nodes, &gateJobs](const auto& node) {
@@ -706,7 +717,7 @@ auto AStarPlacer::placeGatesInEntanglementZone(
         return getHeuristic(gateJobs, deepeningFactor, deepeningValue,
                             scaleFactors, std::move(node));
       },
-      maxNodes_);
+      config_.maxNodes);
   //===------------------------------------------------------------------===//
   // Extract the final mapping
   //===------------------------------------------------------------------===//
@@ -840,16 +851,16 @@ auto AStarPlacer::placeAtomsInStorageZone(
     size_t rHigh = nearestSlm.get().nRows;
     size_t cLow = 0;
     size_t cHigh = nearestSlm.get().nCols;
-    if (useWindow_) {
+    if (config_.useWindow) {
       rLow = nearestRow > windowMinHeight_ / 2
                  ? nearestRow - (windowMinHeight_ / 2)
                  : 0;
       rHigh = std::min(nearestRow + (windowMinHeight_ / 2) + 1,
                        nearestSlm.get().nRows);
-      cLow = nearestCol > windowMinWidth_ / 2
-                 ? nearestCol - (windowMinWidth_ / 2)
+      cLow = nearestCol > config_.windowMinWidth / 2
+                 ? nearestCol - (config_.windowMinWidth / 2)
                  : 0;
-      cHigh = std::min(nearestCol + (windowMinWidth_ / 2) + 1,
+      cHigh = std::min(nearestCol + (config_.windowMinWidth / 2) + 1,
                        nearestSlm.get().nCols);
     }
     for (size_t r = rLow; r < rHigh; ++r) {
@@ -867,26 +878,27 @@ auto AStarPlacer::placeAtomsInStorageZone(
       }
     }
     size_t expansion = 0;
-    while (useWindow_ && static_cast<double>(job.options.size()) <
-                             windowShare_ * static_cast<double>(nJobs)) {
+    while (config_.useWindow &&
+           static_cast<double>(job.options.size()) <
+               config_.windowShare * static_cast<double>(nJobs)) {
       // window does not contain enough options, so expand it
       ++expansion;
       size_t windowWidth = 0;
       size_t windowHeight = 0;
-      if (windowRatio_ < 1.0) {
+      if (config_.windowRatio < 1.0) {
         // landscpe ==> expand width and adjust height
         // the overall width and height is divided by 2 later, hence an
         // expansion of 2 is needed to actually increase the window size
-        windowWidth = windowMinWidth_ + 2 * expansion;
+        windowWidth = config_.windowMinWidth + 2 * expansion;
         windowHeight = static_cast<size_t>(
-            std::round(windowRatio_ * static_cast<double>(windowWidth)));
+            std::round(config_.windowRatio * static_cast<double>(windowWidth)));
       } else {
         // portrait ==> expand height and adjust width
         // the overall width and height is divided by 2 later, hence an
         // expansion of 2 is needed to actually increase the window size
         windowHeight = windowMinHeight_ + 2 * expansion;
-        windowWidth = static_cast<size_t>(
-            std::round(static_cast<double>(windowHeight) / windowRatio_));
+        windowWidth = static_cast<size_t>(std::round(
+            static_cast<double>(windowHeight) / config_.windowRatio));
       }
       auto rLowNew =
           nearestRow > windowHeight / 2 ? nearestRow - (windowHeight / 2) : 0;
@@ -1000,7 +1012,7 @@ auto AStarPlacer::placeAtomsInStorageZone(
             // here on purpose as this is the distance the "reuse" costs by
             // taking the distance of the next interaction partner as cost here
             option.lookaheadCost =
-                std::max(0.0F, std::sqrt(distance) - reuseLevel_);
+                std::max(0.0F, std::sqrt(distance) - config_.reuseLevel);
           } else {
             const auto& [row, col] = option.site;
             const auto& [targetSlm, targetRow, targetCol] =
@@ -1008,7 +1020,8 @@ auto AStarPlacer::placeAtomsInStorageZone(
             const auto distance = static_cast<float>(
                 architecture_.get().distance(nextSlm, nextRow, nextCol,
                                              targetSlm, targetRow, targetCol));
-            option.lookaheadCost = lookaheadFactor_ * std::sqrt(distance);
+            option.lookaheadCost =
+                config_.lookaheadFactor * std::sqrt(distance);
           }
           job.meanLookaheadCost += option.lookaheadCost;
         }
@@ -1073,8 +1086,8 @@ auto AStarPlacer::placeAtomsInStorageZone(
   /// This happens when a node is expanded by calling getNeighbors.
   std::deque<std::unique_ptr<AtomNode>> nodes;
   nodes.emplace_back(std::make_unique<AtomNode>());
-  const auto deepeningFactor = deepeningFactor_;
-  const auto deepeningValue = deepeningValue_;
+  const auto deepeningFactor = config_.deepeningFactor;
+  const auto deepeningValue = config_.deepeningValue;
   const auto& path = aStarTreeSearch<AtomNode>(
       *nodes.front(),
       [&nodes, &atomJobs](const auto& node) {
@@ -1087,7 +1100,7 @@ auto AStarPlacer::placeAtomsInStorageZone(
         return getHeuristic(atomJobs, deepeningFactor, deepeningValue,
                             scaleFactors, std::move(node));
       },
-      maxNodes_);
+      config_.maxNodes);
   //===------------------------------------------------------------------===//
   // Extract the final mapping
   //===------------------------------------------------------------------===//
@@ -1396,9 +1409,8 @@ auto AStarPlacer::checkCompatibilityAndAddPlacement(
   return false;
 }
 
-AStarPlacer::AStarPlacer(const Architecture& architecture,
-                         const nlohmann::json& config)
-    : architecture_(architecture) {
+AStarPlacer::AStarPlacer(const Architecture& architecture, const Config& config)
+    : architecture_(architecture), config_(config) {
   // get first storage SLM and first entanglement SLM
   const auto& firstStorageSlm = *architecture_.get().storageZones.front();
   const auto& firstEntanglementSlm =
@@ -1411,232 +1423,8 @@ AStarPlacer::AStarPlacer(const Architecture& architecture,
     // first and hence revert initial placement
     reverseInitialPlacement_ = true;
   }
-  // check whether the config contains information on the windowed placement
-  if (const auto& configIt = config.find("a_star_placer");
-      configIt != config.end() && configIt->is_object()) {
-    bool useWindowSet = false;
-    bool windowMinWidthSet = false;
-    bool windowRatioSet = false;
-    bool windowShareSet = false;
-    bool deepeningFactorSet = false;
-    bool deepeningValueSet = false;
-    bool lookaheadFactorSet = false;
-    bool reuseLevelSet = false;
-    bool maxNodesSet = false;
-    for (const auto& [key, value] : configIt.value().items()) {
-      if (key == "use_window") {
-        useWindowSet = true;
-        if (value.is_boolean()) {
-          useWindow_ = value;
-        } else {
-          std::ostringstream oss;
-          oss << std::boolalpha;
-          oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer "
-                 "contains an invalid "
-                 "value for use_window. Using default ("
-              << useWindow_ << ").\n";
-          std::cout << oss.str();
-        }
-      } else if (key == "window_min_width") {
-        windowMinWidthSet = true;
-        if (value.is_number_unsigned()) {
-          windowMinWidth_ = value;
-        } else {
-          std::ostringstream oss;
-          oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer "
-                 "contains an invalid value for window_min_width. Using "
-                 "default ("
-              << windowMinWidth_ << ").\n";
-          std::cout << oss.str();
-        }
-      } else if (key == "window_ratio") {
-        windowRatioSet = true;
-        if (value.is_number()) {
-          windowRatio_ = value;
-        } else {
-          std::ostringstream oss;
-          oss << std::setprecision(4);
-          oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer "
-                 "contains an invalid value for window_ratio. Using default ("
-              << windowRatio_ << ").\n";
-          std::cout << oss.str();
-        }
-      } else if (key == "window_share") {
-        windowShareSet = true;
-        if (value.is_number()) {
-          windowShare_ = value;
-        } else {
-          std::ostringstream oss;
-          oss << std::setprecision(4);
-          oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer "
-                 "contains an invalid value for window_share. Using default ("
-              << windowShare_ << ").\n";
-          std::cout << oss.str();
-        }
-      } else if (key == "deepening_factor") {
-        deepeningFactorSet = true;
-        if (value.is_number()) {
-          deepeningFactor_ = value;
-        } else {
-          std::ostringstream oss;
-          oss << std::setprecision(4);
-          oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer "
-                 "contains an invalid value for deepening_factor. Using "
-                 "default ("
-              << deepeningFactor_ << ").\n";
-          std::cout << oss.str();
-        }
-      } else if (key == "deepening_value") {
-        deepeningValueSet = true;
-        if (value.is_number()) {
-          deepeningValue_ = value;
-        } else {
-          std::ostringstream oss;
-          oss << std::setprecision(4);
-          oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer "
-                 "contains an invalid value for deepening_value. Using "
-                 "default ("
-              << deepeningValue_ << ").\n";
-          std::cout << oss.str();
-        }
-      } else if (key == "lookahead_factor") {
-        lookaheadFactorSet = true;
-        if (value.is_number()) {
-          lookaheadFactor_ = value;
-        } else {
-          std::ostringstream oss;
-          oss << std::setprecision(4);
-          oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer "
-                 "contains an invalid value for lookahead_factor. Using "
-                 "default ("
-              << lookaheadFactor_ << ").\n";
-          std::cout << oss.str();
-        }
-      } else if (key == "reuse_level") {
-        reuseLevelSet = true;
-        if (value.is_number()) {
-          reuseLevel_ = value;
-        } else {
-          std::ostringstream oss;
-          oss << std::setprecision(4);
-          oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer "
-                 "contains an invalid value for reuse_level. Using default ("
-              << reuseLevel_ << ").\n";
-          std::cout << oss.str();
-        }
-      } else if (key == "max_nodes") {
-        maxNodesSet = true;
-        if (value.is_number_unsigned()) {
-          maxNodes_ = value;
-        } else {
-          std::ostringstream oss;
-          oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer "
-                 "contains an invalid value for max_nodes. Using default ("
-              << maxNodes_ << ").\n";
-          std::cout << oss.str();
-        }
-      } else {
-        std::ostringstream oss;
-        oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer contains "
-               "an unknown key: "
-            << key << ". Ignoring.\n";
-        std::cout << oss.str();
-      }
-    }
-    if (!useWindowSet) {
-      std::ostringstream oss;
-      oss << std::boolalpha;
-      oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer does "
-             "not contain a value for use_window. Using default ("
-          << useWindow_ << ").\n";
-      std::cout << oss.str();
-    }
-    if (useWindow_) {
-      if (!windowMinWidthSet) {
-        std::ostringstream oss;
-        oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer "
-               "does not contain a value for window_min_width. Using "
-               "default ("
-            << windowMinWidth_ << ").\n";
-        std::cout << oss.str();
-      }
-      if (!windowRatioSet) {
-        std::ostringstream oss;
-        oss << std::setprecision(4);
-        oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer "
-               "does not contain a value for window_ratio. Using default ("
-            << windowRatio_ << ").\n";
-        std::cout << oss.str();
-      }
-      if (!windowShareSet) {
-        std::ostringstream oss;
-        oss << std::setprecision(4);
-        oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer "
-               "does not contain a value for window_share. Using default ("
-            << windowShare_ << ").\n";
-        std::cout << oss.str();
-      }
-    }
-    if (windowMinWidthSet) {
-      windowMinHeight_ = static_cast<size_t>(
-          std::round(windowRatio_ * static_cast<double>(windowMinWidth_)));
-    }
-    if (!deepeningFactorSet) {
-      std::ostringstream oss;
-      oss << std::setprecision(4);
-      oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer does "
-             "not contain a value for deepening_factor. Using default ("
-          << deepeningFactor_ << ").\n";
-      std::cout << oss.str();
-    }
-    if (!deepeningValueSet) {
-      std::ostringstream oss;
-      oss << std::setprecision(4);
-      oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer does "
-             "not contain a value for deepening_value. Using default ("
-          << deepeningValue_ << ").\n";
-      std::cout << oss.str();
-    }
-    if (!lookaheadFactorSet) {
-      std::ostringstream oss;
-      oss << std::setprecision(4);
-      oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer does "
-             "not contain a value for lookahead_factor. Using default ("
-          << lookaheadFactor_ << ").\n";
-      std::cout << oss.str();
-    }
-    if (!reuseLevelSet) {
-      std::ostringstream oss;
-      oss << std::setprecision(4);
-      oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer does "
-             "not contain a value for reuse_level. Using default ("
-          << reuseLevel_ << ").\n";
-      std::cout << oss.str();
-    }
-    if (!maxNodesSet) {
-      std::ostringstream oss;
-      oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer does "
-             "not contain a value for max_nodes. Using default ("
-          << maxNodes_ << ").\n";
-      std::cout << oss.str();
-    }
-  } else {
-    std::ostringstream oss;
-    oss << std::boolalpha << std::setprecision(4);
-    oss << "\033[1;35m[WARN]\033[0m Configuration does not contain "
-           "settings for AStarPlacer or is malformed. Using default settings "
-           "("
-        << "\"use_window\": " << useWindow_
-        << ", \"window_min_width\": " << windowMinWidth_
-        << ", \"window_ratio\": " << windowRatio_
-        << ", \"window_share\": " << windowShare_
-        << ", \"deepening_factor\": " << deepeningFactor_
-        << ", \"deepening_value\": " << deepeningValue_
-        << ", \"lookahead_factor\": " << lookaheadFactor_
-        << ", \"reuse_level\": " << reuseLevel_
-        << ", \"max_nodes\": " << maxNodes_ << ").\n";
-    std::cout << oss.str();
-  }
+  windowMinHeight_ = static_cast<size_t>(std::round(
+      config_.windowRatio * static_cast<double>(config_.windowMinWidth)));
 }
 
 auto AStarPlacer::place(

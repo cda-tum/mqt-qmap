@@ -77,22 +77,6 @@ TEST_F(VMReuseAnalyzerAnalyzeTest, UniqueUnbalanced) {
   EXPECT_THAT(analyzer.analyzeReuse(twoQubitGateLayers),
               ::testing::ElementsAre(::testing::UnorderedElementsAre(1U, 7U)));
 }
-TEST(VMReuseAnalyzerTest, Config) {
-  Architecture architecture(Architecture::fromJSONString(architectureJson));
-  nlohmann::json config = R"({
-  "vm_reuse_analyzer": {
-    "unknown_key": 42
-  }
-})"_json;
-  std::stringstream buffer;
-  std::streambuf* oldCout = std::cout.rdbuf(buffer.rdbuf());
-  std::ignore = VMReuseAnalyzer(architecture, config);
-  std::cout.rdbuf(oldCout);
-  EXPECT_EQ(
-      buffer.str(),
-      "\033[1;35m[WARN]\033[0m Configuration for VMReuseAnalyzer contains an "
-      "unknown key: unknown_key. Ignoring.\n");
-}
 class VMReuseAnalyzerMaximumBipartiteMatchingTest : public ::testing::Test {
 protected:
   // We consider the following bipartite graph, where the nodes in the upper row

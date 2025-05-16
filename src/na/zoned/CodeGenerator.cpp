@@ -111,7 +111,7 @@ auto CodeGenerator::appendSingleQubitGates(
       } else {
         // in this case, the gate is not any variant of a rotational z-gate.
         // depending on the settings, a warning is printed.
-        if (warnUnsupportedGates_) {
+        if (config_.warnUnsupportedGates) {
           std::ostringstream oss;
           oss << "\033[1;35m[WARN]\033[0m Gate not part of basis gates will be "
                  "inserted as U3 gate: "
@@ -228,14 +228,15 @@ auto CodeGenerator::appendRearrangement(
         if (row.find(x) != row.end()) {
           // new atoms get picked up in the column at x, i.e., only do a
           // vertical offset
-          offsetTargetLocations.emplace_back(Location{
-              static_cast<double>(x), static_cast<double>(y + parkingOffset_)});
+          offsetTargetLocations.emplace_back(
+              Location{static_cast<double>(x),
+                       static_cast<double>(y + config_.parkingOffset)});
         } else {
           // no new atoms get picked up in the column at x, i.e., do a
           // diagonal offset to avoid any ghost-spots
           offsetTargetLocations.emplace_back(
-              Location{static_cast<double>(x + parkingOffset_),
-                       static_cast<double>(y + parkingOffset_)});
+              Location{static_cast<double>(x + config_.parkingOffset),
+                       static_cast<double>(y + config_.parkingOffset)});
         }
       }
       code.emplaceBack<MoveOp>(atomsToOffset, offsetTargetLocations);
@@ -251,69 +252,6 @@ auto CodeGenerator::appendRearrangement(
     // all atoms are loaded, now move them to their target locations
     code.emplaceBack<MoveOp>(atomsToMove, targetLocations);
     code.emplaceBack<StoreOp>(atomsToMove);
-  }
-}
-CodeGenerator::CodeGenerator(const Architecture& architecture,
-                             const nlohmann::json& config)
-    : architecture_(architecture) {
-  if (const auto& configIt = config.find("code_generator");
-      configIt != config.end() && configIt->is_object()) {
-    bool parkingOffsetSet = false;
-    bool warnUnsupportedGatesSet = false;
-    for (const auto& [key, value] : configIt.value().items()) {
-      if (key == "parking_offset") {
-        parkingOffsetSet = true;
-        if (value.is_number_unsigned()) {
-          parkingOffset_ = value;
-        } else {
-          std::ostringstream oss;
-          oss << "\033[1;35m[WARN]\033[0m Configuration for CodeGenerator "
-                 "contains an invalid value for parking_offset. Using "
-                 "default ("
-              << parkingOffset_ << ").\n";
-          std::cout << oss.str();
-        }
-      } else if (key == "warn_unsupported_gates") {
-        warnUnsupportedGatesSet = true;
-        if (value.is_boolean()) {
-          warnUnsupportedGates_ = value;
-        } else {
-          std::ostringstream oss;
-          oss << std::boolalpha;
-          oss << "\033[1;35m[WARN]\033[0m Configuration for CodeGenerator "
-                 "contains an invalid value for warn_unsupported_gates. Using "
-                 "default ("
-              << warnUnsupportedGates_ << ").\n";
-          std::cout << oss.str();
-        }
-      } else {
-        std::ostringstream oss;
-        oss << "\033[1;35m[WARN]\033[0m Configuration for CodeGenerator "
-               "contains an unknown key: "
-            << key << ". Ignoring.\n";
-        std::cout << oss.str();
-      }
-    }
-    if (!parkingOffsetSet) {
-      std::ostringstream oss;
-      oss << "\033[1;35m[WARN]\033[0m Configuration for CodeGenerator "
-             "does not contain a value for parking_offset. Using default ("
-          << parkingOffset_ << ").\n";
-      std::cout << oss.str();
-    }
-    if (!warnUnsupportedGatesSet) {
-      std::ostringstream oss;
-      oss << std::boolalpha;
-      oss << "\033[1;35m[WARN]\033[0m Configuration for CodeGenerator "
-             "does not contain a value for warn_unsupported_gates. Using "
-             "default ("
-          << warnUnsupportedGates_ << ").\n";
-      std::cout << oss.str();
-    }
-  } else {
-    std::cout << "\033[1;35m[WARN]\033[0m Configuration does not contain "
-                 "settings for CodeGenerator or is malformed. Using default "
-                 "settings.\n";
   }
 }
 auto CodeGenerator::generate(

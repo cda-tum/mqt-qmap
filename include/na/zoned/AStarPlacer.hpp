@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023 - 2025 Chair for Design Automation, TUM
+ * Copyright (c) 2025 Munich Quantum Software Company GmbH
+ * All rights reserved.
+ *
+ * SPDX-License-Identifier: MIT
+ *
+ * Licensed under the MIT License
+ */
+
 #pragma once
 
 #include "ir/Definitions.hpp"
@@ -52,91 +62,105 @@ class AStarPlacer {
    */
   bool reverseInitialPlacement_ = false;
   /**
-   * @brief This flag indicates whether the placement should use a window when
-   * selecting potential free sites.
-   * @note Specified by the user in the configuration file.
-   */
-  bool useWindow_ = true;
-  /**
-   * @brief If the window is used, this denotes the minimum width in terms of
-   * rows. The window is centered at the nearest site.
-   * @note Specified by the user in the configuration file.
-   */
-  size_t windowMinWidth_ = 8;
-  /**
    * @brief If the window is used, this denotes the minimum height in terms of
    * columns. The window is centered at the nearest site. This value is
    * computed based on the @ref windowMinWidth_ and the @ref windowRatio_.
    * @note Is automatically computed in the constructor.
    */
-  size_t windowMinHeight_ = 8;
-  /**
-   * @brief If the window is used, this denotes the ratio between the height and
-   * the width of the window.
-   * @details A value greater than 1 means that the window is
-   * higher than wide (portrait). A value of exactly 1 means that the window is
-   * square. A value smaller than 1 means that the window is wider than high
-   * (landscape).
-   * @note Specified by the user in the configuration file.
-   */
-  double windowRatio_ = 1.0;
-  /**
-   * @brief If the window is used, this denotes the share of free sites in the
-   * window in relation to the number of atoms to be moved in this step.
-   * @details The window is extended according to the ratio as long as the share
-   * of free sites is smaller than this value. A value of one ensures that there
-   * are at least as many free sites in the window of every atom as atoms that
-   * need to be moved. Hence, a value greater or equal to 1 ensures that there
-   * exists a solution. However, a smaller value might be a reasonable good
-   * guess since it is almost certain that not all atoms to be moved will end in
-   * the same window.
-   * @note Specified by the user in the configuration file.
-   */
-  double windowShare_ = 0.6;
-  /**
-   * @brief The heuristic used in the A* search contains a term that resembles
-   * the standard deviation of the differences between the current and target
-   * sites of the atoms to be moved in every orientation.
-   * @details This factor is multiplied with the sum of standard deviations to
-   * adjust the influence of this term. Setting it to 0.0 disables this term
-   * and, if the lookahead is also disabled, resulting in an admissible
-   * heuristic. However, this leads to a vast exploration of the search tree and
-   * usually results in a huge number of nodes visited.
-   */
-  float deepeningFactor_ = 0.8F;
-  /**
-   * @brief Before the sum of standard deviations is multiplied with the number
-   * of unplaced nodes and @ref deepeningFactor_, this value is added to the sum
-   * to amplify the influence of the unplaced nodes count.
-   * @see deepeningFactor_
-   */
-  float deepeningValue_ = 0.2F;
-  /**
-   * @brief The cost function can consider the distance of atoms to their
-   * interaction partner in the next layer.
-   * @details This factor is multiplied with the distance to adjust the
-   * influence of this term. Setting it to 0.0 disables the lookahead entirely.
-   * A factor of 1.0 implies that the lookahead is as important as the distance
-   * to the target site, which is usually not desired.
-   */
-  float lookaheadFactor_ = 0.2F;
-  /**
-   * @brief The reuse level corresponds to the estimated extra fidelity loss due
-   * to the extra trap transfers when the atom is not reused and instead moved
-   * to the storage zone and back to the entanglement zone.
-   * @details It is subtracted from the cost for the reuse option to favor this
-   * option over the non-reuse options.
-   */
-  float reuseLevel_ = 5.0F;
-  /**
-   * @brief The maximum number of nodes that are allowed to be visited in the A*
-   * search tree.
-   * @detsils If this number is exceeded, the search is aborted and an error is
-   * raised. In the current implementation, one node roughly consumes 120 Byte.
-   * Hence, allowing 50,000,000 nodes results in memory consumption of about 6
-   * GB plus the size of the rest of the data structures.
-   */
-  size_t maxNodes_ = 50'000'000;
+  size_t windowMinHeight_;
+
+public:
+  /// The configuration of the A* placer
+  struct Config {
+    /**
+     * @brief This flag indicates whether the placement should use a window when
+     * selecting potential free sites.
+     * @note Specified by the user in the configuration file.
+     */
+    bool useWindow = true;
+    /**
+     * @brief If the window is used, this denotes the minimum width in terms of
+     * rows. The window is centered at the nearest site.
+     * @note Specified by the user in the configuration file.
+     */
+    size_t windowMinWidth = 8;
+    /**
+     * @brief If the window is used, this denotes the ratio between the height
+     * and the width of the window.
+     * @details A value greater than 1 means that the window is
+     * higher than wide (portrait). A value of exactly 1 means that the window
+     * is square. A value smaller than 1 means that the window is wider than
+     * high (landscape).
+     * @note Specified by the user in the configuration file.
+     */
+    double windowRatio = 1.0;
+    /**
+     * @brief If the window is used, this denotes the share of free sites in the
+     * window in relation to the number of atoms to be moved in this step.
+     * @details The window is extended according to the ratio as long as the
+     * share of free sites is smaller than this value. A value of one ensures
+     * that there are at least as many free sites in the window of every atom as
+     * atoms that need to be moved. Hence, a value greater or equal to 1 ensures
+     * that there exists a solution. However, a smaller value might be a
+     * reasonable good guess since it is almost certain that not all atoms to be
+     * moved will end in the same window.
+     * @note Specified by the user in the configuration file.
+     */
+    double windowShare = 0.6;
+    /**
+     * @brief The heuristic used in the A* search contains a term that resembles
+     * the standard deviation of the differences between the current and target
+     * sites of the atoms to be moved in every orientation.
+     * @details This factor is multiplied with the sum of standard deviations to
+     * adjust the influence of this term. Setting it to 0.0 disables this term
+     * and, if the lookahead is also disabled, resulting in an admissible
+     * heuristic. However, this leads to a vast exploration of the search tree
+     * and usually results in a huge number of nodes visited.
+     */
+    float deepeningFactor = 0.8F;
+    /**
+     * @brief Before the sum of standard deviations is multiplied with the
+     * number of unplaced nodes and @ref deepeningFactor_, this value is added
+     * to the sum to amplify the influence of the unplaced nodes count.
+     * @see deepeningFactor_
+     */
+    float deepeningValue = 0.2F;
+    /**
+     * @brief The cost function can consider the distance of atoms to their
+     * interaction partner in the next layer.
+     * @details This factor is multiplied with the distance to adjust the
+     * influence of this term. Setting it to 0.0 disables the lookahead
+     * entirely. A factor of 1.0 implies that the lookahead is as important as
+     * the distance to the target site, which is usually not desired.
+     */
+    float lookaheadFactor = 0.2F;
+    /**
+     * @brief The reuse level corresponds to the estimated extra fidelity loss
+     * due to the extra trap transfers when the atom is not reused and instead
+     * moved to the storage zone and back to the entanglement zone.
+     * @details It is subtracted from the cost for the reuse option to favor
+     * this option over the non-reuse options.
+     */
+    float reuseLevel = 5.0F;
+    /**
+     * @brief The maximum number of nodes that are allowed to be visited in the
+     * A* search tree.
+     * @detsils If this number is exceeded, the search is aborted and an error
+     * is raised. In the current implementation, one node roughly consumes 120
+     * Byte. Hence, allowing 50,000,000 nodes results in memory consumption of
+     * about 6 GB plus the size of the rest of the data structures.
+     */
+    size_t maxNodes = 50'000'000;
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(Config, useWindow,
+                                                windowMinWidth, windowRatio,
+                                                windowShare, deepeningFactor,
+                                                deepeningValue, lookaheadFactor,
+                                                reuseLevel, maxNodes);
+  };
+
+private:
+  /// The configuration of the A* placer
+  Config config_;
   /**
    * @brief When placing atoms after a rydberg layer back in the storage zone,
    * this struct stores for every such atom all required information, i.e., the
@@ -250,7 +274,7 @@ class AStarPlacer {
 
 public:
   /// Constructs an A* placer for the given architecture and configuration.
-  AStarPlacer(const Architecture& architecture, const nlohmann::json& config);
+  AStarPlacer(const Architecture& architecture, const Config& config);
 
   /**
    * This function defines the interface of the placer and delegates the

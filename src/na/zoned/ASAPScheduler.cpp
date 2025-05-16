@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023 - 2025 Chair for Design Automation, TUM
+ * Copyright (c) 2025 Munich Quantum Software Company GmbH
+ * All rights reserved.
+ *
+ * SPDX-License-Identifier: MIT
+ *
+ * Licensed under the MIT License
+ */
+
 #include "na/zoned/ASAPScheduler.hpp"
 
 #include "ir/Definitions.hpp"
@@ -21,18 +31,8 @@
 
 namespace na::zoned {
 ASAPScheduler::ASAPScheduler(const Architecture& architecture,
-                             const nlohmann::json& config)
+                             const Config& /* unused */)
     : architecture_(architecture) {
-  if (const auto& configIt = config.find("asap_scheduler");
-      configIt != config.end() && configIt->is_object()) {
-    for (const auto& [key, value] : configIt.value().items()) {
-      std::ostringstream oss;
-      oss << "\033[1;35m[WARN]\033[0m Configuration for ASAPScheduler contains "
-             "an unknown key: "
-          << key << ". Ignoring.\n";
-      std::cout << oss.str();
-    }
-  }
   // calculate the maximum possible number of two-qubit gates per layer
   for (const auto& zone : architecture_.get().entanglementZones) {
     maxTwoQubitGateNumPerLayer_ += zone->front().nRows * zone->front().nCols;

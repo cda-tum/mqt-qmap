@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023 - 2025 Chair for Design Automation, TUM
+ * Copyright (c) 2025 Munich Quantum Software Company GmbH
+ * All rights reserved.
+ *
+ * SPDX-License-Identifier: MIT
+ *
+ * Licensed under the MIT License
+ */
+
 #pragma once
 
 #include "ir/Definitions.hpp"
@@ -22,13 +32,23 @@ class VMReuseAnalyzer {
   friend class VMReuseAnalyzerMaximumBipartiteMatchingInvertedTest_Direct_Test;
 
 public:
+  /// The configuration of the VMReuseAnalyzer
+  /// @note VMReuseAnalyzer does not have any configuration parameters.
+  struct Config {
+    template <typename BasicJsonType>
+    friend void to_json(BasicJsonType& /* unused */,
+                        const Config& /* unused */) {}
+    template <typename BasicJsonType>
+    friend void from_json(const BasicJsonType& /* unused */,
+                          Config& /* unused */) {}
+  };
   /**
    * Create a new VMReuseAnalyzer.
    * @note Both parameters are unused. Hence, the constructor does nothing
    * and the function @ref analyzeReuse is a static function.
    */
   VMReuseAnalyzer(const Architecture& /* unused */,
-                  const nlohmann::json& config);
+                  const Config& /* unused */) {}
   /// Analyze the reuse of qubits in the given two-qubit gate layers.
   [[nodiscard]] static auto
   analyzeReuse(const std::vector<TwoQubitGateLayer>& twoQubitGateLayers)

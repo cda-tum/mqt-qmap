@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023 - 2025 Chair for Design Automation, TUM
+ * Copyright (c) 2025 Munich Quantum Software Company GmbH
+ * All rights reserved.
+ *
+ * SPDX-License-Identifier: MIT
+ *
+ * Licensed under the MIT License
+ */
+
 #include "na/zoned/VMReuseAnalyzer.hpp"
 
 #include "ir/Definitions.hpp"
@@ -19,20 +29,6 @@
 #include <vector>
 
 namespace na::zoned {
-VMReuseAnalyzer::VMReuseAnalyzer(const Architecture&,
-                                 const nlohmann::json& config) {
-  if (const auto& configIt = config.find("vm_reuse_analyzer");
-      configIt != config.end() && configIt->is_object()) {
-    for (const auto& [key, value] : configIt.value().items()) {
-      std::ostringstream oss;
-      oss << "\033[1;35m[WARN]\033[0m Configuration for VMReuseAnalyzer "
-             "contains an unknown "
-             "key: "
-          << key << ". Ignoring.\n";
-      std::cout << oss.str();
-    }
-  }
-}
 auto VMReuseAnalyzer::analyzeReuse(
     const std::vector<TwoQubitGateLayer>& twoQubitGateLayers)
     -> std::vector<std::unordered_set<qc::Qubit>> {

@@ -42,24 +42,25 @@ constexpr std::string_view architectureJson = R"({
 })";
 constexpr std::string_view configJson = R"({
   "a_star_placer": {
-    "use_window": true,
-    "window_min_width": 4,
-    "window_ratio": 1.5,
-    "window_share": 0.6,
-    "deepening_factor": 0.6,
-    "deepening_value": 0.2,
-    "lookahead_factor": 0.2,
-    "reuse_level": 5.0
+    "useWindow": true,
+    "windowMinWidth": 4,
+    "windowRatio": 1.5,
+    "windowShare": 0.6,
+    "deepeningFactor": 0.6,
+    "deepeningValue": 0.2,
+    "lookaheadFactor": 0.2,
+    "reuseLevel": 5.0
   }
 })";
 class AStarPlacerPlaceTest : public ::testing::Test {
 protected:
   Architecture architecture;
-  nlohmann::json config;
+  AStarPlacer::Config config;
   AStarPlacer placer;
   AStarPlacerPlaceTest()
       : architecture(Architecture::fromJSONString(architectureJson)),
-        config(nlohmann::json::parse(configJson)),
+        config(nlohmann::json::parse(configJson)
+                   .template get<AStarPlacer::Config>()),
         placer(architecture, config) {}
 };
 TEST_F(AStarPlacerPlaceTest, Empty) {
@@ -222,18 +223,17 @@ TEST_F(AStarPlacerPlaceTest, TwoTwoQubitLayerReuse) {
 }
 TEST(AStarPlacerTest, NoSolution) {
   Architecture architecture(Architecture::fromJSONString(architectureJson));
-  AStarPlacer placer(architecture, R"({
-  "a_star_placer": {
-    "use_window": true,
-    "window_min_width": 0,
-    "window_ratio": 1.5,
-    "window_share": 0.0,
-    "deepening_factor": 0.6,
-    "deepening_value": 0.2,
-    "lookahead_factor": 0.2,
-    "reuse_level": 5.0
-  }
-})"_json);
+  AStarPlacer::Config config = R"({
+  "useWindow": true,
+  "windowMinWidth": 0,
+  "windowRatio": 1.0,
+  "windowShare": 0.0,
+  "deepeningFactor": 0.6,
+  "deepeningValue": 0.2,
+  "lookaheadFactor": 0.2,
+  "reuseLevel": 5.0
+})"_json;
+  AStarPlacer placer(architecture, config);
   constexpr size_t nQubits = 2;
   EXPECT_THROW(
       std::ignore = placer.place(
@@ -245,17 +245,15 @@ TEST(AStarPlacerTest, NoSolution) {
 TEST(AStarPlacerTest, LimitSpace) {
   Architecture architecture(Architecture::fromJSONString(architectureJson));
   AStarPlacer placer(architecture, R"({
-  "a_star_placer": {
-    "use_window": true,
-    "window_min_width": 4,
-    "window_ratio": 1.5,
-    "window_share": 0.6,
-    "deepening_factor": 0.6,
-    "deepening_value": 0.2,
-    "lookahead_factor": 0.2,
-    "reuse_level": 5.0,
-    "max_nodes": 2
-  }
+  "useWindow": true,
+  "windowMinWidth": 4,
+  "windowRatio": 1.5,
+  "windowShare": 0.6,
+  "deepeningFactor": 0.6,
+  "deepeningValue": 0.2,
+  "lookaheadFactor": 0.2,
+  "reuseLevel": 5.0,
+  "maxNodes": 2
 })"_json);
   constexpr size_t nQubits = 4;
   EXPECT_THROW(std::ignore = placer.place(
@@ -269,14 +267,14 @@ TEST(AStarPlacerTest, WindowExpansion) {
   Architecture architecture(Architecture::fromJSONString(architectureJson));
   AStarPlacer placer(architecture, R"({
   "a_star_placer": {
-    "use_window": true,
-    "window_min_width": 1,
-    "window_ratio": 1.0,
-    "window_share": 1.0,
-    "deepening_factor": 0.6,
-    "deepening_value": 0.2,
-    "lookahead_factor": 0.2,
-    "reuse_level": 5.0
+    "useWindow": true,
+    "windowMinWidth": 1,
+    "windowRatio": 1.0,
+    "windowShare": 1.0,
+    "deepeningFactor": 0.6,
+    "deepeningValue": 0.2,
+    "lookaheadFactor": 0.2,
+    "reuseLevel": 5.0
   }
 })"_json);
   constexpr size_t nQubits = 4;
@@ -320,137 +318,6 @@ TEST(AStarPlacerTest, InitialPlacementForTwoSlms) {
               ::testing::ElementsAre(::testing::Contains(::testing::FieldsAre(
                   ::testing::Field(&SLM::id, ::testing::Eq(1)),
                   ::testing::Lt(18), ::testing::Lt(20)))));
-}
-TEST(AStarPlacerTest, NoConfig) {
-  const auto architecture = Architecture::fromJSONString(architectureJson);
-  nlohmann::json config = R"({})"_json;
-  std::stringstream buffer;
-  std::streambuf* oldCout = std::cout.rdbuf(buffer.rdbuf());
-  std::ignore = AStarPlacer(architecture, config);
-  EXPECT_EQ(
-      buffer.str(),
-      "\033[1;35m[WARN]\033[0m Configuration does not contain settings for "
-      "AStarPlacer or is malformed. Using default settings ("
-      "\"use_window\": true, "
-      "\"window_min_width\": 8, "
-      "\"window_ratio\": 1, "
-      "\"window_share\": 0.6, "
-      "\"deepening_factor\": 0.8, "
-      "\"deepening_value\": 0.2, "
-      "\"lookahead_factor\": 0.2, "
-      "\"reuse_level\": 5, "
-      "\"max_nodes\": 50000000).\n");
-  std::cout.rdbuf(oldCout);
-}
-TEST(AStarPlacerTest, InvalidConfig) {
-  const auto architecture = Architecture::fromJSONString(architectureJson);
-  nlohmann::json config = R"({
-  "a_star_placer": {
-    "use_window": "invalid",
-    "window_min_width": "invalid",
-    "window_ratio": "invalid",
-    "window_share": "invalid",
-    "deepening_factor": "invalid",
-    "deepening_value": "invalid",
-    "lookahead_factor": "invalid",
-    "reuse_level": "invalid",
-    "max_nodes": "invalid",
-    "unknown_key": 42
-  }
-})"_json;
-  std::stringstream buffer;
-  std::streambuf* oldCout = std::cout.rdbuf(buffer.rdbuf());
-  std::ignore = AStarPlacer(architecture, config);
-  std::cout.rdbuf(oldCout);
-  EXPECT_THAT(
-      buffer.str(),
-      ::testing::AllOf(
-          ::testing::HasSubstr(
-              "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer contains "
-              "an invalid value for use_window. Using default (true)."),
-          ::testing::HasSubstr(
-              "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer contains "
-              "an invalid value for window_min_width. Using default (8)."),
-          ::testing::HasSubstr(
-              "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer contains "
-              "an invalid value for window_ratio. Using default (1)."),
-          ::testing::HasSubstr(
-              "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer contains "
-              "an invalid value for window_share. Using default (0.6)."),
-          ::testing::HasSubstr(
-              "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer contains "
-              "an invalid value for deepening_factor. Using default (0.8)."),
-          ::testing::HasSubstr(
-              "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer contains "
-              "an invalid value for deepening_value. Using default (0.2)."),
-          ::testing::HasSubstr(
-              "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer contains "
-              "an invalid value for lookahead_factor. Using default (0.2)."),
-          ::testing::HasSubstr(
-              "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer contains "
-              "an invalid value for reuse_level. Using default (5)."),
-          ::testing::HasSubstr(
-              "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer contains "
-              "an invalid value for max_nodes. Using default (50000000)."),
-          ::testing::HasSubstr(
-              "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer contains "
-              "an unknown key: unknown_key. Ignoring.")));
-  size_t warnings = 0;
-  size_t pos = 0;
-  std::string target = "\033[1;35m[WARN]\033[0m";
-  while ((pos = buffer.str().find(target, pos)) != std::string::npos) {
-    ++warnings;
-    pos += target.length();
-  }
-  EXPECT_EQ(warnings, 10);
-}
-TEST(AStarPlacerTest, EmptyConfig) {
-  Architecture architecture(Architecture::fromJSONString(architectureJson));
-  nlohmann::json config = R"({
-  "a_star_placer": {}
-})"_json;
-  std::stringstream buffer;
-  std::streambuf* oldCout = std::cout.rdbuf(buffer.rdbuf());
-  std::ignore = AStarPlacer(architecture, config);
-  std::cout.rdbuf(oldCout);
-  EXPECT_THAT(
-      buffer.str(),
-      ::testing::AllOf(
-          ::testing::HasSubstr(
-              "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer does not "
-              "contain a value for use_window. Using default (true)."),
-          ::testing::HasSubstr(
-              "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer does not "
-              "contain a value for window_min_width. Using default (8)."),
-          ::testing::HasSubstr(
-              "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer does not "
-              "contain a value for window_ratio. Using default (1)."),
-          ::testing::HasSubstr(
-              "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer does not "
-              "contain a value for window_share. Using default (0.6)."),
-          ::testing::HasSubstr(
-              "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer does not "
-              "contain a value for deepening_factor. Using default (0.8)."),
-          ::testing::HasSubstr(
-              "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer does not "
-              "contain a value for deepening_value. Using default (0.2)."),
-          ::testing::HasSubstr(
-              "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer does not "
-              "contain a value for lookahead_factor. Using default (0.2)."),
-          ::testing::HasSubstr(
-              "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer does not "
-              "contain a value for reuse_level. Using default (5)."),
-          ::testing::HasSubstr(
-              "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer does not "
-              "contain a value for max_nodes. Using default (50000000).")));
-  size_t warnings = 0;
-  size_t pos = 0;
-  std::string target = "\033[1;35m[WARN]\033[0m";
-  while ((pos = buffer.str().find(target, pos)) != std::string::npos) {
-    ++warnings;
-    pos += target.length();
-  }
-  EXPECT_EQ(warnings, 9);
 }
 TEST(AStarPlacerTest, AStarSearch) {
   // for testing purposes, we do not use the structure of nodes and just use

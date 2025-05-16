@@ -183,19 +183,4 @@ TEST_F(ISRouterRouteTest, Array) {
       ::testing::ElementsAre(::testing::UnorderedElementsAre(
           ::testing::UnorderedElementsAre(0U, 1U, 2U, 3U, 4U, 5U, 6U, 7U))));
 }
-TEST(ISRouterTest, InvalidConfig) {
-  Architecture architecture(Architecture::fromJSONString(architectureJson));
-  nlohmann::json config = R"({
-  "is_router": {
-    "unknown_key": 42
-  }
-})"_json;
-  std::stringstream buffer;
-  std::streambuf* oldCout = std::cout.rdbuf(buffer.rdbuf());
-  std::ignore = ISRouter(architecture, config);
-  std::cout.rdbuf(oldCout);
-  EXPECT_EQ(buffer.str(),
-            "\033[1;35m[WARN]\033[0m Configuration for ISRouter contains an "
-            "unknown key: unknown_key. Ignoring.\n");
-}
 } // namespace na::zoned

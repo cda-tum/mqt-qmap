@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023 - 2025 Chair for Design Automation, TUM
+ * Copyright (c) 2025 Munich Quantum Software Company GmbH
+ * All rights reserved.
+ *
+ * SPDX-License-Identifier: MIT
+ *
+ * Licensed under the MIT License
+ */
+
 #include "na/zoned/ISRouter.hpp"
 
 #include "ir/Definitions.hpp"
@@ -70,20 +80,6 @@ auto ISRouter::isCompatibleMovement(
     return false;
   }
   return true;
-}
-ISRouter::ISRouter(const Architecture& architecture,
-                   const nlohmann::json& config)
-    : architecture_(architecture) {
-  if (const auto& configIt = config.find("is_router");
-      configIt != config.end() && configIt->is_object()) {
-    for (const auto& [key, value] : configIt.value().items()) {
-      std::ostringstream oss;
-      oss << "\033[1;35m[WARN]\033[0m Configuration for ISRouter contains an "
-             "unknown key: "
-          << key << ". Ignoring.\n";
-      std::cout << oss.str();
-    }
-  }
 }
 auto ISRouter::route(const std::vector<Placement>& placement) const
     -> std::vector<Routing> {

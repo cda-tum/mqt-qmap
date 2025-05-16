@@ -36,21 +36,32 @@ class VMPlacer {
   /// last row instead of the first row in the first SLM
   bool reverseInitialPlacement_ = false;
 
-  /// this flag indicates whether the  placement should use a window when
-  /// selecting potential free sites
-  bool useWindow_ = true;
-  size_t windowSize_ = 10;
+public:
+  struct Config {
 
-  /// this flag indicates whether the placement between gates is dynamic, i.e.,
-  /// if this flag is false, the initial placement is used after all gates
-  bool dynamicPlacement_ = true;
+    /// this flag indicates whether the  placement should use a window when
+    /// selecting potential free sites
+    bool useWindow = true;
+    size_t windowSize = 10;
+
+    /// this flag indicates whether the placement between gates is dynamic,
+    /// i.e., if this flag is false, the initial placement is used after all
+    /// gates
+    bool dynamicPlacement = true;
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(Config, useWindow, windowSize,
+                                                dynamicPlacement);
+  };
+
+private:
+  /// The configuration of the VMPlacer
+  Config config_;
 
   // todo: Why is that?
   constexpr static double costAtomTransfer_ = 0.9999;
 
 public:
   /// Create a VMPlacer based on the given architecture and configuration
-  VMPlacer(const Architecture& architecture, const nlohmann::json& config);
+  VMPlacer(const Architecture& architecture, const Config& config);
   /// generate qubit placement based on minimum weight matching
   [[nodiscard]] auto
   place(size_t nQubits,

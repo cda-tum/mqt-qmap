@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023 - 2025 Chair for Design Automation, TUM
+ * Copyright (c) 2025 Munich Quantum Software Company GmbH
+ * All rights reserved.
+ *
+ * SPDX-License-Identifier: MIT
+ *
+ * Licensed under the MIT License
+ */
+
 #pragma once
 
 #include "ir/Definitions.hpp"
@@ -22,8 +32,19 @@ class ISRouter {
   std::reference_wrapper<const Architecture> architecture_;
 
 public:
+  /// The configuration of the ISRouter
+  /// @note ISRouter does not have any configuration parameters.
+  struct Config {
+    template <typename BasicJsonType>
+    friend void to_json(BasicJsonType& /* unused */,
+                        const Config& /* unused */) {}
+    template <typename BasicJsonType>
+    friend void from_json(const BasicJsonType& /* unused */,
+                          Config& /* unused */) {}
+  };
   /// Create a ISRouter
-  ISRouter(const Architecture& architecture, const nlohmann::json& config);
+  ISRouter(const Architecture& architecture, const Config& /* unused */)
+      : architecture_(architecture) {}
   /**
    * Given the computed placement, compute a possible routing.
    * @details For this task, all movements are put in a conflict graph where an
