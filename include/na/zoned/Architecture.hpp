@@ -168,21 +168,31 @@ struct Architecture {
 
   /// Creates an Architecture from a file containing a JSON specification.
   /// @param filename the name of the file given as a string
-  explicit Architecture(const std::string& filename)
-      : Architecture(std::filesystem::path(filename)) {}
+  static auto fromJSONFile(const std::string& filename) -> Architecture {
+    return fromJSONFile(std::filesystem::path(filename));
+  }
   /// Creates an Architecture from a file containing a JSON specification.
   /// @param filepath the path to the file
-  explicit Architecture(const std::filesystem::path& filepath)
-      : Architecture(std::ifstream(filepath)) {}
+  static auto fromJSONFile(const std::filesystem::path& filepath)
+      -> Architecture {
+    return fromJSON(std::ifstream(filepath));
+  }
   /// Creates an Architecture from a JSON specification.
   /// @param ifs the input stream containing the JSON specification
-  explicit Architecture(std::istream&& ifs)
-      : Architecture(nlohmann::json::parse(std::move(ifs))) {}
+  static auto fromJSON(std::istream&& ifs) -> Architecture {
+    return fromJSON(nlohmann::json::parse(std::move(ifs)));
+  }
+  /// Creates an Architecture from a JSON specification.
+  /// @param json the JSON string
+  static auto fromJSON(std::string&& json) -> Architecture {
+    return fromJSON(nlohmann::json::parse(json));
+  }
   /// Creates an Architecture from a JSON specification.
   /// @param json the JSON specification
-  explicit Architecture(nlohmann::json json);
+  static auto fromJSON(nlohmann::json json) -> Architecture;
+  Architecture() = default;
   // Explicitly delete copy constructor and copy assignment operator because the
-  // SLMs and AODs owned by the Architecture cannot be simpli copied.
+  // SLMs and AODs owned by the Architecture cannot be copied.
   Architecture(const Architecture&) = delete;
   Architecture& operator=(const Architecture&) = delete;
   // Default move constructor and move assignment operator

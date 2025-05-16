@@ -158,13 +158,14 @@ auto SLM::operator==(const SLM& other) const -> bool {
   return true;
 }
 
-Architecture::Architecture(nlohmann::json json) {
+auto Architecture::fromJSON(nlohmann::json json) -> Architecture {
+  Architecture arch;
   // check if the name exists and is a string, otherwise throw an error
   // JSON Example:
   // "name": "My Super Cool Architecture"
   if (json.contains("name")) {
     if (json["name"].is_string()) {
-      name = json["name"];
+      arch.name = json["name"];
     } else {
       throw std::invalid_argument("Architecture name must be a string");
     }
@@ -182,10 +183,10 @@ Architecture::Architecture(nlohmann::json json) {
   // }
   if (json.contains("operation_duration")) {
     if (json["operation_duration"].is_object()) {
-      operationDurations = OperationDurations{};
+      arch.operationDurations = OperationDurations{};
       if (json["operation_duration"].contains("rydberg_gate")) {
         if (json["operation_duration"]["rydberg_gate"].is_number()) {
-          operationDurations->timeRydbergGate =
+          arch.operationDurations->timeRydbergGate =
               json["operation_duration"]["rydberg_gate"];
         } else {
           throw std::invalid_argument(
@@ -197,7 +198,7 @@ Architecture::Architecture(nlohmann::json json) {
       }
       if (json["operation_duration"].contains("atom_transfer")) {
         if (json["operation_duration"]["atom_transfer"].is_number()) {
-          operationDurations->timeAtomTransfer =
+          arch.operationDurations->timeAtomTransfer =
               json["operation_duration"]["atom_transfer"];
         } else {
           throw std::invalid_argument(
@@ -209,7 +210,7 @@ Architecture::Architecture(nlohmann::json json) {
       }
       if (json["operation_duration"].contains("single_qubit_gate")) {
         if (json["operation_duration"]["single_qubit_gate"].is_number()) {
-          operationDurations->timeSingleQubitGate =
+          arch.operationDurations->timeSingleQubitGate =
               json["operation_duration"]["single_qubit_gate"];
         } else {
           throw std::invalid_argument(
@@ -236,10 +237,10 @@ Architecture::Architecture(nlohmann::json json) {
   // }
   if (json.contains("operation_fidelity")) {
     if (json["operation_fidelity"].is_object()) {
-      operationFidelities = OperationFidelities{};
+      arch.operationFidelities = OperationFidelities{};
       if (json["operation_fidelity"].contains("rydberg_gate")) {
         if (json["operation_fidelity"]["rydberg_gate"].is_number()) {
-          operationFidelities->fidelityRydbergGate =
+          arch.operationFidelities->fidelityRydbergGate =
               json["operation_fidelity"]["rydberg_gate"];
         } else {
           throw std::invalid_argument("Two qubit gate fidelity must be a float "
@@ -251,7 +252,7 @@ Architecture::Architecture(nlohmann::json json) {
       }
       if (json["operation_fidelity"].contains("atom_transfer")) {
         if (json["operation_fidelity"]["atom_transfer"].is_number()) {
-          operationFidelities->fidelityAtomTransfer =
+          arch.operationFidelities->fidelityAtomTransfer =
               json["operation_fidelity"]["atom_transfer"];
         } else {
           throw std::invalid_argument("Atom transfer fidelity must be a float "
@@ -263,7 +264,7 @@ Architecture::Architecture(nlohmann::json json) {
       }
       if (json["operation_fidelity"].contains("single_qubit_gate")) {
         if (json["operation_fidelity"]["single_qubit_gate"].is_number()) {
-          operationFidelities->fidelitySingleQubitGate =
+          arch.operationFidelities->fidelitySingleQubitGate =
               json["operation_fidelity"]["single_qubit_gate"];
         } else {
           throw std::invalid_argument("One qubit gate fidelity must be a float "
@@ -291,7 +292,7 @@ Architecture::Architecture(nlohmann::json json) {
     if (json["qubit_spec"].is_object()) {
       if (json["qubit_spec"].contains("T")) {
         if (json["qubit_spec"]["T"].is_number()) {
-          qubitT1 = json["qubit_spec"]["T"];
+          arch.qubitT1 = json["qubit_spec"]["T"];
         } else {
           throw std::invalid_argument("The qubit's T1 time must be a number in "
                                       "architecture spec");
@@ -329,10 +330,10 @@ Architecture::Architecture(nlohmann::json json) {
             rydbergRange[1].is_array() && rydbergRange[1].size() == 2 &&
             rydbergRange[0][0].is_number() && rydbergRange[0][1].is_number() &&
             rydbergRange[1][0].is_number() && rydbergRange[1][1].is_number()) {
-          rydbergRangeMinX.emplace_back(rydbergRange[0][0]);
-          rydbergRangeMinY.emplace_back(rydbergRange[0][1]);
-          rydbergRangeMaxX.emplace_back(rydbergRange[1][0]);
-          rydbergRangeMaxY.emplace_back(rydbergRange[1][1]);
+          arch.rydbergRangeMinX.emplace_back(rydbergRange[0][0]);
+          arch.rydbergRangeMinY.emplace_back(rydbergRange[0][1]);
+          arch.rydbergRangeMaxX.emplace_back(rydbergRange[1][0]);
+          arch.rydbergRangeMaxY.emplace_back(rydbergRange[1][1]);
         } else {
           throw std::invalid_argument("Rydberg range must be a Nx2x2 number "
                                       "array in architecture spec, N > 1");
@@ -380,7 +381,7 @@ Architecture::Architecture(nlohmann::json json) {
         for (const auto& zone : json["storage_zones"]) {
           if (zone.contains("slms") && zone["slms"].is_array()) {
             for (const auto& slmSpec : zone["slms"]) {
-              storageZones.emplace_back(std::make_unique<SLM>(slmSpec));
+              arch.storageZones.emplace_back(std::make_unique<SLM>(slmSpec));
             }
           } else {
             throw std::invalid_argument(
@@ -453,7 +454,7 @@ Architecture::Architecture(nlohmann::json json) {
               throw std::invalid_argument("entanglement zone must contain two "
                                           "slms in architecture spec");
             }
-            auto& slmPair = *entanglementZones.emplace_back(
+            auto& slmPair = *arch.entanglementZones.emplace_back(
                 std::make_unique<std::array<SLM, 2>>(std::array<SLM, 2>{
                     SLM(zone["slms"].front()), SLM(zone["slms"].back())}));
             slmPair.front().entanglementId_ = zone["zone_id"];
@@ -492,7 +493,7 @@ Architecture::Architecture(nlohmann::json json) {
   if (json.contains("aods")) {
     if (json["aods"].is_array()) {
       for (const auto& aodSpec : json["aods"]) {
-        aods.emplace_back(std::make_unique<AOD>(aodSpec));
+        arch.aods.emplace_back(std::make_unique<AOD>(aodSpec));
       }
     } else {
       throw std::invalid_argument(
@@ -503,7 +504,8 @@ Architecture::Architecture(nlohmann::json json) {
   }
   // preprocess the created architecture, i.e., calculate the nearest sites for
   // entanglement and storage zones
-  preprocessing();
+  arch.preprocessing();
+  return arch;
 }
 
 auto Architecture::exportNAVizMachine() const -> std::string {

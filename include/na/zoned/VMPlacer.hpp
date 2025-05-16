@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023 - 2025 Chair for Design Automation, TUM
+ * Copyright (c) 2025 Munich Quantum Software Company GmbH
+ * All rights reserved.
+ *
+ * SPDX-License-Identifier: MIT
+ *
+ * Licensed under the MIT License
+ */
+
 #pragma once
 
 #include "ir/Definitions.hpp"
@@ -29,7 +39,7 @@ class VMPlacer {
   /// this flag indicates whether the  placement should use a window when
   /// selecting potential free sites
   bool useWindow_ = true;
-  size_t windowSize_ = 0;
+  size_t windowSize_ = 10;
 
   /// this flag indicates whether the placement between gates is dynamic, i.e.,
   /// if this flag is false, the initial placement is used after all gates
