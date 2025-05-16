@@ -32,10 +32,11 @@
 #include <vector>
 
 namespace na::zoned {
-AOD::AOD(nlohmann::json aodSpec) {
+auto AOD::fromJSON(nlohmann::json aodSpec) -> AOD {
+  AOD aod;
   if (aodSpec.contains("id")) {
     if (aodSpec["id"].is_number()) {
-      id = aodSpec["id"];
+      aod.id = aodSpec["id"];
     } else {
       throw std::invalid_argument(
           "AOD id must be a number in architecture spec");
@@ -45,7 +46,7 @@ AOD::AOD(nlohmann::json aodSpec) {
   }
   if (aodSpec.contains("site_separation")) {
     if (aodSpec["site_separation"].is_number()) {
-      siteSeparation = aodSpec["site_separation"];
+      aod.siteSeparation = aodSpec["site_separation"];
     } else {
       throw std::invalid_argument(
           "AOD site separation must be a number in architecture spec");
@@ -56,7 +57,7 @@ AOD::AOD(nlohmann::json aodSpec) {
   }
   if (aodSpec.contains("r")) {
     if (aodSpec["r"].is_number()) {
-      nRows = aodSpec["r"];
+      aod.nRows = aodSpec["r"];
     } else {
       throw std::invalid_argument(
           "AOD row number must be a number in architecture spec");
@@ -67,7 +68,7 @@ AOD::AOD(nlohmann::json aodSpec) {
   }
   if (aodSpec.contains("c")) {
     if (aodSpec["c"].is_number()) {
-      nCols = aodSpec["c"];
+      aod.nCols = aodSpec["c"];
     } else {
       throw std::invalid_argument(
           "AOD column number must be a number in architecture spec");
@@ -76,12 +77,14 @@ AOD::AOD(nlohmann::json aodSpec) {
     throw std::invalid_argument(
         "AOD column number is missed in architecture spec");
   }
+  return aod;
 }
 
-SLM::SLM(nlohmann::json slmSpec) {
+auto SLM::fromJSON(nlohmann::json slmSpec) -> SLM {
+  SLM slm;
   if (slmSpec.contains("id")) {
     if (slmSpec["id"].is_number()) {
-      id = slmSpec["id"];
+      slm.id = slmSpec["id"];
     } else {
       throw std::invalid_argument(
           "SLM id must be a number in architecture spec");
@@ -94,7 +97,7 @@ SLM::SLM(nlohmann::json slmSpec) {
         slmSpec["site_separation"].size() == 2 &&
         slmSpec["site_separation"][0].is_number() &&
         slmSpec["site_separation"][1].is_number()) {
-      siteSeparation = slmSpec["site_separation"];
+      slm.siteSeparation = slmSpec["site_separation"];
     } else {
       throw std::invalid_argument(
           "SLM site separation must be a 2D number array in architecture spec");
@@ -105,7 +108,7 @@ SLM::SLM(nlohmann::json slmSpec) {
   }
   if (slmSpec.contains("r")) {
     if (slmSpec["r"].is_number()) {
-      nRows = slmSpec["r"];
+      slm.nRows = slmSpec["r"];
     } else {
       throw std::invalid_argument(
           "SLM row number must be a number in architecture spec");
@@ -116,7 +119,7 @@ SLM::SLM(nlohmann::json slmSpec) {
   }
   if (slmSpec.contains("c")) {
     if (slmSpec["c"].is_number()) {
-      nCols = slmSpec["c"];
+      slm.nCols = slmSpec["c"];
     } else {
       throw std::invalid_argument(
           "SLM column number must be a number in architecture spec");
@@ -129,7 +132,7 @@ SLM::SLM(nlohmann::json slmSpec) {
     if (slmSpec["location"].is_array() && slmSpec["location"].size() == 2 &&
         slmSpec["location"][0].is_number() &&
         slmSpec["location"][1].is_number()) {
-      location = slmSpec["location"];
+      slm.location = slmSpec["location"];
     } else {
       throw std::invalid_argument(
           "SLM location must be a 2D number array in architecture spec");
@@ -137,6 +140,7 @@ SLM::SLM(nlohmann::json slmSpec) {
   } else {
     throw std::invalid_argument("SLM location is missed in architecture spec");
   }
+  return slm;
 }
 
 auto SLM::operator==(const SLM& other) const -> bool {
@@ -158,7 +162,7 @@ auto SLM::operator==(const SLM& other) const -> bool {
   return true;
 }
 
-auto Architecture::fromJSON(nlohmann::json json) -> Architecture {
+auto Architecture::fromJSON(const nlohmann::json& json) -> Architecture {
   Architecture arch;
   // check if the name exists and is a string, otherwise throw an error
   // JSON Example:
@@ -381,7 +385,8 @@ auto Architecture::fromJSON(nlohmann::json json) -> Architecture {
         for (const auto& zone : json["storage_zones"]) {
           if (zone.contains("slms") && zone["slms"].is_array()) {
             for (const auto& slmSpec : zone["slms"]) {
-              arch.storageZones.emplace_back(std::make_unique<SLM>(slmSpec));
+              arch.storageZones.emplace_back(
+                  std::make_unique<SLM>(SLM::fromJSON(slmSpec)));
             }
           } else {
             throw std::invalid_argument(
@@ -455,8 +460,9 @@ auto Architecture::fromJSON(nlohmann::json json) -> Architecture {
                                           "slms in architecture spec");
             }
             auto& slmPair = *arch.entanglementZones.emplace_back(
-                std::make_unique<std::array<SLM, 2>>(std::array<SLM, 2>{
-                    SLM(zone["slms"].front()), SLM(zone["slms"].back())}));
+                std::make_unique<std::array<SLM, 2>>(
+                    std::array<SLM, 2>{SLM::fromJSON(zone["slms"].front()),
+                                       SLM::fromJSON(zone["slms"].back())}));
             slmPair.front().entanglementId_ = zone["zone_id"];
             slmPair.front().entanglementZone_ = &slmPair;
             slmPair.back().entanglementId_ = zone["zone_id"];
@@ -493,7 +499,7 @@ auto Architecture::fromJSON(nlohmann::json json) -> Architecture {
   if (json.contains("aods")) {
     if (json["aods"].is_array()) {
       for (const auto& aodSpec : json["aods"]) {
-        arch.aods.emplace_back(std::make_unique<AOD>(aodSpec));
+        arch.aods.emplace_back(std::make_unique<AOD>(AOD::fromJSON(aodSpec)));
       }
     } else {
       throw std::invalid_argument(

@@ -60,7 +60,8 @@ constexpr std::string_view architectureJson = R"({
 class TwoZoneArchitectureTest : public ::testing::Test {
 protected:
   Architecture arch;
-  TwoZoneArchitectureTest() : arch(nlohmann::json::parse(architectureJson)) {}
+  TwoZoneArchitectureTest()
+      : arch(Architecture::fromJSONString(architectureJson)) {}
 };
 TEST_F(TwoZoneArchitectureTest, Load) {}
 TEST_F(TwoZoneArchitectureTest, Storage) {
@@ -121,68 +122,78 @@ TEST(ArchitectureTest, InvalidName) {
   nlohmann::json spec = R"({
   "name": 42
 })"_json;
-  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+  EXPECT_THROW(std::ignore = Architecture::fromJSON(spec),
+               std::invalid_argument);
 }
 TEST(ArchitectureTest, MissingName) {
   nlohmann::json spec = R"({
 })"_json;
-  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+  EXPECT_THROW(std::ignore = Architecture::fromJSON(spec),
+               std::invalid_argument);
 }
 TEST(ArchitectureTest, InvalidDurations) {
   nlohmann::json spec = R"({
   "name": "invalid_architecture",
   "operation_duration": 0
 })"_json;
-  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+  EXPECT_THROW(std::ignore = Architecture::fromJSON(spec),
+               std::invalid_argument);
 }
 TEST(ArchitectureTest, InvalidRydbergDuration) {
   nlohmann::json spec = R"({
   "name": "invalid_architecture",
   "operation_duration": {"rydberg_gate": "0.36µs", "single_qubit_gate": 52, "atom_transfer": 15}
 })"_json;
-  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+  EXPECT_THROW(std::ignore = Architecture::fromJSON(spec),
+               std::invalid_argument);
 }
 TEST(ArchitectureTest, MissingRydbergDuration) {
   nlohmann::json spec = R"({
   "name": "invalid_architecture",
   "operation_duration": {"single_qubit_gate": 52, "atom_transfer": 15}
 })"_json;
-  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+  EXPECT_THROW(std::ignore = Architecture::fromJSON(spec),
+               std::invalid_argument);
 }
 TEST(ArchitectureTest, InvalidTransferDuration) {
   nlohmann::json spec = R"({
   "name": "invalid_architecture",
   "operation_duration": {"rydberg_gate": 0.36, "single_qubit_gate": 52, "atom_transfer": "15 µs"}
 })"_json;
-  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+  EXPECT_THROW(std::ignore = Architecture::fromJSON(spec),
+               std::invalid_argument);
 }
 TEST(ArchitectureTest, MissingTransferDuration) {
   nlohmann::json spec = R"({
   "name": "invalid_architecture",
   "operation_duration": {"rydberg_gate": 0.36, "single_qubit_gate": 52}
 })"_json;
-  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+  EXPECT_THROW(std::ignore = Architecture::fromJSON(spec),
+               std::invalid_argument);
 }
 TEST(ArchitectureTest, InvalidSingleQubitOperationDuration) {
   nlohmann::json spec = R"({
   "name": "invalid_architecture",
   "operation_duration": {"rydberg_gate": 0.36, "single_qubit_gate": "52µs", "atom_transfer": 15}
 })"_json;
-  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+  EXPECT_THROW(std::ignore = Architecture::fromJSON(spec),
+               std::invalid_argument);
 }
 TEST(ArchitectureTest, MissingSingleQubitOperationDuration) {
   nlohmann::json spec = R"({
   "name": "invalid_architecture",
   "operation_duration": {"rydberg_gate": 0.36, "atom_transfer": 15}
 })"_json;
-  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+  EXPECT_THROW(std::ignore = Architecture::fromJSON(spec),
+               std::invalid_argument);
 }
 TEST(ArchitectureTest, InvalidFidelities) {
   nlohmann::json spec = R"({
   "name": "invalid_architecture",
   "operation_duration": 0
 })"_json;
-  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+  EXPECT_THROW(std::ignore = Architecture::fromJSON(spec),
+               std::invalid_argument);
 }
 TEST(ArchitectureTest, InvalidRydbergFidelity) {
   nlohmann::json spec = R"({
@@ -193,7 +204,8 @@ TEST(ArchitectureTest, InvalidRydbergFidelity) {
     "atom_transfer": 0.999
   }
 })"_json;
-  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+  EXPECT_THROW(std::ignore = Architecture::fromJSON(spec),
+               std::invalid_argument);
 }
 TEST(ArchitectureTest, MissingRydbergFidelity) {
   nlohmann::json spec = R"({
@@ -203,7 +215,8 @@ TEST(ArchitectureTest, MissingRydbergFidelity) {
     "atom_transfer": 0.999
   }
 })"_json;
-  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+  EXPECT_THROW(std::ignore = Architecture::fromJSON(spec),
+               std::invalid_argument);
 }
 TEST(ArchitectureTest, InvalidTransferFidelity) {
   nlohmann::json spec = R"({
@@ -214,7 +227,8 @@ TEST(ArchitectureTest, InvalidTransferFidelity) {
     "atom_transfer": "0.999"
   }
 })"_json;
-  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+  EXPECT_THROW(std::ignore = Architecture::fromJSON(spec),
+               std::invalid_argument);
 }
 TEST(ArchitectureTest, MissingTransferFidelity) {
   nlohmann::json spec = R"({
@@ -224,7 +238,8 @@ TEST(ArchitectureTest, MissingTransferFidelity) {
     "single_qubit_gate": 0.9997
   }
 })"_json;
-  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+  EXPECT_THROW(std::ignore = Architecture::fromJSON(spec),
+               std::invalid_argument);
 }
 TEST(ArchitectureTest, InvalidSingleQubitOperationFidelity) {
   nlohmann::json spec = R"({
@@ -235,7 +250,8 @@ TEST(ArchitectureTest, InvalidSingleQubitOperationFidelity) {
     "atom_transfer": 0.999
   }
 })"_json;
-  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+  EXPECT_THROW(std::ignore = Architecture::fromJSON(spec),
+               std::invalid_argument);
 }
 TEST(ArchitectureTest, MissingSingleQubitOperationFidelity) {
   nlohmann::json spec = R"({
@@ -245,55 +261,63 @@ TEST(ArchitectureTest, MissingSingleQubitOperationFidelity) {
     "atom_transfer": 0.999
   }
 })"_json;
-  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+  EXPECT_THROW(std::ignore = Architecture::fromJSON(spec),
+               std::invalid_argument);
 }
 TEST(ArchitectureTest, InvalidQubitSpec) {
   nlohmann::json spec = R"({
   "name": "invalid_architecture",
   "qubit_spec": 1.5e6
 })"_json;
-  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+  EXPECT_THROW(std::ignore = Architecture::fromJSON(spec),
+               std::invalid_argument);
 }
 TEST(ArchitectureTest, InvalidT1) {
   nlohmann::json spec = R"({
   "name": "invalid_architecture",
   "qubit_spec": {"T": "1.5e6"}
 })"_json;
-  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+  EXPECT_THROW(std::ignore = Architecture::fromJSON(spec),
+               std::invalid_argument);
 }
 TEST(ArchitectureTest, MissingT1) {
   nlohmann::json spec = R"({
   "name": "invalid_architecture",
   "qubit_spec": {}
 })"_json;
-  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+  EXPECT_THROW(std::ignore = Architecture::fromJSON(spec),
+               std::invalid_argument);
 }
 TEST(ArchitectureTest, InvalidRydbergRange1) {
   nlohmann::json spec = R"({
   "name": "invalid_architecture",
   "rydberg_range": []
 })"_json;
-  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+  EXPECT_THROW(std::ignore = Architecture::fromJSON(spec),
+               std::invalid_argument);
 }
 TEST(ArchitectureTest, InvalidRydbergRange2) {
   nlohmann::json spec = R"({
   "name": "invalid_architecture",
   "rydberg_range": [[[2, 1]]]
 })"_json;
-  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+  EXPECT_THROW(std::ignore = Architecture::fromJSON(spec),
+               std::invalid_argument);
 }
 TEST(ArchitectureTest, MissingRydbergRange) {
   nlohmann::json spec = R"({
   "name": "invalid_architecture"
 })"_json;
-  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+  EXPECT_THROW(std::ignore = Architecture::fromJSON(spec),
+               std::invalid_argument);
 }
 TEST(ArchitectureTest, MissingStorage) {
   nlohmann::json spec = R"({
   "name": "invalid_architecture",
   "rydberg_range": [[[0, 0], [2, 1]]]
 })"_json;
-  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+  EXPECT_THROW(std::ignore = Architecture::fromJSON(spec),
+               std::invalid_argument);
 }
 TEST(ArchitectureTest, InvalidStorage1) {
   nlohmann::json spec = R"({
@@ -310,7 +334,8 @@ TEST(ArchitectureTest, InvalidStorage1) {
   },
   "rydberg_range": [[[0, 0], [2, 1]]]
 })"_json;
-  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+  EXPECT_THROW(std::ignore = Architecture::fromJSON(spec),
+               std::invalid_argument);
 }
 TEST(ArchitectureTest, InvalidStorage2) {
   nlohmann::json spec = R"({
@@ -318,7 +343,8 @@ TEST(ArchitectureTest, InvalidStorage2) {
   "storage_zones": [],
   "rydberg_range": [[[0, 0], [2, 1]]]
 })"_json;
-  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+  EXPECT_THROW(std::ignore = Architecture::fromJSON(spec),
+               std::invalid_argument);
 }
 TEST(ArchitectureTest, InvalidStorage3) {
   nlohmann::json spec = R"({
@@ -329,7 +355,8 @@ TEST(ArchitectureTest, InvalidStorage3) {
   }],
   "rydberg_range": [[[0, 0], [2, 1]]]
 })"_json;
-  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+  EXPECT_THROW(std::ignore = Architecture::fromJSON(spec),
+               std::invalid_argument);
 }
 TEST(ArchitectureTest, InvalidSLMId) {
   nlohmann::json spec = R"({
@@ -346,7 +373,8 @@ TEST(ArchitectureTest, InvalidSLMId) {
   }],
   "rydberg_range": [[[0, 0], [2, 1]]]
 })"_json;
-  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+  EXPECT_THROW(std::ignore = Architecture::fromJSON(spec),
+               std::invalid_argument);
 }
 TEST(ArchitectureTest, MissingSLMId) {
   nlohmann::json spec = R"({
@@ -362,7 +390,8 @@ TEST(ArchitectureTest, MissingSLMId) {
   }],
   "rydberg_range": [[[0, 0], [2, 1]]]
 })"_json;
-  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+  EXPECT_THROW(std::ignore = Architecture::fromJSON(spec),
+               std::invalid_argument);
 }
 TEST(ArchitectureTest, InvalidSLMSeparation) {
   nlohmann::json spec = R"({
@@ -379,7 +408,8 @@ TEST(ArchitectureTest, InvalidSLMSeparation) {
   }],
   "rydberg_range": [[[0, 0], [2, 1]]]
 })"_json;
-  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+  EXPECT_THROW(std::ignore = Architecture::fromJSON(spec),
+               std::invalid_argument);
 }
 TEST(ArchitectureTest, MissingSLMSeparation) {
   nlohmann::json spec = R"({
@@ -395,7 +425,8 @@ TEST(ArchitectureTest, MissingSLMSeparation) {
   }],
   "rydberg_range": [[[0, 0], [2, 1]]]
 })"_json;
-  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+  EXPECT_THROW(std::ignore = Architecture::fromJSON(spec),
+               std::invalid_argument);
 }
 TEST(ArchitectureTest, InvalidSLMLocation) {
   nlohmann::json spec = R"({
@@ -412,7 +443,8 @@ TEST(ArchitectureTest, InvalidSLMLocation) {
   }],
   "rydberg_range": [[[0, 0], [2, 1]]]
 })"_json;
-  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+  EXPECT_THROW(std::ignore = Architecture::fromJSON(spec),
+               std::invalid_argument);
 }
 TEST(ArchitectureTest, MissingSLMLocation) {
   nlohmann::json spec = R"({
@@ -428,7 +460,8 @@ TEST(ArchitectureTest, MissingSLMLocation) {
   }],
   "rydberg_range": [[[0, 0], [2, 1]]]
 })"_json;
-  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+  EXPECT_THROW(std::ignore = Architecture::fromJSON(spec),
+               std::invalid_argument);
 }
 TEST(ArchitectureTest, InvalidSLMRows) {
   nlohmann::json spec = R"({
@@ -445,7 +478,8 @@ TEST(ArchitectureTest, InvalidSLMRows) {
   }],
   "rydberg_range": [[[0, 0], [2, 1]]]
 })"_json;
-  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+  EXPECT_THROW(std::ignore = Architecture::fromJSON(spec),
+               std::invalid_argument);
 }
 TEST(ArchitectureTest, MissingSLMRows) {
   nlohmann::json spec = R"({
@@ -461,7 +495,8 @@ TEST(ArchitectureTest, MissingSLMRows) {
   }],
   "rydberg_range": [[[0, 0], [2, 1]]]
 })"_json;
-  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+  EXPECT_THROW(std::ignore = Architecture::fromJSON(spec),
+               std::invalid_argument);
 }
 TEST(ArchitectureTest, InvalidSLMColumns) {
   nlohmann::json spec = R"({
@@ -478,7 +513,8 @@ TEST(ArchitectureTest, InvalidSLMColumns) {
   }],
   "rydberg_range": [[[0, 0], [2, 1]]]
 })"_json;
-  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+  EXPECT_THROW(std::ignore = Architecture::fromJSON(spec),
+               std::invalid_argument);
 }
 TEST(ArchitectureTest, MissingSLMColumns) {
   nlohmann::json spec = R"({
@@ -494,71 +530,72 @@ TEST(ArchitectureTest, MissingSLMColumns) {
   }],
   "rydberg_range": [[[0, 0], [2, 1]]]
 })"_json;
-  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+  EXPECT_THROW(std::ignore = Architecture::fromJSON(spec),
+               std::invalid_argument);
 }
 TEST(ArchitectureTest, SLMEqualityOperator) {
-  const SLM slm{R"({
+  const auto slm = SLM::fromJSON(R"({
   "id": 0,
   "site_separation": [3, 3],
   "r": 20,
   "c": 20,
   "location": [0, 0]
-})"_json};
+})"_json);
   // &other == this
   EXPECT_TRUE(slm == slm);
-  const SLM slmOther{R"({
+  const auto slmOther = SLM::fromJSON(R"({
   "id": 0,
   "site_separation": [3, 3],
   "r": 20,
   "c": 20,
   "location": [0, 0]
-})"_json};
+})"_json);
   // equal slm
   EXPECT_TRUE(slm == slmOther);
-  const SLM slmOtherLocation{R"({
+  const auto slmOtherLocation = SLM::fromJSON(R"({
   "id": 0,
   "site_separation": [3, 3],
   "r": 20,
   "c": 20,
   "location": [1, 0]
-})"_json};
+})"_json);
   // other.location != location
   EXPECT_FALSE(slm == slmOtherLocation);
-  const SLM slmOtherRows{R"({
+  const auto slmOtherRows = SLM::fromJSON(R"({
   "id": 0,
   "site_separation": [3, 3],
   "r": 21,
   "c": 20,
   "location": [0, 0]
-})"_json};
+})"_json);
   // other.nRows != nRows || other.nCols != nCols
   EXPECT_FALSE(slm == slmOtherRows);
-  const SLM slmOtherSeparation{R"({
+  const auto slmOtherSeparation = SLM::fromJSON(R"({
   "id": 0,
   "site_separation": [4, 3],
   "r": 20,
   "c": 20,
   "location": [0, 0]
-})"_json};
+})"_json);
   // other.siteSeparation != siteSeparation
   EXPECT_FALSE(slm == slmOtherSeparation);
-  SLM slmEntanglement{R"({
+  auto slmEntanglement = SLM::fromJSON(R"({
   "id": 0,
   "site_separation": [4, 3],
   "r": 20,
   "c": 20,
   "location": [0, 0]
-})"_json};
+})"_json);
   slmEntanglement.entanglementId_ = 0;
   // other.entanglementZone_ != entanglementZone_
   EXPECT_FALSE(slm == slmEntanglement);
-  SLM slmOtherEntanglement{R"({
+  auto slmOtherEntanglement = SLM::fromJSON(R"({
   "id": 0,
   "site_separation": [4, 3],
   "r": 20,
   "c": 20,
   "location": [0, 0]
-})"_json};
+})"_json);
   slmEntanglement.entanglementId_ = 1;
   // other.entanglementZone_ != entanglementZone_
   EXPECT_FALSE(slm == slmOtherEntanglement);
@@ -599,7 +636,8 @@ TEST(ArchitectureTest, InvalidAODId) {
   "aods":[{"id": "one", "site_separation": 2, "r": 20, "c": 20}],
   "rydberg_range": [[[0, 0], [2, 1]]]
 })"_json;
-  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+  EXPECT_THROW(std::ignore = Architecture::fromJSON(spec),
+               std::invalid_argument);
 }
 TEST(ArchitectureTest, MissingAODId) {
   nlohmann::json spec = R"({
@@ -637,7 +675,8 @@ TEST(ArchitectureTest, MissingAODId) {
   "aods":[{"site_separation": 2, "r": 20, "c": 20}],
   "rydberg_range": [[[0, 0], [2, 1]]]
 })"_json;
-  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+  EXPECT_THROW(std::ignore = Architecture::fromJSON(spec),
+               std::invalid_argument);
 }
 TEST(ArchitectureTest, InvalidAODSeparation) {
   nlohmann::json spec = R"({
@@ -675,7 +714,8 @@ TEST(ArchitectureTest, InvalidAODSeparation) {
   "aods":[{"id": 0, "site_separation": "2 µm", "r": 20, "c": 20}],
   "rydberg_range": [[[0, 0], [2, 1]]]
 })"_json;
-  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+  EXPECT_THROW(std::ignore = Architecture::fromJSON(spec),
+               std::invalid_argument);
 }
 TEST(ArchitectureTest, MissingAODSeparation) {
   nlohmann::json spec = R"({
@@ -713,7 +753,8 @@ TEST(ArchitectureTest, MissingAODSeparation) {
   "aods":[{"id": 0, "r": 20, "c": 20}],
   "rydberg_range": [[[0, 0], [2, 1]]]
 })"_json;
-  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+  EXPECT_THROW(std::ignore = Architecture::fromJSON(spec),
+               std::invalid_argument);
 }
 TEST(ArchitectureTest, InvalidAODRows) {
   nlohmann::json spec = R"({
@@ -751,7 +792,8 @@ TEST(ArchitectureTest, InvalidAODRows) {
   "aods":[{"id": 0, "site_separation": 2, "r": "twenty", "c": 20}],
   "rydberg_range": [[[0, 0], [2, 1]]]
 })"_json;
-  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+  EXPECT_THROW(std::ignore = Architecture::fromJSON(spec),
+               std::invalid_argument);
 }
 TEST(ArchitectureTest, MissingAODRows) {
   nlohmann::json spec = R"({
@@ -789,7 +831,8 @@ TEST(ArchitectureTest, MissingAODRows) {
   "aods":[{"id": 0, "site_separation": 2, "c": 20}],
   "rydberg_range": [[[0, 0], [2, 1]]]
 })"_json;
-  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+  EXPECT_THROW(std::ignore = Architecture::fromJSON(spec),
+               std::invalid_argument);
 }
 TEST(ArchitectureTest, InvalidAODColumns) {
   nlohmann::json spec = R"({
@@ -827,7 +870,8 @@ TEST(ArchitectureTest, InvalidAODColumns) {
   "aods":[{"id": 0, "site_separation": 2, "r": 20, "c": "twenty"}],
   "rydberg_range": [[[0, 0], [2, 1]]]
 })"_json;
-  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+  EXPECT_THROW(std::ignore = Architecture::fromJSON(spec),
+               std::invalid_argument);
 }
 TEST(ArchitectureTest, MissingAODColumns) {
   nlohmann::json spec = R"({
@@ -865,6 +909,7 @@ TEST(ArchitectureTest, MissingAODColumns) {
   "aods":[{"id": 0, "site_separation": 2, "r": 20}],
   "rydberg_range": [[[0, 0], [2, 1]]]
 })"_json;
-  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+  EXPECT_THROW(std::ignore = Architecture::fromJSON(spec),
+               std::invalid_argument);
 }
 } // namespace na::zoned

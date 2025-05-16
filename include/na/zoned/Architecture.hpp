@@ -36,8 +36,10 @@ struct AOD {
   std::size_t nRows = 0;
   std::size_t nCols = 0;
 
+  /// Creates an AOD with default values.
+  AOD() = default;
   /// Creates an AOD from a JSON specification.
-  explicit AOD(nlohmann::json aodSpec);
+  [[nodiscard]] static auto fromJSON(nlohmann::json aodSpec) -> AOD;
 };
 
 /// An 2D-array of SLM traps.
@@ -54,8 +56,10 @@ struct SLM {
   const std::array<SLM, 2>* entanglementZone_ = nullptr;
   /// only used for printing.
   std::optional<std::size_t> entanglementId_ = std::nullopt;
+  /// Creates an SLM with default values.
+  SLM() = default;
   /// Creates an SLM array from a JSON specification.
-  explicit SLM(nlohmann::json slmSpec);
+  [[nodiscard]] static auto fromJSON(nlohmann::json slmSpec) -> SLM;
   /// @returns true if the SLM is part of an entanglement zone.
   [[nodiscard]] auto isEntanglement() const -> bool {
     return entanglementZone_ != nullptr;
@@ -168,28 +172,31 @@ struct Architecture {
 
   /// Creates an Architecture from a file containing a JSON specification.
   /// @param filename the name of the file given as a string
-  static auto fromJSONFile(const std::string& filename) -> Architecture {
+  [[nodiscard]] static auto fromJSONFile(const std::string& filename)
+      -> Architecture {
     return fromJSONFile(std::filesystem::path(filename));
   }
   /// Creates an Architecture from a file containing a JSON specification.
   /// @param filepath the path to the file
-  static auto fromJSONFile(const std::filesystem::path& filepath)
+  [[nodiscard]] static auto fromJSONFile(const std::filesystem::path& filepath)
       -> Architecture {
     return fromJSON(std::ifstream(filepath));
   }
   /// Creates an Architecture from a JSON specification.
   /// @param ifs the input stream containing the JSON specification
-  static auto fromJSON(std::istream&& ifs) -> Architecture {
+  [[nodiscard]] static auto fromJSON(std::istream&& ifs) -> Architecture {
     return fromJSON(nlohmann::json::parse(std::move(ifs)));
   }
   /// Creates an Architecture from a JSON specification.
   /// @param json the JSON string
-  static auto fromJSON(std::string&& json) -> Architecture {
+  [[nodiscard]] static auto fromJSONString(const std::string_view& json)
+      -> Architecture {
     return fromJSON(nlohmann::json::parse(json));
   }
   /// Creates an Architecture from a JSON specification.
   /// @param json the JSON specification
-  static auto fromJSON(nlohmann::json json) -> Architecture;
+  [[nodiscard]] static auto fromJSON(const nlohmann::json& json)
+      -> Architecture;
   Architecture() = default;
   // Explicitly delete copy constructor and copy assignment operator because the
   // SLMs and AODs owned by the Architecture cannot be copied.

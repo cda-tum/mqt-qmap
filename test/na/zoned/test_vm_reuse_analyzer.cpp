@@ -46,7 +46,7 @@ protected:
   nlohmann::json config;
   VMReuseAnalyzer analyzer;
   VMReuseAnalyzerAnalyzeTest()
-      : architecture(nlohmann::json::parse(architectureJson)),
+      : architecture(Architecture::fromJSONString(architectureJson)),
         analyzer{architecture, config} {}
 };
 TEST_F(VMReuseAnalyzerAnalyzeTest, NoGates) {
@@ -78,7 +78,7 @@ TEST_F(VMReuseAnalyzerAnalyzeTest, UniqueUnbalanced) {
               ::testing::ElementsAre(::testing::UnorderedElementsAre(1U, 7U)));
 }
 TEST(VMReuseAnalyzerTest, Config) {
-  Architecture architecture(nlohmann::json::parse(architectureJson));
+  Architecture architecture(Architecture::fromJSONString(architectureJson));
   nlohmann::json config = R"({
   "vm_reuse_analyzer": {
     "unknown_key": 42

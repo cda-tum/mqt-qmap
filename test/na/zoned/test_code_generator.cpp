@@ -57,7 +57,7 @@ protected:
   nlohmann::json config;
   CodeGenerator codeGenerator;
   CodeGeneratorGenerateTest()
-      : architecture(nlohmann::json::parse(architectureJson)),
+      : architecture(Architecture::fromJSONString(architectureJson)),
         config(nlohmann::json::parse(configJson)),
         codeGenerator(architecture, config) {}
 };
@@ -607,7 +607,7 @@ TEST_F(CodeGeneratorGenerateTest, Offset) {
       "]\n");
 }
 TEST(CodeGeneratorTest, InvalidConfig) {
-  Architecture architecture(nlohmann::json::parse(architectureJson));
+  Architecture architecture(Architecture::fromJSONString(architectureJson));
   nlohmann::json config = R"({
   "code_generator": {
     "parking_offset": "invalid",
@@ -641,7 +641,7 @@ TEST(CodeGeneratorTest, InvalidConfig) {
   EXPECT_EQ(warnings, 3);
 }
 TEST(CodeGeneratorTest, EmptyConfig) {
-  Architecture architecture(nlohmann::json::parse(architectureJson));
+  Architecture architecture(Architecture::fromJSONString(architectureJson));
   nlohmann::json config = R"({
   "code_generator": {}
 })"_json;
@@ -669,7 +669,7 @@ TEST(CodeGeneratorTest, EmptyConfig) {
   EXPECT_EQ(warnings, 2);
 }
 TEST(CodeGeneratorTest, NoConfig) {
-  Architecture architecture(nlohmann::json::parse(architectureJson));
+  Architecture architecture(Architecture::fromJSONString(architectureJson));
   nlohmann::json config = R"({})"_json;
   std::stringstream buffer;
   std::streambuf* oldCout = std::cout.rdbuf(buffer.rdbuf());

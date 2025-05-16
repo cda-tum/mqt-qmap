@@ -48,7 +48,7 @@ protected:
   nlohmann::json config;
   ASAPScheduler scheduler;
   ASAPSchedulerScheduleTest()
-      : architecture(nlohmann::json::parse(architectureJson)),
+      : architecture(Architecture::fromJSONString(architectureJson)),
         scheduler(architecture, config) {}
 };
 TEST_F(ASAPSchedulerScheduleTest, NoGate) {
@@ -215,7 +215,7 @@ TEST_F(ASAPSchedulerScheduleTest, UnsupportedCXGate) {
   EXPECT_THROW(std::ignore = scheduler.schedule(qc), std::invalid_argument);
 }
 TEST(ASAPSchedulerTest, Config) {
-  Architecture architecture(nlohmann::json::parse(architectureJson));
+  Architecture architecture(Architecture::fromJSONString(architectureJson));
   const auto config = R"({
   "asap_scheduler": {
     "unknown_key": 42

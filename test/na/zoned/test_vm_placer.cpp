@@ -54,7 +54,7 @@ protected:
   nlohmann::json config;
   VMPlacer placer;
   VMPlacerPlaceTest()
-      : architecture(nlohmann::json::parse(architectureJson)),
+      : architecture(Architecture::fromJSONString(architectureJson)),
         config(nlohmann::json::parse(configJson)),
         placer(architecture, config) {}
 };
@@ -217,7 +217,7 @@ TEST_F(VMPlacerPlaceTest, TwoTwoQubitLayerReuse) {
   EXPECT_EQ(std::get<2>(placement[2][1]), std::get<2>(placement[3][1]));
 }
 TEST(VMPlacerTest, NoConfig) {
-  Architecture architecture(nlohmann::json::parse(architectureJson));
+  Architecture architecture(Architecture::fromJSONString(architectureJson));
   nlohmann::json config = R"({})"_json;
   std::stringstream buffer;
   std::streambuf* oldCout = std::cout.rdbuf(buffer.rdbuf());
@@ -228,7 +228,7 @@ TEST(VMPlacerTest, NoConfig) {
   std::cout.rdbuf(oldCout);
 }
 TEST(VMPlacerTest, InvalidConfig) {
-  Architecture architecture(nlohmann::json::parse(architectureJson));
+  Architecture architecture(Architecture::fromJSONString(architectureJson));
   nlohmann::json config = R"({
   "vm_placer": {
     "use_window": "invalid",
@@ -251,7 +251,7 @@ TEST(VMPlacerTest, InvalidConfig) {
           ::testing::HasSubstr(
               "\033[1;35m[WARN]\033[0m Configuration for VMPlacer "
               "contains an invalid value for window_size. Using default "
-              "(0)."),
+              "(10)."),
           ::testing::HasSubstr(
               "\033[1;35m[WARN]\033[0m Configuration for VMPlacer "
               "contains an invalid value for dynamic_placement. Using default "
@@ -269,7 +269,7 @@ TEST(VMPlacerTest, InvalidConfig) {
   EXPECT_EQ(warnings, 4);
 }
 TEST(VMPlacerTest, EmptyConfig) {
-  Architecture architecture(nlohmann::json::parse(architectureJson));
+  Architecture architecture(Architecture::fromJSONString(architectureJson));
   nlohmann::json config = R"({
   "vm_placer": {}
 })"_json;
@@ -287,7 +287,7 @@ TEST(VMPlacerTest, EmptyConfig) {
           ::testing::HasSubstr(
               "\033[1;35m[WARN]\033[0m Configuration for VMPlacer does "
               "not contain a value for window_size. Using default "
-              "(0)."),
+              "(10)."),
           ::testing::HasSubstr(
               "\033[1;35m[WARN]\033[0m Configuration for VMPlacer does "
               "not contain a value for dynamic_placement. Using default "

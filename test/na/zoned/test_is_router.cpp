@@ -47,7 +47,7 @@ protected:
   nlohmann::json config;
   ISRouter router;
   ISRouterRouteTest()
-      : architecture(nlohmann::json::parse(architectureJson)),
+      : architecture(Architecture::fromJSONString(architectureJson)),
         router(architecture, config) {}
 };
 TEST_F(ISRouterRouteTest, Empty) {
@@ -184,7 +184,7 @@ TEST_F(ISRouterRouteTest, Array) {
           ::testing::UnorderedElementsAre(0U, 1U, 2U, 3U, 4U, 5U, 6U, 7U))));
 }
 TEST(ISRouterTest, InvalidConfig) {
-  Architecture architecture(nlohmann::json::parse(architectureJson));
+  Architecture architecture(Architecture::fromJSONString(architectureJson));
   nlohmann::json config = R"({
   "is_router": {
     "unknown_key": 42

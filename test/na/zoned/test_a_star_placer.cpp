@@ -58,7 +58,7 @@ protected:
   nlohmann::json config;
   AStarPlacer placer;
   AStarPlacerPlaceTest()
-      : architecture(nlohmann::json::parse(architectureJson)),
+      : architecture(Architecture::fromJSONString(architectureJson)),
         config(nlohmann::json::parse(configJson)),
         placer(architecture, config) {}
 };
@@ -221,7 +221,7 @@ TEST_F(AStarPlacerPlaceTest, TwoTwoQubitLayerReuse) {
   EXPECT_EQ(std::get<2>(placement[2][1]), std::get<2>(placement[3][1]));
 }
 TEST(AStarPlacerTest, NoSolution) {
-  Architecture architecture(nlohmann::json::parse(architectureJson));
+  Architecture architecture(Architecture::fromJSONString(architectureJson));
   AStarPlacer placer(architecture, R"({
   "a_star_placer": {
     "use_window": true,
@@ -243,7 +243,7 @@ TEST(AStarPlacerTest, NoSolution) {
       std::runtime_error);
 }
 TEST(AStarPlacerTest, LimitSpace) {
-  Architecture architecture(nlohmann::json::parse(architectureJson));
+  Architecture architecture(Architecture::fromJSONString(architectureJson));
   AStarPlacer placer(architecture, R"({
   "a_star_placer": {
     "use_window": true,
@@ -266,7 +266,7 @@ TEST(AStarPlacerTest, LimitSpace) {
                std::runtime_error);
 }
 TEST(AStarPlacerTest, WindowExpansion) {
-  Architecture architecture(nlohmann::json::parse(architectureJson));
+  Architecture architecture(Architecture::fromJSONString(architectureJson));
   AStarPlacer placer(architecture, R"({
   "a_star_placer": {
     "use_window": true,
@@ -287,7 +287,7 @@ TEST(AStarPlacerTest, WindowExpansion) {
                       std::vector<std::unordered_set<qc::Qubit>>{}));
 }
 TEST(AStarPlacerTest, InitialPlacementForTwoSlms) {
-  Architecture architecture(R"({
+  const auto architecture = Architecture::fromJSON(R"({
   "name": "a_star_placer_architecture",
   "storage_zones": [{
     "zone_id": 0,
@@ -322,7 +322,7 @@ TEST(AStarPlacerTest, InitialPlacementForTwoSlms) {
                   ::testing::Lt(18), ::testing::Lt(20)))));
 }
 TEST(AStarPlacerTest, NoConfig) {
-  Architecture architecture(nlohmann::json::parse(architectureJson));
+  const auto architecture = Architecture::fromJSONString(architectureJson);
   nlohmann::json config = R"({})"_json;
   std::stringstream buffer;
   std::streambuf* oldCout = std::cout.rdbuf(buffer.rdbuf());
@@ -343,7 +343,7 @@ TEST(AStarPlacerTest, NoConfig) {
   std::cout.rdbuf(oldCout);
 }
 TEST(AStarPlacerTest, InvalidConfig) {
-  Architecture architecture(nlohmann::json::parse(architectureJson));
+  const auto architecture = Architecture::fromJSONString(architectureJson);
   nlohmann::json config = R"({
   "a_star_placer": {
     "use_window": "invalid",
@@ -405,7 +405,7 @@ TEST(AStarPlacerTest, InvalidConfig) {
   EXPECT_EQ(warnings, 10);
 }
 TEST(AStarPlacerTest, EmptyConfig) {
-  Architecture architecture(nlohmann::json::parse(architectureJson));
+  Architecture architecture(Architecture::fromJSONString(architectureJson));
   nlohmann::json config = R"({
   "a_star_placer": {}
 })"_json;
