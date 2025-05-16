@@ -149,8 +149,8 @@ public:
               << statistics_.reuseAnalysisTime.count() << "µs\n";
 
     const auto& placementStart = std::chrono::system_clock::now();
-    const auto& placement = static_cast<ConcreteType*>(this)->place(
-        qComp.getNqubits(), twoQubitGateLayers, reuseQubits);
+    const auto& placement =
+        SELF.place(qComp.getNqubits(), twoQubitGateLayers, reuseQubits);
     statistics_.placementTime =
         std::chrono::duration_cast<std::chrono::microseconds>(
             std::chrono::system_clock::now() - placementStart);
