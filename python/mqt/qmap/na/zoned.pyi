@@ -151,7 +151,7 @@ class RoutingAgnosticCompiler:
             qc: is the quantum circuit
 
         Returns:
-            the compilation results as an NAComputation.
+            the compilations result as a string in the .naviz format.
         """
 
     def stats(self) -> dict[str, float]:
@@ -213,7 +213,7 @@ class RoutingAwareCompiler:
             qc: is the quantum circuit
 
         Returns:
-            the compilation results as an NAComputation.
+            the compilations result as a string in the .naviz format.
         """
 
     def stats(self) -> dict[str, float]:
