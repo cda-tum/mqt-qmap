@@ -41,29 +41,13 @@ architecture_specification = """{
     "aods":[{"id": 0, "site_separation": 2, "r": 20, "c": 20}],
     "rydberg_range": [[[5, 70], [55, 110]]]
 }"""
-routing_aware_configuration = """{
-    "placerConfig" : {
-        "useWindow" : true,
-        "windowMinWidth" : 4,
-        "windowRatio" : 1.5,
-        "windowShare" : 0.6,
-        "deepeningFactor" : 0.6,
-        "deepeningValue" : 0.2,
-        "lookaheadFactor": 0.2,
-        "reuseLevel": 5.0
-    },
-    "codeGeneratorConfig" : {
-        "parkingOffset" : 1
-    }
-}"""
 
 
 @pytest.fixture
 def compiler() -> RoutingAwareCompiler:
     """Return an MQT QMAP's Zoned Neutral Atom Compiler initialized with the above architecture and settings."""
     architecture = ZonedNeutralAtomArchitecture.from_json_string(architecture_specification)
-    configuration = RoutingAwareCompiler.Config.from_json_string(routing_aware_configuration)
-    return RoutingAwareCompiler(architecture, configuration)
+    return RoutingAwareCompiler(architecture, window_min_width=4, window_ratio=1.5, deepening_factor=0.6)
 
 
 @pytest.mark.parametrize("circuit_filename", circuits)
