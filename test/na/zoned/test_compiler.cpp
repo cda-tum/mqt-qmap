@@ -67,24 +67,24 @@ constexpr std::string_view routingAwareConfiguration = R"({
   }
 })";
 #define COMPILER_TEST(compiler_type, config)                                   \
-  TEST(compiler_type##Test, ConstructorWithoutSettings) {                      \
+  TEST(compiler_type##Test, ConstructorWithoutConfig) {                        \
     Architecture architecture(                                                 \
         Architecture::fromJSONString(architectureSpecification));              \
     /* expected not to lead to a segfault */                                   \
     [[maybe_unused]] compiler_type compiler(architecture);                     \
   }                                                                            \
   class compiler_type##Test : public ::testing::TestWithParam<std::string> {   \
-    compiler_type::Config settings_;                                           \
+    compiler_type::Config config_;                                             \
     Architecture architecture_;                                                \
                                                                                \
   protected:                                                                   \
     qc::QuantumComputation circ_;                                              \
     compiler_type compiler_;                                                   \
     compiler_type##Test()                                                      \
-        : settings_(nlohmann::json(config)),                                   \
+        : config_(nlohmann::json::parse(config)),                              \
           architecture_(                                                       \
               Architecture::fromJSONString(architectureSpecification)),        \
-          compiler_(architecture_, settings_) {}                               \
+          compiler_(architecture_, config_) {}                                 \
     void SetUp() override { circ_ = qasm3::Importer::importf(GetParam()); }    \
   };                                                                           \
   /*=========================== END TO END TESTS ===========================*/ \
