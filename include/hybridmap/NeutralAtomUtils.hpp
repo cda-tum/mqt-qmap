@@ -104,7 +104,7 @@ struct MoveVector {
     return direction == other.direction;
   }
   [[nodiscard]] qc::fp getLength() const {
-    return std::sqrt(std::pow(xEnd - xStart, 2) + std::pow(yEnd - yStart, 2));
+    return std::hypot(xEnd - xStart, yEnd - yStart);
   }
   [[nodiscard]] bool overlap(const MoveVector& other) const;
   [[nodiscard]] bool include(const MoveVector& other) const;

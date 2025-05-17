@@ -41,6 +41,7 @@ target_link_libraries(
           MQT::QMapCliffordSynthesis
           MQT::QMapHybrid
           MQT::NASP
+          MQT::QMapNAZoned
           MQT::CoreQASM
           MQT::ProjectOptions
           MQT::ProjectWarnings
@@ -51,3 +52,6 @@ install(
   TARGETS pyqmap
   DESTINATION .
   COMPONENT mqt-qmap_Python)
+
+# add all modules
+add_subdirectory(na)

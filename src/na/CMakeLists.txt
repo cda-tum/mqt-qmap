@@ -7,4 +7,7 @@
 # Licensed under the MIT License
 
 add_subdirectory(nalac)
-add_subdirectory(nasp)
+if(Z3_FOUND)
+  add_subdirectory(nasp)
+endif()
+add_subdirectory(zoned)
