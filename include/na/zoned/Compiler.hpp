@@ -59,6 +59,11 @@ public:
     std::chrono::microseconds routingTime;
     std::chrono::microseconds codeGenerationTime;
     std::chrono::microseconds totalTime;
+    size_t numberOfQubits = 0;
+    size_t nSingleQubitGates = 0;
+    size_t nTwoQubitGates = 0;
+    size_t nSingleQubitGateLayers = 0;
+    size_t nTwoQubitGateLayers = 0;
     NLOHMANN_DEFINE_TYPE_INTRUSIVE_ONLY_SERIALIZE(Statistics, schedulingTime,
                                                   reuseAnalysisTime,
                                                   placementTime, routingTime,
@@ -85,30 +90,32 @@ private:
 public:
   [[nodiscard]] auto compile(const qc::QuantumComputation& qComp)
       -> NAComputation {
-    spdlog::info("*** MQT QMAP Zoned Neutral Atom Compiler ***");
-    spdlog::info("Used compiler settings:");
-    if (spdlog::should_log(spdlog::level::info)) {
-      std::string jsonStr =
-          config_.dump(2); // Pretty-print with 2-space indentation
-      std::istringstream iss(jsonStr);
-      std::string line;
-      while (std::getline(iss, line)) {
-        spdlog::info(line);
-      }
+    SPDLOG_INFO("*** MQT QMAP Zoned Neutral Atom Compiler ***");
+    SPDLOG_INFO("Used compiler settings:");
+#if SPDLOG_ACTIVE_LEVEL <= SPDLOG_LEVEL_INFO
+    std::string jsonStr =
+        config_.dump(2); // Pretty-print with 2-space indentation
+    std::istringstream iss(jsonStr);
+    std::string line;
+    while (std::getline(iss, line)) {
+      spdlog::info(line);
     }
-    spdlog::info("Number of qubits: {}", qComp.getNqubits());
-    const auto nTwoQubitGates =
+#endif // SPDLOG_ACTIVE_LEVEL <= SPDLOG_LEVEL_INFO
+    statistics_.numberOfQubits = qComp.getNqubits();
+    SPDLOG_INFO("Number of qubits: {}", statistics_.numberOfQubits);
+    statistics_.nTwoQubitGates = static_cast<size_t>(
         std::count_if(qComp.cbegin(), qComp.cend(),
                       [](const std::unique_ptr<qc::Operation>& op) {
                         return op->getNqubits() == 2;
-                      });
-    const auto nSingleQubitGates =
+                      }));
+    SPDLOG_INFO("Number of two-qubit gates: {}", statistics_.nTwoQubitGates);
+    statistics_.nSingleQubitGates = static_cast<size_t>(
         std::count_if(qComp.cbegin(), qComp.cend(),
                       [](const std::unique_ptr<qc::Operation>& op) {
                         return op->getNqubits() == 1;
-                      });
-    spdlog::info("Number of two-qubit gates: {}", nTwoQubitGates);
-    spdlog::info("Number of single-qubit gates: {}", nSingleQubitGates);
+                      }));
+    SPDLOG_INFO("Number of single-qubit gates: {}",
+                statistics_.nSingleQubitGates);
 
     const auto& schedulingStart = std::chrono::system_clock::now();
     const auto& [singleQubitGateLayers, twoQubitGateLayers] =
@@ -116,12 +123,15 @@ public:
     statistics_.schedulingTime =
         std::chrono::duration_cast<std::chrono::microseconds>(
             std::chrono::system_clock::now() - schedulingStart);
-    spdlog::info("Time for scheduling: {}us",
-                 statistics_.schedulingTime.count());
-    spdlog::info("Number of single-qubit gate layers: {}",
-                 singleQubitGateLayers.size());
-    spdlog::info("Number of two-qubit gate layers: {}",
-                 twoQubitGateLayers.size());
+    SPDLOG_INFO("Time for scheduling: {}us",
+                statistics_.schedulingTime.count());
+    statistics_.nSingleQubitGateLayers = singleQubitGateLayers.size();
+    SPDLOG_INFO("Number of single-qubit gate layers: {}",
+                statistics_.nSingleQubitGateLayers);
+    statistics_.nTwoQubitGateLayers = twoQubitGateLayers.size();
+    SPDLOG_INFO("Number of two-qubit gate layers: {}",
+                statistics_.nTwoQubitGateLayers);
+#if SPDLOG_ACTIVE_LEVEL <= SPDLOG_LEVEL_INFO
     if (!twoQubitGateLayers.empty()) {
       const auto& [min, sum, max] = std::accumulate(
           twoQubitGateLayers.cbegin(), twoQubitGateLayers.cend(),
@@ -137,14 +147,15 @@ public:
           "Number of two-qubit gates per layer: min: {}, avg: {}, max: {}", min,
           avg, max);
     }
+#endif // SPDLOG_ACTIVE_LEVEL <= SPDLOG_LEVEL_INFO
 
     const auto& reuseAnalysisStart = std::chrono::system_clock::now();
     const auto& reuseQubits = SELF.analyzeReuse(twoQubitGateLayers);
     statistics_.reuseAnalysisTime =
         std::chrono::duration_cast<std::chrono::microseconds>(
             std::chrono::system_clock::now() - reuseAnalysisStart);
-    spdlog::info("Time for reuse analysis: {}us",
-                 statistics_.reuseAnalysisTime.count());
+    SPDLOG_INFO("Time for reuse analysis: {}us",
+                statistics_.reuseAnalysisTime.count());
 
     const auto& placementStart = std::chrono::system_clock::now();
     const auto& placement =
@@ -152,14 +163,14 @@ public:
     statistics_.placementTime =
         std::chrono::duration_cast<std::chrono::microseconds>(
             std::chrono::system_clock::now() - placementStart);
-    spdlog::info("Time for placement: {}us", statistics_.placementTime.count());
+    SPDLOG_INFO("Time for placement: {}us", statistics_.placementTime.count());
 
     const auto& routingStart = std::chrono::system_clock::now();
     const auto& routing = SELF.route(placement);
     statistics_.routingTime =
         std::chrono::duration_cast<std::chrono::microseconds>(
             std::chrono::system_clock::now() - routingStart);
-    spdlog::info("Time for routing: {}us", statistics_.routingTime.count());
+    SPDLOG_INFO("Time for routing: {}us", statistics_.routingTime.count());
 
     const auto& codeGenerationStart = std::chrono::system_clock::now();
     NAComputation code =
@@ -168,13 +179,13 @@ public:
     statistics_.codeGenerationTime =
         std::chrono::duration_cast<std::chrono::microseconds>(
             std::chrono::system_clock::now() - codeGenerationStart);
-    spdlog::info("Time for code generation: {}us",
-                 statistics_.codeGenerationTime.count());
+    SPDLOG_INFO("Time for code generation: {}us",
+                statistics_.codeGenerationTime.count());
 
     statistics_.totalTime =
         std::chrono::duration_cast<std::chrono::microseconds>(
             std::chrono::system_clock::now() - schedulingStart);
-    spdlog::info("Total time: {}us", statistics_.totalTime.count());
+    SPDLOG_INFO("Total time: {}us", statistics_.totalTime.count());
     return code;
   }
   [[nodiscard]] auto getStatistics() const -> const Statistics& {

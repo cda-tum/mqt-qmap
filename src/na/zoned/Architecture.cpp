@@ -230,8 +230,8 @@ auto Architecture::fromJSON(const nlohmann::json& json) -> Architecture {
           "Operation duration must be a dict in architecture spec");
     }
   } else {
-    spdlog::warn("Operation's duration is missed in architecture spec. "
-                 "Using default values.");
+    SPDLOG_WARN("Operation's duration is missed in architecture spec. "
+                "Using default values.");
   }
   // check if the operation's fidelity exists, otherwise print a warning
   // throw an error if the specification is invalid
@@ -284,8 +284,8 @@ auto Architecture::fromJSON(const nlohmann::json& json) -> Architecture {
           "Operation fidelities must be a dict in architecture spec");
     }
   } else {
-    spdlog::warn("Operation's fidelity is missed in architecture spec. "
-                 "Using default values.");
+    SPDLOG_WARN("Operation's fidelity is missed in architecture spec. "
+                "Using default values.");
   }
   // check if the qubit's T1 time exists, otherwise print a warning
   // throw an error if the time is not a number
@@ -310,7 +310,7 @@ auto Architecture::fromJSON(const nlohmann::json& json) -> Architecture {
           "The qubit spec must be a dict in architecture spec");
     }
   } else {
-    spdlog::warn(
+    SPDLOG_WARN(
         "The qubit spec is missed in architecture spec. Using default values.");
   }
   // check if the rydberg range exists and is valid, otherwise throw an error

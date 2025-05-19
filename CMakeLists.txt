@@ -17,6 +17,25 @@ project(
 # Add path for custom modules
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
+set(MQT_QMAP_LOG_LEVEL
+    INFO
+    CACHE
+      STRING
+      "Set the active log level for spdlog (possible values: TRACE, DEBUG, INFO, WARN, ERROR, CRITICAL, OFF)"
+)
+set_property(
+  CACHE MQT_QMAP_LOG_LEVEL
+  PROPERTY STRINGS
+           TRACE
+           DEBUG
+           INFO
+           WARN
+           ERROR
+           CRITICAL
+           OFF)
+message(STATUS "MQT_QMAP_LOG_LEVEL: ${MQT_QMAP_LOG_LEVEL}")
+add_compile_definitions(SPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_${MQT_QMAP_LOG_LEVEL})
+
 option(BUILD_MQT_QMAP_BINDINGS "Build the MQT QMAP Python bindings" OFF)
 if(BUILD_MQT_QMAP_BINDINGS)
   # ensure that the BINDINGS option is set

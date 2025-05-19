@@ -112,7 +112,7 @@ auto CodeGenerator::appendSingleQubitGates(
         // in this case, the gate is not any variant of a rotational z-gate.
         // depending on the settings, a warning is printed.
         if (config_.warnUnsupportedGates) {
-          spdlog::warn(
+          SPDLOG_WARN(
               "Gate not part of basis gates will be inserted as U3 gate: {}",
               qc::toString(op.get().getType()));
         }
