@@ -112,6 +112,7 @@ sdist.exclude = [
 BUILD_MQT_QMAP_TESTS = "OFF"
 BUILD_MQT_QMAP_BINDINGS = "ON"
 ENABLE_IPO = "ON"
+MQT_QMAP_LOG_LEVEL = "WARN"
 
 [[tool.scikit-build.overrides]]
 if.python-version = ">=3.13"

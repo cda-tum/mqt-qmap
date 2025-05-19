@@ -47,10 +47,11 @@ public:
     typename Placer::Config placerConfig{};
     typename Router::Config routerConfig{};
     typename CodeGenerator::Config codeGeneratorConfig{};
+    spdlog::level::level_enum logLevel = spdlog::level::info;
     NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(Config, schedulerConfig,
                                                 reuseAnalyzerConfig,
                                                 placerConfig, routerConfig,
-                                                codeGeneratorConfig);
+                                                codeGeneratorConfig, logLevel);
   };
   struct Statistics {
     std::chrono::microseconds schedulingTime;
@@ -82,7 +83,9 @@ private:
         Placer(architecture, config.placerConfig),
         Router(architecture, config.routerConfig),
         CodeGenerator(architecture, config.codeGeneratorConfig),
-        architecture_(architecture), config_(config) {}
+        architecture_(architecture), config_(config) {
+    spdlog::set_level(config.logLevel);
+  }
 
   explicit Compiler(const Architecture& architecture)
       : Compiler(architecture, {}) {}
@@ -98,7 +101,7 @@ public:
     std::istringstream iss(jsonStr);
     std::string line;
     while (std::getline(iss, line)) {
-      spdlog::info(line);
+      SPDLOG_INFO(line);
     }
 #endif // SPDLOG_ACTIVE_LEVEL <= SPDLOG_LEVEL_INFO
     statistics_.numberOfQubits = qComp.getNqubits();
@@ -143,7 +146,7 @@ public:
           });
       const auto avg = static_cast<double>(sum) /
                        static_cast<double>(twoQubitGateLayers.size());
-      spdlog::info(
+      SPDLOG_INFO(
           "Number of two-qubit gates per layer: min: {}, avg: {}, max: {}", min,
           avg, max);
     }
@@ -219,6 +222,14 @@ NLOHMANN_JSON_NAMESPACE_BEGIN
 template <> struct adl_serializer<std::chrono::microseconds> {
   static void to_json(json& j, const std::chrono::microseconds& ms) {
     j = ms.count();
+  }
+};
+template <> struct adl_serializer<spdlog::level::level_enum> {
+  static void to_json(json& j, const spdlog::level::level_enum& level) {
+    j = spdlog::level::to_string_view(level).data();
+  }
+  static void from_json(const json& j, spdlog::level::level_enum& level) {
+    level = spdlog::level::from_str(j.get<std::string>());
   }
 };
 NLOHMANN_JSON_NAMESPACE_END
