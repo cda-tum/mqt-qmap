@@ -1,6 +1,29 @@
 OPENQASM 2.0;
 include "qelib1.inc";
 qreg q[32];
+// Description:
+//     This circuit contains 32 CZ-gates that can only be performed
+//     sequentially. Always, one qubit of the previous gate can be reused.
+//
+// Motivation:
+//     Since, one of the qubits is reused, many CZ-gates are executed in the
+//     same site's pair (before the lookahead decides not to reuse the qubit).
+//     While moving back, the qubits build a flock in the storage zone which
+//     requires proper routing in the storage zone.
+//
+//  q_0: ─■─────────
+//        │
+//  q_1: ─■─■───────
+//          │
+//  q_2: ───■─■─────
+//            │
+//  q_3: ─────■─────
+//
+//           ...
+//
+// q_30: ─────────■─
+//                │
+// q_31: ─────────■─
 cz q[0], q[1];
 cz q[1], q[2];
 cz q[2], q[3];

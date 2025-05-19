@@ -1,6 +1,32 @@
 OPENQASM 2.0;
 include "qelib1.inc";
 qreg q[32];
+// Description:
+//     This circuit contains two layers of 16 CZ-gates each.
+//
+// Motivation:
+//     Test a more complex circuit with many reuse qubits and multiple qubits
+//     that are moved simultaneously.
+//
+//  q_0: ─■─
+//        │
+//  q_1: ─■──■─
+//           │
+//  q_2: ─■──■─
+//        │
+//  q_3: ─■──■─
+//           │
+//  q_4: ─■──■─
+//        │
+//  q_5: ─■────
+//
+// ...
+//
+// q_29: ────■─
+//           │
+// q_30: ─■──■─
+//        │
+// q_31: ─■────
 cz q[0], q[1];
 cz q[2], q[3];
 cz q[4], q[5];
