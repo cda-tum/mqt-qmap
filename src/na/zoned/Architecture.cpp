@@ -10,6 +10,8 @@
 
 #include "na/zoned/Architecture.hpp"
 
+#include "spdlog/spdlog.h"
+
 #include <algorithm>
 #include <cassert>
 #include <cmath>
@@ -22,7 +24,7 @@
 #include <limits>
 #include <memory>
 #include <nlohmann/json.hpp>
-#include <numeric>
+#include <spdlog/spdlog.h>
 #include <sstream>
 #include <stdexcept>
 #include <tuple>
@@ -228,8 +230,8 @@ auto Architecture::fromJSON(const nlohmann::json& json) -> Architecture {
           "Operation duration must be a dict in architecture spec");
     }
   } else {
-    std::cout << "\033[1;35m[WARN]\033[0m Operation's duration is missed in "
-                 "architecture spec. Using default values.\n";
+    spdlog::warn("Operation's duration is missed in architecture spec. "
+                 "Using default values.");
   }
   // check if the operation's fidelity exists, otherwise print a warning
   // throw an error if the specification is invalid
@@ -282,8 +284,8 @@ auto Architecture::fromJSON(const nlohmann::json& json) -> Architecture {
           "Operation fidelities must be a dict in architecture spec");
     }
   } else {
-    std::cout << "\033[1;35m[WARN]\033[0m Operation's fidelity is missed in "
-                 "architecture spec. Using default values.\n";
+    spdlog::warn("Operation's fidelity is missed in architecture spec. "
+                 "Using default values.");
   }
   // check if the qubit's T1 time exists, otherwise print a warning
   // throw an error if the time is not a number
@@ -308,8 +310,8 @@ auto Architecture::fromJSON(const nlohmann::json& json) -> Architecture {
           "The qubit spec must be a dict in architecture spec");
     }
   } else {
-    std::cout << "\033[1;35m[WARN]\033[0m The qubit spec is missed in "
-                 "architecture spec. Using default values.\n";
+    spdlog::warn(
+        "The qubit spec is missed in architecture spec. Using default values.");
   }
   // check if the rydberg range exists and is valid, otherwise throw an error
   // JSON Example:
@@ -512,7 +514,6 @@ auto Architecture::fromJSON(const nlohmann::json& json) -> Architecture {
   arch.preprocessing();
   return arch;
 }
-
 auto Architecture::exportNAVizMachine() const -> std::string {
   std::stringstream ss;
   ss << "name: \"" << name << "\"\n";
@@ -873,5 +874,4 @@ auto Architecture::otherEntanglementSite(const SLM& slm, std::size_t r,
   assert(slm.nRows == otherSlm.nRows);
   return {otherSlm, r, c};
 }
-
 } // namespace na::zoned

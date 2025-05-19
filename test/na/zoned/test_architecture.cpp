@@ -158,7 +158,7 @@ TEST(ArchitectureTest, MissingRydbergDuration) {
 TEST(ArchitectureTest, InvalidTransferDuration) {
   nlohmann::json spec = R"({
   "name": "invalid_architecture",
-  "operation_duration": {"rydberg_gate": 0.36, "single_qubit_gate": 52, "atom_transfer": "15 µs"}
+  "operation_duration": {"rydberg_gate": 0.36, "single_qubit_gate": 52, "atom_transfer": "15 us"}
 })"_json;
   EXPECT_THROW(std::ignore = Architecture::fromJSON(spec),
                std::invalid_argument);
@@ -174,7 +174,7 @@ TEST(ArchitectureTest, MissingTransferDuration) {
 TEST(ArchitectureTest, InvalidSingleQubitOperationDuration) {
   nlohmann::json spec = R"({
   "name": "invalid_architecture",
-  "operation_duration": {"rydberg_gate": 0.36, "single_qubit_gate": "52µs", "atom_transfer": 15}
+  "operation_duration": {"rydberg_gate": 0.36, "single_qubit_gate": "52us", "atom_transfer": 15}
 })"_json;
   EXPECT_THROW(std::ignore = Architecture::fromJSON(spec),
                std::invalid_argument);
@@ -711,7 +711,7 @@ TEST(ArchitectureTest, InvalidAODSeparation) {
     "offset": [5, 70],
     "dimension": [50, 40]
   }],
-  "aods":[{"id": 0, "site_separation": "2 µm", "r": 20, "c": 20}],
+  "aods":[{"id": 0, "site_separation": "2 um", "r": 20, "c": 20}],
   "rydberg_range": [[[0, 0], [2, 1]]]
 })"_json;
   EXPECT_THROW(std::ignore = Architecture::fromJSON(spec),

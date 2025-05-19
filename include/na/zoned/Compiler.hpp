@@ -27,6 +27,7 @@
 #include <iostream>
 #include <memory>
 #include <nlohmann/json.hpp>
+#include <spdlog/spdlog.h>
 
 namespace na::zoned {
 #define SELF (*static_cast<ConcreteType*>(this))
@@ -84,18 +85,18 @@ private:
 public:
   [[nodiscard]] auto compile(const qc::QuantumComputation& qComp)
       -> NAComputation {
-    std::cout << "\033[1;32m[INFO]\033[0m \033[4mMQT QMAP Zoned Neutral Atom "
-                 "Compiler\n"
-              << "\033[1;32m[INFO]\033[0m Used compiler settings: \n";
-    std::string jsonStr =
-        config_.dump(2); // Pretty-print with 2-space indentation
-    std::istringstream iss(jsonStr);
-    std::string line;
-    while (std::getline(iss, line)) {
-      std::cout << "\033[1;32m[INFO]\033[0m " << line << '\n';
+    spdlog::info("*** MQT QMAP Zoned Neutral Atom Compiler ***");
+    spdlog::info("Used compiler settings:");
+    if (spdlog::should_log(spdlog::level::info)) {
+      std::string jsonStr =
+          config_.dump(2); // Pretty-print with 2-space indentation
+      std::istringstream iss(jsonStr);
+      std::string line;
+      while (std::getline(iss, line)) {
+        spdlog::info(line);
+      }
     }
-    std::cout << "\033[1;32m[INFO]\033[0m Number of qubits: "
-              << qComp.getNqubits() << "\n";
+    spdlog::info("Number of qubits: {}", qComp.getNqubits());
     const auto nTwoQubitGates =
         std::count_if(qComp.cbegin(), qComp.cend(),
                       [](const std::unique_ptr<qc::Operation>& op) {
@@ -106,10 +107,8 @@ public:
                       [](const std::unique_ptr<qc::Operation>& op) {
                         return op->getNqubits() == 1;
                       });
-    std::cout << "\033[1;32m[INFO]\033[0m Number of two-qubit gates: "
-              << nTwoQubitGates << "\n";
-    std::cout << "\033[1;32m[INFO]\033[0m Number of single-qubit gates: "
-              << nSingleQubitGates << "\n";
+    spdlog::info("Number of two-qubit gates: {}", nTwoQubitGates);
+    spdlog::info("Number of single-qubit gates: {}", nSingleQubitGates);
 
     const auto& schedulingStart = std::chrono::system_clock::now();
     const auto& [singleQubitGateLayers, twoQubitGateLayers] =
@@ -117,13 +116,12 @@ public:
     statistics_.schedulingTime =
         std::chrono::duration_cast<std::chrono::microseconds>(
             std::chrono::system_clock::now() - schedulingStart);
-    std::cout << "\033[1;32m[INFO]\033[0m Time for scheduling: "
-              << statistics_.schedulingTime.count() << "µs\n";
-    std::cout << "\033[1;32m[INFO]\033[0m Number of single-qubit "
-                 "gate layers: "
-              << singleQubitGateLayers.size() << "\n";
-    std::cout << "\033[1;32m[INFO]\033[0m Number of two-qubit gate layers: "
-              << twoQubitGateLayers.size() << "\n";
+    spdlog::info("Time for scheduling: {}us",
+                 statistics_.schedulingTime.count());
+    spdlog::info("Number of single-qubit gate layers: {}",
+                 singleQubitGateLayers.size());
+    spdlog::info("Number of two-qubit gate layers: {}",
+                 twoQubitGateLayers.size());
     if (!twoQubitGateLayers.empty()) {
       const auto& [min, sum, max] = std::accumulate(
           twoQubitGateLayers.cbegin(), twoQubitGateLayers.cend(),
@@ -135,9 +133,9 @@ public:
           });
       const auto avg = static_cast<double>(sum) /
                        static_cast<double>(twoQubitGateLayers.size());
-      std::cout << "\033[1;32m[INFO]\033[0m Number of two-qubit "
-                   "gates per layer: min: "
-                << min << ", avg: " << avg << ", max: " << max << "\n";
+      spdlog::info(
+          "Number of two-qubit gates per layer: min: {}, avg: {}, max: {}", min,
+          avg, max);
     }
 
     const auto& reuseAnalysisStart = std::chrono::system_clock::now();
@@ -145,8 +143,8 @@ public:
     statistics_.reuseAnalysisTime =
         std::chrono::duration_cast<std::chrono::microseconds>(
             std::chrono::system_clock::now() - reuseAnalysisStart);
-    std::cout << "\033[1;32m[INFO]\033[0m Time for reuse analysis: "
-              << statistics_.reuseAnalysisTime.count() << "µs\n";
+    spdlog::info("Time for reuse analysis: {}us",
+                 statistics_.reuseAnalysisTime.count());
 
     const auto& placementStart = std::chrono::system_clock::now();
     const auto& placement =
@@ -154,16 +152,14 @@ public:
     statistics_.placementTime =
         std::chrono::duration_cast<std::chrono::microseconds>(
             std::chrono::system_clock::now() - placementStart);
-    std::cout << "\033[1;32m[INFO]\033[0m Time for placement: "
-              << statistics_.placementTime.count() << "µs\n";
+    spdlog::info("Time for placement: {}us", statistics_.placementTime.count());
 
     const auto& routingStart = std::chrono::system_clock::now();
     const auto& routing = SELF.route(placement);
     statistics_.routingTime =
         std::chrono::duration_cast<std::chrono::microseconds>(
             std::chrono::system_clock::now() - routingStart);
-    std::cout << "\033[1;32m[INFO]\033[0m Time for routing: "
-              << statistics_.routingTime.count() << "µs\n";
+    spdlog::info("Time for routing: {}us", statistics_.routingTime.count());
 
     const auto& codeGenerationStart = std::chrono::system_clock::now();
     NAComputation code =
@@ -172,14 +168,13 @@ public:
     statistics_.codeGenerationTime =
         std::chrono::duration_cast<std::chrono::microseconds>(
             std::chrono::system_clock::now() - codeGenerationStart);
-    std::cout << "\033[1;32m[INFO]\033[0m Time for code generation: "
-              << statistics_.codeGenerationTime.count() << "µs\n";
+    spdlog::info("Time for code generation: {}us",
+                 statistics_.codeGenerationTime.count());
 
     statistics_.totalTime =
         std::chrono::duration_cast<std::chrono::microseconds>(
             std::chrono::system_clock::now() - schedulingStart);
-    std::cout << "\033[1;32m[INFO]\033[0m Total time: "
-              << statistics_.totalTime.count() << "µs\n";
+    spdlog::info("Total time: {}us", statistics_.totalTime.count());
     return code;
   }
   [[nodiscard]] auto getStatistics() const -> const Statistics& {

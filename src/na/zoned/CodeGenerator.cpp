@@ -30,10 +30,10 @@
 
 #include <cassert>
 #include <cstddef>
-#include <iostream>
 #include <iterator>
 #include <map>
 #include <nlohmann/json.hpp>
+#include <spdlog/spdlog.h>
 #include <sstream>
 #include <string>
 #include <utility>
@@ -112,11 +112,9 @@ auto CodeGenerator::appendSingleQubitGates(
         // in this case, the gate is not any variant of a rotational z-gate.
         // depending on the settings, a warning is printed.
         if (config_.warnUnsupportedGates) {
-          std::ostringstream oss;
-          oss << "\033[1;35m[WARN]\033[0m Gate not part of basis gates will be "
-                 "inserted as U3 gate: "
-              << op.get().getType() << "\n";
-          std::cout << oss.str();
+          spdlog::warn(
+              "Gate not part of basis gates will be inserted as U3 gate: {}",
+              qc::toString(op.get().getType()));
         }
         if (op.get().getType() == qc::U) {
           code.emplaceBack<LocalUOp>(

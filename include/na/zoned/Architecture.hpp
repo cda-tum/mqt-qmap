@@ -135,9 +135,9 @@ struct Architecture {
   std::vector<std::unique_ptr<AOD>> aods;
   /// A struct to define the operation durations.
   struct OperationDurations {
-    double timeAtomTransfer = 15;       ///< µs
-    double timeRydbergGate = 0.36;      ///< µs
-    double timeSingleQubitGate = 0.625; ///< µs
+    double timeAtomTransfer = 15;       ///< us
+    double timeRydbergGate = 0.36;      ///< us
+    double timeSingleQubitGate = 0.625; ///< us
   };
   /// Operation durations.
   std::optional<OperationDurations> operationDurations;
@@ -149,7 +149,7 @@ struct Architecture {
   };
   /// Operation fidelities.
   std::optional<OperationFidelities> operationFidelities;
-  std::optional<double> qubitT1; ///< T1 time of the qubit in µs
+  std::optional<double> qubitT1; ///< T1 time of the qubit in us
   /// Minimum X coordinates of the different Rydberg zones, i.e., where the
   /// Rydberg laser can affect the atoms.
   std::vector<std::size_t> rydbergRangeMinX;
@@ -191,6 +191,7 @@ struct Architecture {
   /// @param json the JSON specification
   [[nodiscard]] static auto fromJSON(const nlohmann::json& json)
       -> Architecture;
+  /// Creates an empty Architecture.
   Architecture() = default;
   // Explicitly delete copy constructor and copy assignment operator because the
   // SLMs and AODs owned by the Architecture cannot be copied.
@@ -248,10 +249,12 @@ struct Architecture {
                                const SLM& idx2, std::size_t r2,
                                std::size_t c2) const -> const
       std::tuple<std::reference_wrapper<const SLM>, std::size_t, std::size_t>&;
-  /// return the maximum/sum of the distance to move two qubits to one rydberg
-  /// site. If the two qubits are in the same row, i.e., can be picked up
-  /// simultaneously, the maximum distance is returned. Otherwise, the
-  /// sum of the distances is returned.
+  /**
+   * return the maximum/sum of the distance to move two qubits to one rydberg
+   * site. If the two qubits are in the same row, i.e., can be picked up
+   * simultaneously, the maximum distance is returned. Otherwise, the
+   * sum of the distances is returned.
+   */
   auto nearestEntanglementSiteDistance(const SLM& slm1, std::size_t r1,
                                        std::size_t c1, const SLM& slm2,
                                        std::size_t r2, std::size_t c2) const
@@ -262,10 +265,14 @@ struct Architecture {
                     std::size_t>;
 
 private:
-  /// Compute the site region for entanglement zone and the nearest Rydberg site
-  /// for each storage site.
-  /// @note We assume we only have one storage zone or one entanglement zone per
-  /// row.
+  /// Initialize the logger if it is not already initialized.
+  static auto initializeLog() -> void;
+  /**
+   * Compute the site region for entanglement zone and the nearest Rydberg site
+   * for each storage site.
+   * @note We assume we only have one storage zone or one entanglement zone per
+   * row.
+   */
   auto preprocessing() -> void;
   /**
    * In the loop, we will calculate a lower bound of the distance
