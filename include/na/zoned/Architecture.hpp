@@ -261,7 +261,7 @@ public:
   auto nearestStorageSite(const SLM& slm, std::size_t r, std::size_t c) const
       -> const
       std::tuple<std::reference_wrapper<const SLM>, std::size_t, std::size_t>&;
-  /// return the nearest Rydberg site for two qubit in the storage zone
+  /// return the nearest entanglement site for two qubit in the storage zone
   /// based on the position of two qubits
   auto nearestEntanglementSite(const SLM& idx1, std::size_t r1, std::size_t c1,
                                const SLM& idx2, std::size_t r2,
@@ -286,10 +286,8 @@ private:
   /// Initialize the logger if it is not already initialized.
   static auto initializeLog() -> void;
   /**
-   * Compute the site region for entanglement zone and the nearest Rydberg site
-   * for each storage site.
-   * @note We assume we only have one storage zone or one entanglement zone per
-   * row.
+   * Compute the site region for entanglement zone and the nearest entanglement
+   * site for each storage site.
    */
   auto preprocessing() -> void;
   /**
