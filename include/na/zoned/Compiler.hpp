@@ -60,11 +60,6 @@ public:
     std::chrono::microseconds routingTime;
     std::chrono::microseconds codeGenerationTime;
     std::chrono::microseconds totalTime;
-    size_t numberOfQubits = 0;
-    size_t nSingleQubitGates = 0;
-    size_t nTwoQubitGates = 0;
-    size_t nSingleQubitGateLayers = 0;
-    size_t nTwoQubitGateLayers = 0;
     NLOHMANN_DEFINE_TYPE_INTRUSIVE_ONLY_SERIALIZE(Statistics, schedulingTime,
                                                   reuseAnalysisTime,
                                                   placementTime, routingTime,
@@ -94,31 +89,29 @@ public:
   [[nodiscard]] auto compile(const qc::QuantumComputation& qComp)
       -> NAComputation {
     SPDLOG_INFO("*** MQT QMAP Zoned Neutral Atom Compiler ***");
-    SPDLOG_INFO("Used compiler settings:");
-#if SPDLOG_ACTIVE_LEVEL <= SPDLOG_LEVEL_INFO
+#if SPDLOG_ACTIVE_LEVEL <= SPDLOG_LEVEL_DEBUG
+    SPDLOG_DEBUG("Used compiler settings:");
     std::string jsonStr =
         config_.dump(2); // Pretty-print with 2-space indentation
     std::istringstream iss(jsonStr);
     std::string line;
     while (std::getline(iss, line)) {
-      SPDLOG_INFO(line);
+      SPDLOG_DEBUG(line);
     }
-#endif // SPDLOG_ACTIVE_LEVEL <= SPDLOG_LEVEL_INFO
-    statistics_.numberOfQubits = qComp.getNqubits();
-    SPDLOG_INFO("Number of qubits: {}", statistics_.numberOfQubits);
-    statistics_.nTwoQubitGates = static_cast<size_t>(
+    SPDLOG_DEBUG("Number of qubits: {}", qComp.getNqubits());
+    const auto nTwoQubitGates = static_cast<size_t>(
         std::count_if(qComp.cbegin(), qComp.cend(),
                       [](const std::unique_ptr<qc::Operation>& op) {
                         return op->getNqubits() == 2;
                       }));
-    SPDLOG_INFO("Number of two-qubit gates: {}", statistics_.nTwoQubitGates);
-    statistics_.nSingleQubitGates = static_cast<size_t>(
+    SPDLOG_DEBUG("Number of two-qubit gates: {}", nTwoQubitGates);
+    const auto nSingleQubitGates = static_cast<size_t>(
         std::count_if(qComp.cbegin(), qComp.cend(),
                       [](const std::unique_ptr<qc::Operation>& op) {
                         return op->getNqubits() == 1;
                       }));
-    SPDLOG_INFO("Number of single-qubit gates: {}",
-                statistics_.nSingleQubitGates);
+    SPDLOG_DEBUG("Number of single-qubit gates: {}", nSingleQubitGates);
+#endif // SPDLOG_ACTIVE_LEVEL <= SPDLOG_LEVEL_DEBUG
 
     const auto& schedulingStart = std::chrono::system_clock::now();
     const auto& [singleQubitGateLayers, twoQubitGateLayers] =
@@ -128,13 +121,11 @@ public:
             std::chrono::system_clock::now() - schedulingStart);
     SPDLOG_INFO("Time for scheduling: {}us",
                 statistics_.schedulingTime.count());
-    statistics_.nSingleQubitGateLayers = singleQubitGateLayers.size();
-    SPDLOG_INFO("Number of single-qubit gate layers: {}",
-                statistics_.nSingleQubitGateLayers);
-    statistics_.nTwoQubitGateLayers = twoQubitGateLayers.size();
-    SPDLOG_INFO("Number of two-qubit gate layers: {}",
-                statistics_.nTwoQubitGateLayers);
-#if SPDLOG_ACTIVE_LEVEL <= SPDLOG_LEVEL_INFO
+#if SPDLOG_ACTIVE_LEVEL <= SPDLOG_LEVEL_DEBUG
+    SPDLOG_DEBUG("Number of single-qubit gate layers: {}",
+                 singleQubitGateLayers.size());
+    SPDLOG_DEBUG("Number of two-qubit gate layers: {}",
+                 twoQubitGateLayers.size());
     if (!twoQubitGateLayers.empty()) {
       const auto& [min, sum, max] = std::accumulate(
           twoQubitGateLayers.cbegin(), twoQubitGateLayers.cend(),
@@ -146,11 +137,11 @@ public:
           });
       const auto avg = static_cast<double>(sum) /
                        static_cast<double>(twoQubitGateLayers.size());
-      SPDLOG_INFO(
+      SPDLOG_DEBUG(
           "Number of two-qubit gates per layer: min: {}, avg: {}, max: {}", min,
           avg, max);
     }
-#endif // SPDLOG_ACTIVE_LEVEL <= SPDLOG_LEVEL_INFO
+#endif // SPDLOG_ACTIVE_LEVEL <= SPDLOG_LEVEL_DEBUG
 
     const auto& reuseAnalysisStart = std::chrono::system_clock::now();
     const auto& reuseQubits = SELF.analyzeReuse(twoQubitGateLayers);
@@ -229,7 +220,11 @@ template <> struct adl_serializer<spdlog::level::level_enum> {
     j = spdlog::level::to_string_view(level).data();
   }
   static void from_json(const json& j, spdlog::level::level_enum& level) {
-    level = spdlog::level::from_str(j.get<std::string>());
+    // transform the string to lower case
+    std::string str = j.get<std::string>();
+    std::transform(str.begin(), str.end(), str.begin(),
+                   [](unsigned char c) { return std::tolower(c); });
+    level = spdlog::level::from_str(str);
   }
 };
 NLOHMANN_JSON_NAMESPACE_END
