@@ -8,7 +8,7 @@
  * Licensed under the MIT License
  */
 
-#include "na/zoned/ISRouter.hpp"
+#include "na/zoned/IndependentSetRouter.hpp"
 
 #include <cstddef>
 #include <gmock/gmock-matchers.h>
@@ -41,23 +41,23 @@ constexpr std::string_view architectureJson = R"({
   "aods":[{"id": 0, "site_separation": 2, "r": 20, "c": 20}],
   "rydberg_range": [[[5, 70], [55, 110]]]
 })";
-class ISRouterRouteTest : public ::testing::Test {
+class IndependentSetRouterRouteTest : public ::testing::Test {
 protected:
   Architecture architecture;
   nlohmann::json config;
-  ISRouter router;
-  ISRouterRouteTest()
+  IndependentSetRouter router;
+  IndependentSetRouterRouteTest()
       : architecture(Architecture::fromJSONString(architectureJson)),
         router(architecture, config) {}
 };
-TEST_F(ISRouterRouteTest, Empty) {
+TEST_F(IndependentSetRouterRouteTest, Empty) {
   EXPECT_THAT(
       router.route(
           std::vector<std::vector<std::tuple<std::reference_wrapper<const SLM>,
                                              size_t, size_t>>>{}),
       ::testing::IsEmpty());
 }
-TEST_F(ISRouterRouteTest, Initial) {
+TEST_F(IndependentSetRouterRouteTest, Initial) {
   const auto& slm = *architecture.storageZones.front();
   EXPECT_THAT(
       router.route(
@@ -66,7 +66,7 @@ TEST_F(ISRouterRouteTest, Initial) {
               {{slm, 0, 0}}}),
       ::testing::IsEmpty());
 }
-TEST_F(ISRouterRouteTest, OneLayer) {
+TEST_F(IndependentSetRouterRouteTest, OneLayer) {
   // STORAGE     ...         │ ...         │ ...
   //         18  o o o o ... │ o o o o ... │ o o o o ...
   //         19  0 1 o o ... │ o o o o ... │ 0 1 o o ...
@@ -92,7 +92,7 @@ TEST_F(ISRouterRouteTest, OneLayer) {
                              ::testing::UnorderedElementsAre(
                                  ::testing::UnorderedElementsAre(0U, 1U))));
 }
-TEST_F(ISRouterRouteTest, Cross) {
+TEST_F(IndependentSetRouterRouteTest, Cross) {
   // STORAGE     ...         │ ...
   //         18  o o o o ... │ o o o o ...
   //         19  0 1 o o ... │ o o o o ...
@@ -116,7 +116,7 @@ TEST_F(ISRouterRouteTest, Cross) {
           ::testing::UnorderedElementsAre(0U),
           ::testing::UnorderedElementsAre(1U))));
 }
-TEST_F(ISRouterRouteTest, Overtake) {
+TEST_F(IndependentSetRouterRouteTest, Overtake) {
   // STORAGE     ...         │ ...
   //         18  0 1 o o ... │ o o o o ...
   //         19  2 3 o o ... │ o o o o ...
@@ -146,7 +146,7 @@ TEST_F(ISRouterRouteTest, Overtake) {
           ::testing::UnorderedElementsAre(0U, 1U),
           ::testing::UnorderedElementsAre(2U, 3U))));
 }
-TEST_F(ISRouterRouteTest, Array) {
+TEST_F(IndependentSetRouterRouteTest, Array) {
   // STORAGE     ...             │ ...
   //         18  0 1 2 3 o o ... │ o o o o o o ...
   //         19  4 5 6 7 o o ... │ o o o o o o ...

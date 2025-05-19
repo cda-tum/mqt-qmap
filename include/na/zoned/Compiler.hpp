@@ -17,9 +17,9 @@
 #include "na/zoned/ASAPScheduler.hpp"
 #include "na/zoned/AStarPlacer.hpp"
 #include "na/zoned/CodeGenerator.hpp"
-#include "na/zoned/ISRouter.hpp"
-#include "na/zoned/VMPlacer.hpp"
-#include "na/zoned/VMReuseAnalyzer.hpp"
+#include "na/zoned/IndependentSetRouter.hpp"
+#include "na/zoned/VertexMatchingPlacer.hpp"
+#include "na/zoned/VertexMatchingReuseAnalyzer.hpp"
 
 #include <cassert>
 #include <chrono>
@@ -188,8 +188,9 @@ public:
 };
 
 class RoutingAgnosticCompiler final
-    : public Compiler<RoutingAgnosticCompiler, ASAPScheduler, VMReuseAnalyzer,
-                      VMPlacer, ISRouter, CodeGenerator> {
+    : public Compiler<RoutingAgnosticCompiler, ASAPScheduler,
+                      VertexMatchingReuseAnalyzer, VertexMatchingPlacer,
+                      IndependentSetRouter, CodeGenerator> {
 public:
   RoutingAgnosticCompiler(const Architecture& architecture,
                           const Config& config)
@@ -199,8 +200,9 @@ public:
 };
 
 class RoutingAwareCompiler final
-    : public Compiler<RoutingAwareCompiler, ASAPScheduler, VMReuseAnalyzer,
-                      AStarPlacer, ISRouter, CodeGenerator> {
+    : public Compiler<RoutingAwareCompiler, ASAPScheduler,
+                      VertexMatchingReuseAnalyzer, AStarPlacer,
+                      IndependentSetRouter, CodeGenerator> {
 public:
   RoutingAwareCompiler(const Architecture& architecture, const Config& config)
       : Compiler(architecture, config) {}

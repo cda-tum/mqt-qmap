@@ -23,18 +23,22 @@
 
 namespace na::zoned {
 /**
- * The class VMReuseAnalyzer implements the default reuse analysis for the
- * zoned neutral atom compiler that uses a bipartite maximum matching.
+ * The class VertexMatchingReuseAnalyzer implements the default reuse analysis
+ * for the zoned neutral atom compiler that uses a bipartite maximum matching.
  */
-class VMReuseAnalyzer {
-  friend class VMReuseAnalyzerMaximumBipartiteMatchingTest_Direct_Test;
-  friend class VMReuseAnalyzerMaximumBipartiteMatchingTest_Inverse_Test;
-  friend class VMReuseAnalyzerMaximumBipartiteMatchingInvertedTest_Direct_Test;
+class VertexMatchingReuseAnalyzer {
+  friend class
+      VertexMatchingReuseAnalyzerMaximumBipartiteMatchingTest_Direct_Test;
+  friend class
+      VertexMatchingReuseAnalyzerMaximumBipartiteMatchingTest_Inverse_Test;
+  friend class
+      VertexMatchingReuseAnalyzerMaximumBipartiteMatchingInvertedTest_Direct_Test;
 
 public:
   /**
-   * The configuration of the VMReuseAnalyzer
-   * @note VMReuseAnalyzer does not have any configuration parameters.
+   * The configuration of the VertexMatchingReuseAnalyzer
+   * @note VertexMatchingReuseAnalyzer does not have any configuration
+   * parameters.
    */
   struct Config {
     template <typename BasicJsonType>
@@ -45,12 +49,12 @@ public:
                           Config& /* unused */) {}
   };
   /**
-   * Create a new VMReuseAnalyzer.
+   * Create a new VertexMatchingReuseAnalyzer.
    * @note Both parameters are unused. Hence, the constructor does nothing
    * and the function @ref analyzeReuse is a static function.
    */
-  VMReuseAnalyzer(const Architecture& /* unused */,
-                  const Config& /* unused */) {}
+  VertexMatchingReuseAnalyzer(const Architecture& /* unused */,
+                              const Config& /* unused */) {}
   /// Analyze the reuse of qubits in the given two-qubit gate layers.
   [[nodiscard]] static auto
   analyzeReuse(const std::vector<TwoQubitGateLayer>& twoQubitGateLayers)

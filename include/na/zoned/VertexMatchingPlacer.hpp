@@ -27,11 +27,15 @@ namespace na::zoned {
  * class to find a qubit layout based on vertex matching of a weighted
  * bipartite graph
  */
-class VMPlacer {
-  friend class VMPlacerTest_MinimumWeightFullBipartiteMatching1_Test;
-  friend class VMPlacerTest_MinimumWeightFullBipartiteMatching2_Test;
-  friend class VMPlacerTest_MinimumWeightFullBipartiteMatchingExceptions_Test;
-  friend class VMPlacerTest_MinimumWeightFullBipartiteMatchingEmpty_Test;
+class VertexMatchingPlacer {
+  friend class
+      VertexMatchingPlacerTest_MinimumWeightFullBipartiteMatching1_Test;
+  friend class
+      VertexMatchingPlacerTest_MinimumWeightFullBipartiteMatching2_Test;
+  friend class
+      VertexMatchingPlacerTest_MinimumWeightFullBipartiteMatchingExceptions_Test;
+  friend class
+      VertexMatchingPlacerTest_MinimumWeightFullBipartiteMatchingEmpty_Test;
 
   std::reference_wrapper<const Architecture> architecture_;
   /**
@@ -60,15 +64,16 @@ public:
   };
 
 private:
-  /// The configuration of the VMPlacer
+  /// The configuration of the VertexMatchingPlacer
   Config config_;
 
   // todo: Why is that?
   constexpr static double costAtomTransfer_ = 0.9999;
 
 public:
-  /// Create a VMPlacer based on the given architecture and configuration
-  VMPlacer(const Architecture& architecture, const Config& config);
+  /// Create a VertexMatchingPlacer based on the given architecture and
+  /// configuration
+  VertexMatchingPlacer(const Architecture& architecture, const Config& config);
   /// generate qubit placement based on minimum weight matching
   [[nodiscard]] auto
   place(size_t nQubits,

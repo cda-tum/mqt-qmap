@@ -8,7 +8,7 @@
  * Licensed under the MIT License
  */
 
-#include "na/zoned/ISRouter.hpp"
+#include "na/zoned/IndependentSetRouter.hpp"
 
 #include "ir/Definitions.hpp"
 #include "na/zoned/Architecture.hpp"
@@ -27,9 +27,9 @@
 #include <vector>
 
 namespace na::zoned {
-auto ISRouter::createConflictGraph(const std::vector<qc::Qubit>& atomsToMove,
-                                   const Placement& startPlacement,
-                                   const Placement& targetPlacement) const
+auto IndependentSetRouter::createConflictGraph(
+    const std::vector<qc::Qubit>& atomsToMove, const Placement& startPlacement,
+    const Placement& targetPlacement) const
     -> std::unordered_map<qc::Qubit, std::vector<qc::Qubit>> {
   std::unordered_map<qc::Qubit, std::vector<qc::Qubit>> conflictGraph;
   for (auto atomIt = atomsToMove.cbegin(); atomIt != atomsToMove.cend();
@@ -50,7 +50,7 @@ auto ISRouter::createConflictGraph(const std::vector<qc::Qubit>& atomsToMove,
   }
   return conflictGraph;
 }
-auto ISRouter::getMovementVector(
+auto IndependentSetRouter::getMovementVector(
     const std::tuple<const SLM&, size_t, size_t>& start,
     const std::tuple<const SLM&, size_t, size_t>& target) const
     -> std::tuple<size_t, size_t, size_t, size_t> {
@@ -62,7 +62,7 @@ auto ISRouter::getMovementVector(
       architecture_.get().exactSLMLocation(targetSLM, targetRow, targetColumn);
   return std::make_tuple(startX, startY, targetX, targetY);
 }
-auto ISRouter::isCompatibleMovement(
+auto IndependentSetRouter::isCompatibleMovement(
     std::tuple<size_t, size_t, size_t, size_t> v,
     std::tuple<size_t, size_t, size_t, size_t> w) -> bool {
   const auto& [v0, v1, v2, v3] = v;
@@ -81,7 +81,7 @@ auto ISRouter::isCompatibleMovement(
   }
   return true;
 }
-auto ISRouter::route(const std::vector<Placement>& placement) const
+auto IndependentSetRouter::route(const std::vector<Placement>& placement) const
     -> std::vector<Routing> {
   std::vector<Routing> routing;
   // early return if no placement is given

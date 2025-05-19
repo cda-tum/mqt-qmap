@@ -8,7 +8,7 @@
  * Licensed under the MIT License
  */
 
-#include "na/zoned/VMReuseAnalyzer.hpp"
+#include "na/zoned/VertexMatchingReuseAnalyzer.hpp"
 
 #include <cmath>
 #include <cstddef>
@@ -40,44 +40,45 @@ constexpr std::string_view architectureJson = R"({
   "aods":[{"id": 0, "site_separation": 2, "r": 20, "c": 20}],
   "rydberg_range": [[[5, 70], [55, 110]]]
 })";
-class VMReuseAnalyzerAnalyzeTest : public ::testing::Test {
+class VertexMatchingReuseAnalyzerAnalyzeTest : public ::testing::Test {
 protected:
   Architecture architecture;
   nlohmann::json config;
-  VMReuseAnalyzer analyzer;
-  VMReuseAnalyzerAnalyzeTest()
+  VertexMatchingReuseAnalyzer analyzer;
+  VertexMatchingReuseAnalyzerAnalyzeTest()
       : architecture(Architecture::fromJSONString(architectureJson)),
         analyzer{architecture, config} {}
 };
-TEST_F(VMReuseAnalyzerAnalyzeTest, NoGates) {
+TEST_F(VertexMatchingReuseAnalyzerAnalyzeTest, NoGates) {
   std::vector<std::vector<std::array<qc::Qubit, 2>>> twoQubitGateLayers;
   EXPECT_THAT(analyzer.analyzeReuse(twoQubitGateLayers), ::testing::IsEmpty());
 }
-TEST_F(VMReuseAnalyzerAnalyzeTest, OneLayer) {
+TEST_F(VertexMatchingReuseAnalyzerAnalyzeTest, OneLayer) {
   std::vector<std::vector<std::array<qc::Qubit, 2>>> twoQubitGateLayers{
       {{0, 1}}};
   EXPECT_THAT(analyzer.analyzeReuse(twoQubitGateLayers), ::testing::IsEmpty());
 }
-TEST_F(VMReuseAnalyzerAnalyzeTest, NoChoice) {
+TEST_F(VertexMatchingReuseAnalyzerAnalyzeTest, NoChoice) {
   std::vector<std::vector<std::array<qc::Qubit, 2>>> twoQubitGateLayers{
       {{0, 1}}, {{1, 2}}};
   EXPECT_THAT(analyzer.analyzeReuse(twoQubitGateLayers),
               ::testing::ElementsAre(::testing::UnorderedElementsAre(1U)));
 }
-TEST_F(VMReuseAnalyzerAnalyzeTest, Unique) {
+TEST_F(VertexMatchingReuseAnalyzerAnalyzeTest, Unique) {
   std::vector<std::vector<std::array<qc::Qubit, 2>>> twoQubitGateLayers{
       {{0, 1}, {2, 3}, {4, 5}}, {{1, 2}, {3, 4}, {5, 7}}};
   EXPECT_THAT(
       analyzer.analyzeReuse(twoQubitGateLayers),
       ::testing::ElementsAre(::testing::UnorderedElementsAre(1U, 3U, 5U)));
 }
-TEST_F(VMReuseAnalyzerAnalyzeTest, UniqueUnbalanced) {
+TEST_F(VertexMatchingReuseAnalyzerAnalyzeTest, UniqueUnbalanced) {
   std::vector<std::vector<std::array<qc::Qubit, 2>>> twoQubitGateLayers{
       {{0, 1}, {2, 3}, {4, 5}, {6, 7}}, {{1, 6}, {7, 8}}};
   EXPECT_THAT(analyzer.analyzeReuse(twoQubitGateLayers),
               ::testing::ElementsAre(::testing::UnorderedElementsAre(1U, 7U)));
 }
-class VMReuseAnalyzerMaximumBipartiteMatchingTest : public ::testing::Test {
+class VertexMatchingReuseAnalyzerMaximumBipartiteMatchingTest
+    : public ::testing::Test {
 protected:
   // We consider the following bipartite graph, where the nodes in the upper row
   // are the sources, and the nodes in the lower row are the sinks.
@@ -95,7 +96,7 @@ protected:
                                                            /* 2 -> */ {1, 2, 3},
                                                            /* 3 -> */ {2, 3}};
 };
-TEST_F(VMReuseAnalyzerMaximumBipartiteMatchingTest, Direct) {
+TEST_F(VertexMatchingReuseAnalyzerMaximumBipartiteMatchingTest, Direct) {
   // The result should be the following (unique) maximum matching:
   //   ┌───┐ ┌───┐ ┌───┐ ┌───┐
   //   │ 0 │ │ 1 │ │ 2 │ │ 3 │ <-- SOURCES
@@ -106,14 +107,16 @@ TEST_F(VMReuseAnalyzerMaximumBipartiteMatchingTest, Direct) {
   //   ┌─┴─┐ ┌─┴─┐ ┌─┴─┐ ┌─┴─┐
   //   │ 0 │ │ 1 │ │ 2 │ │ 3 │ <-- SINKS
   //   └───┘ └───┘ └───┘ └───┘
-  EXPECT_THAT(VMReuseAnalyzer::maximumBipartiteMatching(sparseMatrix),
-              ::testing::ElementsAre(0, 2, 1, 3));
+  EXPECT_THAT(
+      VertexMatchingReuseAnalyzer::maximumBipartiteMatching(sparseMatrix),
+      ::testing::ElementsAre(0, 2, 1, 3));
 }
-TEST_F(VMReuseAnalyzerMaximumBipartiteMatchingTest, Inverse) {
-  EXPECT_THAT(VMReuseAnalyzer::maximumBipartiteMatching(sparseMatrix, true),
-              ::testing::ElementsAre(0, 2, 1, 3));
+TEST_F(VertexMatchingReuseAnalyzerMaximumBipartiteMatchingTest, Inverse) {
+  EXPECT_THAT(
+      VertexMatchingReuseAnalyzer::maximumBipartiteMatching(sparseMatrix, true),
+      ::testing::ElementsAre(0, 2, 1, 3));
 }
-TEST(VMReuseAnalyzerMaximumBipartiteMatchingInvertedTest, Direct) {
+TEST(VertexMatchingReuseAnalyzerMaximumBipartiteMatchingInvertedTest, Direct) {
   // We also test with the inverted graph, i.e., the sources and sinks are
   // labeled in reverse order, but sources stay sources and sinks stay sinks.
   const std::vector<std::vector<std::size_t>> inverseSparseMatrix{
@@ -121,7 +124,8 @@ TEST(VMReuseAnalyzerMaximumBipartiteMatchingInvertedTest, Direct) {
       /* 1 -> */ {0, 1, 2},
       /* 2 -> */ {1},
       /* 3 -> */ {2, 3}};
-  EXPECT_THAT(VMReuseAnalyzer::maximumBipartiteMatching(inverseSparseMatrix),
+  EXPECT_THAT(VertexMatchingReuseAnalyzer::maximumBipartiteMatching(
+                  inverseSparseMatrix),
               ::testing::ElementsAre(0, 2, 1, 3));
 }
 } // namespace na::zoned

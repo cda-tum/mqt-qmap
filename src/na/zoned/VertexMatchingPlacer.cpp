@@ -8,7 +8,7 @@
  * Licensed under the MIT License
  */
 
-#include "na/zoned/VMPlacer.hpp"
+#include "na/zoned/VertexMatchingPlacer.hpp"
 
 #include "ir/Definitions.hpp"
 #include "na/zoned/Architecture.hpp"
@@ -35,7 +35,7 @@
 #include <vector>
 
 namespace na::zoned {
-auto VMPlacer::minimumWeightFullBipartiteMatching(
+auto VertexMatchingPlacer::minimumWeightFullBipartiteMatching(
     const std::vector<std::vector<std::optional<double>>>& costMatrix)
     -> std::vector<std::size_t> {
   const std::size_t sizeX = costMatrix.size();
@@ -200,7 +200,7 @@ auto VMPlacer::minimumWeightFullBipartiteMatching(
   }
   return matching;
 }
-auto VMPlacer::computeMovementCostBetweenPlacements(
+auto VertexMatchingPlacer::computeMovementCostBetweenPlacements(
     const Placement& placementBefore, const Placement& placementAfter) const
     -> double {
   double cost = 0;
@@ -227,15 +227,14 @@ auto VMPlacer::computeMovementCostBetweenPlacements(
   }
   return cost;
 }
-auto VMPlacer::computeLayersMovementCost(const Placement& placementBefore,
-                                         const Placement& placementBetween,
-                                         const Placement& placementAfter) const
-    -> double {
+auto VertexMatchingPlacer::computeLayersMovementCost(
+    const Placement& placementBefore, const Placement& placementBetween,
+    const Placement& placementAfter) const -> double {
   return computeMovementCostBetweenPlacements(placementBefore,
                                               placementBetween) +
          computeMovementCostBetweenPlacements(placementBetween, placementAfter);
 }
-auto VMPlacer::filterMapping(
+auto VertexMatchingPlacer::filterMapping(
     const Placement& previousGatePlacement,
     const std::pair<Placement, Placement>& placementsWithoutReuse,
     const std::pair<Placement, Placement>& placementsWithReuse) const
@@ -257,7 +256,7 @@ auto VMPlacer::filterMapping(
   }
   return {qubitPlacementWithReuse, gatePlacementWithReuse};
 }
-auto VMPlacer::placeGatesInEntanglementZone(
+auto VertexMatchingPlacer::placeGatesInEntanglementZone(
     const Placement& previousQubitPlacement,
     const std::unordered_set<qc::Qubit>& reuseQubits,
     const TwoQubitGateLayer& twoQubitGates,
@@ -457,7 +456,7 @@ auto VMPlacer::placeGatesInEntanglementZone(
   }
   return newPlacement;
 }
-auto VMPlacer::placeAtomsInStorageZone(
+auto VertexMatchingPlacer::placeAtomsInStorageZone(
     const Placement& initialPlacement, const Placement& previousGatePlacement,
     const std::unordered_set<qc::Qubit>& reuseQubits,
     const TwoQubitGateLayer& nextTwoQubitGates, const bool reuse) const
@@ -673,7 +672,8 @@ auto VMPlacer::placeAtomsInStorageZone(
   }
   return newPlacement;
 }
-VMPlacer::VMPlacer(const Architecture& architecture, const Config& config)
+VertexMatchingPlacer::VertexMatchingPlacer(const Architecture& architecture,
+                                           const Config& config)
     : architecture_(architecture), config_(config) {
   // get first storage SLM and first entanglement SLM
   const auto& firstStorageSLM = *architecture_.get().storageZones.front();
@@ -688,7 +688,7 @@ VMPlacer::VMPlacer(const Architecture& architecture, const Config& config)
     reverseInitialPlacement_ = true;
   }
 }
-auto VMPlacer::place(
+auto VertexMatchingPlacer::place(
     const size_t nQubits,
     const std::vector<TwoQubitGateLayer>& twoQubitGateLayers,
     const std::vector<std::unordered_set<qc::Qubit>>& reuseQubits)
@@ -767,7 +767,8 @@ auto VMPlacer::place(
   }
   return placement;
 }
-auto VMPlacer::makeInitialPlacement(const size_t nQubits) const -> Placement {
+auto VertexMatchingPlacer::makeInitialPlacement(const size_t nQubits) const
+    -> Placement {
   auto slmIt = architecture_.get().storageZones.cbegin();
   std::size_t c = 0;
   std::int64_t r = reverseInitialPlacement_

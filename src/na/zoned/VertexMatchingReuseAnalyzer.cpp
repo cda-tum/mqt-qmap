@@ -8,7 +8,7 @@
  * Licensed under the MIT License
  */
 
-#include "na/zoned/VMReuseAnalyzer.hpp"
+#include "na/zoned/VertexMatchingReuseAnalyzer.hpp"
 
 #include "ir/Definitions.hpp"
 #include "na/zoned/Types.hpp"
@@ -29,7 +29,7 @@
 #include <vector>
 
 namespace na::zoned {
-auto VMReuseAnalyzer::analyzeReuse(
+auto VertexMatchingReuseAnalyzer::analyzeReuse(
     const std::vector<TwoQubitGateLayer>& twoQubitGateLayers)
     -> std::vector<std::unordered_set<qc::Qubit>> {
   if (twoQubitGateLayers.size() <= 1) {
@@ -105,7 +105,7 @@ auto VMReuseAnalyzer::analyzeReuse(
   }
   return reuseQubits;
 }
-auto VMReuseAnalyzer::maximumBipartiteMatching(
+auto VertexMatchingReuseAnalyzer::maximumBipartiteMatching(
     const std::vector<std::vector<std::size_t>>& sparseMatrix, bool inverted)
     -> std::vector<std::optional<std::size_t>> {
   // Conversely, to other implementations and the literature, we do NOT

@@ -27,13 +27,13 @@ namespace na::zoned {
  * that forms groups of parallel movements by calculating a maximal independent
  * set.
  */
-class ISRouter {
+class IndependentSetRouter {
   std::reference_wrapper<const Architecture> architecture_;
 
 public:
   /**
-   * The configuration of the ISRouter
-   * @note ISRouter does not have any configuration parameters.
+   * The configuration of the IndependentSetRouter
+   * @note IndependentSetRouter does not have any configuration parameters.
    */
   struct Config {
     template <typename BasicJsonType>
@@ -43,8 +43,9 @@ public:
     friend void from_json(const BasicJsonType& /* unused */,
                           Config& /* unused */) {}
   };
-  /// Create a ISRouter
-  ISRouter(const Architecture& architecture, const Config& /* unused */)
+  /// Create a IndependentSetRouter
+  IndependentSetRouter(const Architecture& architecture,
+                       const Config& /* unused */)
       : architecture_(architecture) {}
   /**
    * Given the computed placement, compute a possible routing.

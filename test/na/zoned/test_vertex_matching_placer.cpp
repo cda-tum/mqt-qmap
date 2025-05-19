@@ -8,7 +8,7 @@
  * Licensed under the MIT License
  */
 
-#include "na/zoned/VMPlacer.hpp"
+#include "na/zoned/VertexMatchingPlacer.hpp"
 
 #include <cstddef>
 #include <gmock/gmock-matchers.h>
@@ -46,24 +46,24 @@ constexpr std::string_view configJson = R"({
   "windowSize" : 10,
   "dynamicPlacement" : true
 })";
-class VMPlacerPlaceTest : public ::testing::Test {
+class VertexMatchingPlacerPlaceTest : public ::testing::Test {
 protected:
   Architecture architecture;
   nlohmann::json config;
-  VMPlacer placer;
-  VMPlacerPlaceTest()
+  VertexMatchingPlacer placer;
+  VertexMatchingPlacerPlaceTest()
       : architecture(Architecture::fromJSONString(architectureJson)),
         config(nlohmann::json::parse(configJson)),
         placer(architecture, config) {}
 };
-TEST_F(VMPlacerPlaceTest, Empty) {
+TEST_F(VertexMatchingPlacerPlaceTest, Empty) {
   constexpr size_t nQubits = 1;
   EXPECT_THAT(placer.place(nQubits,
                            std::vector<std::vector<std::array<qc::Qubit, 2>>>{},
                            std::vector<std::unordered_set<qc::Qubit>>{}),
               ::testing::ElementsAre(::testing::SizeIs(nQubits)));
 }
-TEST_F(VMPlacerPlaceTest, OneGate) {
+TEST_F(VertexMatchingPlacerPlaceTest, OneGate) {
   constexpr size_t nQubits = 2;
   EXPECT_THAT(placer.place(nQubits,
                            std::vector<std::vector<std::array<qc::Qubit, 2>>>{
@@ -73,7 +73,7 @@ TEST_F(VMPlacerPlaceTest, OneGate) {
                                      ::testing::SizeIs(nQubits),
                                      ::testing::SizeIs(nQubits)));
 }
-TEST_F(VMPlacerPlaceTest, TwoGatesCons) {
+TEST_F(VertexMatchingPlacerPlaceTest, TwoGatesCons) {
   constexpr size_t nQubits = 4;
   const auto& placement = placer.place(
       nQubits,
@@ -112,7 +112,7 @@ TEST_F(VMPlacerPlaceTest, TwoGatesCons) {
   EXPECT_THAT(qubitsInEntanglementAsc, ::testing::ElementsAre(0U, 1U, 2U, 3U));
   EXPECT_THAT(qubitsInEntanglementYs, ::testing::UnorderedElementsAre(70UL));
 }
-TEST_F(VMPlacerPlaceTest, OneGateCross) {
+TEST_F(VertexMatchingPlacerPlaceTest, OneGateCross) {
   constexpr size_t nQubits = 2;
   const auto& placement = placer.place(
       nQubits, std::vector<std::vector<std::array<qc::Qubit, 2>>>{{{1U, 0U}}},
@@ -132,7 +132,7 @@ TEST_F(VMPlacerPlaceTest, OneGateCross) {
   }
   EXPECT_THAT(qubitsInEntanglementAsc, ::testing::ElementsAre(0U, 1U));
 }
-TEST_F(VMPlacerPlaceTest, TwoGatesZip) {
+TEST_F(VertexMatchingPlacerPlaceTest, TwoGatesZip) {
   constexpr size_t nQubits = 4;
   const auto& placement = placer.place(
       nQubits,
@@ -158,7 +158,7 @@ TEST_F(VMPlacerPlaceTest, TwoGatesZip) {
                                ::testing::ElementsAre(1U, 3U, 0U, 2U)));
   EXPECT_THAT(qubitsInEntanglementYs, ::testing::UnorderedElementsAre(70UL));
 }
-TEST_F(VMPlacerPlaceTest, FullEntanglementZone) {
+TEST_F(VertexMatchingPlacerPlaceTest, FullEntanglementZone) {
   constexpr size_t nQubits = 32;
   const auto& placement = placer.place(
       nQubits,
@@ -190,7 +190,7 @@ TEST_F(VMPlacerPlaceTest, FullEntanglementZone) {
   }
   EXPECT_THAT(qubitsLocationsInEntanglement, ::testing::SizeIs(nQubits));
 }
-TEST_F(VMPlacerPlaceTest, TwoTwoQubitLayerReuse) {
+TEST_F(VertexMatchingPlacerPlaceTest, TwoTwoQubitLayerReuse) {
   constexpr size_t nQubits = 3;
   const auto& placement =
       placer.place(nQubits,
@@ -214,7 +214,7 @@ TEST_F(VMPlacerPlaceTest, TwoTwoQubitLayerReuse) {
   EXPECT_EQ(std::get<1>(placement[2][1]), std::get<1>(placement[3][1]));
   EXPECT_EQ(std::get<2>(placement[2][1]), std::get<2>(placement[3][1]));
 }
-TEST(VMPlacerTest, MinimumWeightFullBipartiteMatching1) {
+TEST(VertexMatchingPlacerTest, MinimumWeightFullBipartiteMatching1) {
   // We consider the following bipartite graph, where the nodes in the upper row
   // are the sources, and the nodes in the lower row are the sinks.
   //         ┌───┐ ┌───┐ ┌───┐
@@ -242,10 +242,10 @@ TEST(VMPlacerTest, MinimumWeightFullBipartiteMatching1) {
   //   │ 0 │ │ 1 │ │ 2 │ │ 3 │ │ 4 │ <-- SINKS
   //   └───┘ └───┘ └───┘ └───┘ └───┘
   const auto matching =
-      VMPlacer::minimumWeightFullBipartiteMatching(costMatrix);
+      VertexMatchingPlacer::minimumWeightFullBipartiteMatching(costMatrix);
   EXPECT_THAT(matching, ::testing::ElementsAre(0, 1, 3));
 }
-TEST(VMPlacerTest, MinimumWeightFullBipartiteMatching2) {
+TEST(VertexMatchingPlacerTest, MinimumWeightFullBipartiteMatching2) {
   // We also consider the following bipartite graph that is the same graph as
   // the previous one, but with different weights:
   //         ┌───┐ ┌───┐ ┌───┐
@@ -273,25 +273,29 @@ TEST(VMPlacerTest, MinimumWeightFullBipartiteMatching2) {
   //   │ 0 │ │ 1 │ │ 2 │ │ 3 │ │ 4 │ <-- SINKS
   //   └───┘ └───┘ └───┘ └───┘ └───┘
   const auto matching =
-      VMPlacer::minimumWeightFullBipartiteMatching(costMatrix);
+      VertexMatchingPlacer::minimumWeightFullBipartiteMatching(costMatrix);
   EXPECT_THAT(matching, ::testing::ElementsAre(2, 1, 3));
 }
-TEST(VMPlacerTest, MinimumWeightFullBipartiteMatchingEmpty) {
-  EXPECT_THAT(VMPlacer::minimumWeightFullBipartiteMatching({}),
+TEST(VertexMatchingPlacerTest, MinimumWeightFullBipartiteMatchingEmpty) {
+  EXPECT_THAT(VertexMatchingPlacer::minimumWeightFullBipartiteMatching({}),
               ::testing::IsEmpty());
 }
-TEST(VMPlacerTest, MinimumWeightFullBipartiteMatchingExceptions) {
+TEST(VertexMatchingPlacerTest, MinimumWeightFullBipartiteMatchingExceptions) {
+  EXPECT_THROW(
+      std::ignore =
+          VertexMatchingPlacer::minimumWeightFullBipartiteMatching({{0}, {0}}),
+      std::invalid_argument);
   EXPECT_THROW(std::ignore =
-                   VMPlacer::minimumWeightFullBipartiteMatching({{0}, {0}}),
+                   VertexMatchingPlacer::minimumWeightFullBipartiteMatching(
+                       {{std::nullopt}}),
                std::invalid_argument);
-  EXPECT_THROW(std::ignore = VMPlacer::minimumWeightFullBipartiteMatching(
-                   {{std::nullopt}}),
+  EXPECT_THROW(std::ignore =
+                   VertexMatchingPlacer::minimumWeightFullBipartiteMatching(
+                       {{0, std::nullopt}, {std::nullopt, std::nullopt}}),
                std::invalid_argument);
-  EXPECT_THROW(std::ignore = VMPlacer::minimumWeightFullBipartiteMatching(
-                   {{0, std::nullopt}, {std::nullopt, std::nullopt}}),
-               std::invalid_argument);
-  EXPECT_THROW(std::ignore = VMPlacer::minimumWeightFullBipartiteMatching(
-                   {{0, std::nullopt}, {0}}),
+  EXPECT_THROW(std::ignore =
+                   VertexMatchingPlacer::minimumWeightFullBipartiteMatching(
+                       {{0, std::nullopt}, {0}}),
                std::invalid_argument);
 }
 } // namespace na::zoned
