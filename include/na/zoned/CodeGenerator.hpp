@@ -34,8 +34,10 @@ public:
   struct Config {
     /// The offset for parking spots
     size_t parkingOffset = 1;
-    /// Warn if a gate not belonging to the basis gates (local rz, global ry) is
-    /// used
+    /**
+     * Warn if a gate not belonging to the basis gates (local rz, global ry) is
+     * used
+     */
     bool warnUnsupportedGates = true;
     NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(Config, parkingOffset,
                                                 warnUnsupportedGates);

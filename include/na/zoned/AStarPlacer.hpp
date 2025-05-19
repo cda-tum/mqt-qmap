@@ -30,8 +30,10 @@
 #include <vector>
 
 namespace na::zoned {
-/// An unordered map from a row or columns of an SLM to a value of type T.
-/// @tparam T the type of the value
+/**
+ * An unordered map from a row or columns of an SLM to a value of type T.
+ * @tparam T the type of the value
+ */
 template <class T>
 using RowColumnMap =
     std::unordered_map<std::pair<std::reference_wrapper<const SLM>, size_t>, T>;
@@ -221,23 +223,32 @@ private:
    * stage
    */
   struct AtomNode {
-    /// The current level in the search tree. A level equal to the number of
-    /// atoms to be placed indicates that all atoms have been placed.
+    /**
+     * The current level in the search tree. A level equal to the number of
+     * atoms to be placed indicates that all atoms have been placed.
+     */
     uint8_t level = 0;
-    /// The index of the chosen option for the current atom instead of a pointer
-    /// to that option to save memory
+    /**
+     * The index of the chosen option for the current atom instead of a pointer
+     * to that option to save memory
+     */
     uint16_t option = 0;
     /// The accumulated lookahead cost
     float lookaheadCost = 0.0F;
-    /// A set of all sites that are already occupied by an atom due to the
-    /// current placement
+    /**
+     * A set of all sites that are already occupied by an atom due to the
+     * current placement
+     */
     std::unordered_set<DiscreteSite> consumedFreeSites;
-    /// A binary search tree representing the horizontal and vertical group,
-    /// respectively
-    /// @see getNeighbors for more details
+    /**
+     * A binary search tree representing the horizontal and vertical group,
+     * @see getNeighbors for more details
+     */
     std::vector<CompatibilityGroup> groups;
-    /// The maximum distance of placed atoms in every group to their
-    /// target location
+    /**
+     * The maximum distance of placed atoms in every group to their
+     * target location
+     */
     std::vector<float> maxDistancesOfPlacedAtomsPerGroup;
   };
 
@@ -248,23 +259,32 @@ private:
    * stage.
    */
   struct GateNode {
-    /// The current level in the search tree. A level equal to the number of
-    /// gates to be placed indicates that all gates have been placed.
+    /**
+     * The current level in the search tree. A level equal to the number of
+     * gates to be placed indicates that all gates have been placed.
+     */
     uint8_t level = 0;
-    /// The index of the chosen option for the current gate instead of a pointer
-    /// to that option to save memory
+    /**
+     * The index of the chosen option for the current gate instead of a pointer
+     * to that option to save memory
+     */
     uint16_t option = 0;
     /// The accumulated lookahead cost
     float lookaheadCost = 0.0F;
-    /// A set of all sites that are already occupied by an atom due to the
-    /// current placement
+    /**
+     * A set of all sites that are already occupied by an atom due to the
+     * current placement
+     */
     std::unordered_set<DiscreteSite> consumedFreeSites;
-    /// A binary search tree representing the horizontal and vertical group,
-    /// respectively
-    /// @see getNeighbors for more details
+    /**
+     * A binary search tree representing the horizontal and vertical group,
+     * @see getNeighbors for more details
+     */
     std::vector<CompatibilityGroup> groups;
-    /// The maximum distance of placed atoms in every group to their
-    /// target location
+    /**
+     * The maximum distance of placed atoms in every group to their
+     * target location
+     */
     std::vector<float> maxDistancesOfPlacedAtomsPerGroup;
   };
 

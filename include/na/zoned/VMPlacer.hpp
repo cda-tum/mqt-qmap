@@ -23,8 +23,10 @@
 #include <vector>
 
 namespace na::zoned {
-/// class to find a qubit layout based on vertex matching of a weighted
-/// bipartite graph
+/**
+ * class to find a qubit layout based on vertex matching of a weighted
+ * bipartite graph
+ */
 class VMPlacer {
   friend class VMPlacerTest_MinimumWeightFullBipartiteMatching1_Test;
   friend class VMPlacerTest_MinimumWeightFullBipartiteMatching2_Test;
@@ -32,21 +34,26 @@ class VMPlacer {
   friend class VMPlacerTest_MinimumWeightFullBipartiteMatchingEmpty_Test;
 
   std::reference_wrapper<const Architecture> architecture_;
-  /// If true, during the initial placement the atoms are placed starting in the
-  /// last row instead of the first row in the first SLM
+  /**
+   * If true, during the initial placement the atoms are placed starting in the
+   * last row instead of the first row in the first SLM
+   */
   bool reverseInitialPlacement_ = false;
 
 public:
   struct Config {
 
-    /// this flag indicates whether the  placement should use a window when
-    /// selecting potential free sites
+    /**
+     * this flag indicates whether the  placement should use a window when
+     * selecting potential free sites
+     */
     bool useWindow = true;
     size_t windowSize = 10;
 
-    /// this flag indicates whether the placement between gates is dynamic,
-    /// i.e., if this flag is false, the initial placement is used after all
-    /// gates
+    /**
+     * this flag indicates whether the placement between gates is dynamic,
+     * gates
+     */
     bool dynamicPlacement = true;
     NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(Config, useWindow, windowSize,
                                                 dynamicPlacement);
@@ -73,8 +80,10 @@ private:
   /// generate qubit initial layout
   auto makeInitialPlacement(size_t nQubits) const -> Placement;
 
-  /// @note implemented following pseudocode in
-  /// https://www2.eecs.berkeley.edu/Pubs/TechRpts/1978/ERL-m-78-67.pdf
+  /**
+   * @note implemented following pseudocode in
+   * https://www2.eecs.berkeley.edu/Pubs/TechRpts/1978/ERL-m-78-67.pdf
+   */
   [[nodiscard]] static auto minimumWeightFullBipartiteMatching(
       const std::vector<std::vector<std::optional<double>>>& costMatrix)
       -> std::vector<size_t>;
@@ -94,8 +103,10 @@ private:
       const std::pair<Placement, Placement>& placementsWithoutReuse,
       const std::pair<Placement, Placement>& placementsWithReuse) const
       -> std::pair<Placement, Placement>;
-  /// generate gate mapping based on minimum weight matching for the first
-  /// layer of gates
+  /**
+   * generate gate mapping based on minimum weight matching for the first
+   * layer of gates
+   */
   [[nodiscard]] auto
   placeGatesInEntanglementZone(const Placement& previousQubitPlacement,
                                const std::unordered_set<qc::Qubit>& reuseQubits,

@@ -28,11 +28,15 @@ using QubitPair = std::array<qc::Qubit, 2>;
 using TwoQubitGateLayer = std::vector<QubitPair>;
 /// Placement of one layer as a mapping from qubits (indices) to sites
 using Placement = std::vector<Site>;
-/// Routing from one layer to the next. The first dimension determines the
-/// rearrangement group, the second all qubits that are moved in this group.
+/**
+ * Routing from one layer to the next. The first dimension determines the
+ * rearrangement group, the second all qubits that are moved in this group.
+ */
 using Routing = std::vector<std::vector<qc::Qubit>>;
-/// An unordered map from sites to values of type T
-/// @tparam T the type of the value
+/**
+ * An unordered map from sites to values of type T
+ * @tparam T the type of the value
+ */
 template <class T> using SiteMap = std::unordered_map<Site, T>;
 /// An unordered set of sites
 using SiteSet = std::unordered_set<Site>;

@@ -51,8 +51,10 @@ struct SLM {
   std::size_t nCols = 0; ///< number of columns
   /// x,y-coordinate of the left uppermost SLM.
   std::pair<std::size_t, std::size_t> location{0, 0};
-  /// if the SLM is used in entanglement zone, a pointer to all entanglement
-  /// SLMs in the same group.
+  /**
+   * if the SLM is used in entanglement zone, a pointer to all entanglement
+   * SLMs in the same group.
+   */
   const std::array<SLM, 2>* entanglementZone_ = nullptr;
   /// only used for printing.
   std::optional<std::size_t> entanglementId_ = std::nullopt;
@@ -66,15 +68,19 @@ struct SLM {
   }
   /// @returns true, if the SLM is part of a storage zone.
   [[nodiscard]] auto isStorage() const -> bool { return !isEntanglement(); }
-  /// @returns true, if both SLMs are equal, i.e., they have the same
-  /// location and dimensions.
+  /**
+   * @returns true, if both SLMs are equal, i.e., they have the same
+   * location and dimensions.
+   */
   [[nodiscard]] auto operator==(const SLM& other) const -> bool;
 };
 /// An element of type Site identifies a concrete site in an SLM array.
 using Site =
     std::tuple<std::reference_wrapper<const SLM>, std::size_t, std::size_t>;
-/// An unordered map from an SLM to a value of type V.
-/// @tparam V the type of the value
+/**
+ * An unordered map from an SLM to a value of type V.
+ * @tparam V the type of the value
+ */
 template <class V>
 using SLMMap = std::unordered_map<std::reference_wrapper<const SLM>, V>;
 } // namespace na::zoned
@@ -134,15 +140,20 @@ namespace na::zoned {
 /// Class to define zone architecture.
 struct Architecture {
   std::string name; ///< name of the architecture
-  /// All storage zones of the architecture. The objects are owned by the
-  /// Architecture class. Outside the class, the SLMs are only referenced.
+  /**
+   * All storage zones of the architecture. The objects are owned by the
+   * Architecture class. Outside the class, the SLMs are only referenced.
+   */
   std::vector<std::unique_ptr<SLM>> storageZones;
-  /// All entanglement zones of the architecture. Each entanglement zone
-  /// consists of two SLMs. The objects are owned by the Architecture class.
-  /// Outside the class, the SLMs are only referenced.
+  /**
+   * All entanglement zones of the architecture. Each entanglement zone
+   * Outside the class, the SLMs are only referenced.
+   */
   std::vector<std::unique_ptr<std::array<SLM, 2>>> entanglementZones;
-  /// All AODs of the architecture. The objects are owned by the Architecture
-  /// class. Outside the class, the AODs are only referenced.
+  /**
+   * All AODs of the architecture. The objects are owned by the Architecture
+   * class. Outside the class, the AODs are only referenced.
+   */
   std::vector<std::unique_ptr<AOD>> aods;
   /// A struct to define the operation durations.
   struct OperationDurations {
@@ -161,52 +172,68 @@ struct Architecture {
   /// Operation fidelities.
   std::optional<OperationFidelities> operationFidelities;
   std::optional<double> qubitT1; ///< T1 time of the qubit in us
-  /// Minimum X coordinates of the different Rydberg zones, i.e., where the
-  /// Rydberg laser can affect the atoms.
+  /**
+   * Minimum X coordinates of the different Rydberg zones, i.e., where the
+   * Rydberg laser can affect the atoms.
+   */
   std::vector<std::size_t> rydbergRangeMinX;
-  /// Maximum X coordinates of the different Rydberg zones, i.e., where the
-  /// Rydberg laser can affect the atoms.
+  /**
+   * Maximum X coordinates of the different Rydberg zones, i.e., where the
+   * Rydberg laser can affect the atoms.
+   */
   std::vector<std::size_t> rydbergRangeMaxX;
-  /// Minimum Y coordinates of the different Rydberg zones, i.e., where the
-  /// Rydberg laser can affect the atoms.
+  /**
+   * Minimum Y coordinates of the different Rydberg zones, i.e., where the
+   * Rydberg laser can affect the atoms.
+   */
   std::vector<std::size_t> rydbergRangeMinY;
-  /// Maximum Y coordinates of the different Rydberg zones, i.e., where the
-  /// Rydberg laser can affect the atoms.
+  /**
+   * Maximum Y coordinates of the different Rydberg zones, i.e., where the
+   * Rydberg laser can affect the atoms.
+   */
   std::vector<std::size_t> rydbergRangeMaxY;
 
 private:
-  /// A map from an entanglement site to its nearest storage site. The nearest
-  /// site is the first candidate considered when moving an atom from this site
-  /// to the storage zone.
-  /// @see storageToNearestEntanglementSite
+  /**
+   * A map from an entanglement site to its nearest storage site. The nearest
+   * @see storageToNearestEntanglementSite
+   */
   SLMMap<std::vector<std::vector<Site>>> entanglementToNearestStorageSite;
-  /// A map from a pair of storage sites to their common nearest entanglement
-  /// site. The nearest site is the first candidate considered when moving a
-  /// pair of atoms from the storage zone to the entanglement zone.
-  /// @see entanglementToNearestStorageSite
+  /**
+   * A map from a pair of storage sites to their common nearest entanglement
+   * @see entanglementToNearestStorageSite
+   */
   SLMMap<std::vector<std::vector<SLMMap<std::vector<std::vector<Site>>>>>>
       storageToNearestEntanglementSite;
 
 public:
-  /// Creates an Architecture from a JSON file.
-  /// @param filename the name of the file given as a string
+  /**
+   * Creates an Architecture from a JSON file.
+   * @param filename the name of the file given as a string
+   */
   [[nodiscard]] static auto fromJSONFile(const std::string& filename)
       -> Architecture {
     return fromJSON(std::ifstream(filename));
   }
-  /// Creates an Architecture from a JSON stream.
-  /// @param ifs the input stream containing the JSON specification
+  /**
+   * Creates an Architecture from a JSON stream.
+   * @param ifs the input stream containing the JSON specification
+   */
   [[nodiscard]] static auto fromJSON(std::istream&& ifs) -> Architecture {
     return fromJSON(nlohmann::json::parse(std::move(ifs)));
   }
-  /// Creates an Architecture from a JSON string.
-  /// @param json the JSON string
+  /**
+   * Creates an Architecture from a JSON string.
+   * @param json the JSON string
+   */
   [[nodiscard]] static auto fromJSONString(const std::string_view& json)
       -> Architecture {
     return fromJSON(nlohmann::json::parse(json));
   }
-  /// Creates an Architecture from a JSON object.
-  /// @param json the JSON specification
+  /**
+   * Creates an Architecture from a JSON object.
+   * @param json the JSON specification
+   */
   [[nodiscard]] static auto fromJSON(const nlohmann::json& json)
       -> Architecture;
   /// Creates an empty Architecture.
@@ -218,38 +245,49 @@ public:
   // Default move constructor and move assignment operator
   Architecture(Architecture&&) noexcept = default;
   Architecture& operator=(Architecture&&) noexcept = default;
-  /// Export the architecture for the NAViz tool.
-  /// @returns a string containing the NAViz-compatible architecture
-  /// specification
+  /**
+   * Export the architecture for the NAViz tool.
+   * specification
+   */
   auto exportNAVizMachine() const -> std::string;
-  /// Export the architecture for the NAViz tool.
-  /// @param os the output stream to write the NAViz-compatible architecture
+  /**
+   * Export the architecture for the NAViz tool.
+   * @param os the output stream to write the NAViz-compatible architecture
+   */
   auto exportNAVizMachine(std::ostream&& os) const -> void {
     os << exportNAVizMachine();
   }
-  /// Export the architecture for the NAViz tool.
-  /// @param os the output stream to write the NAViz-compatible architecture
+  /**
+   * Export the architecture for the NAViz tool.
+   * @param os the output stream to write the NAViz-compatible architecture
+   */
   auto exportNAVizMachine(std::ostream& os) const -> void {
     exportNAVizMachine(std::move(os));
   }
-  /// Export the architecture for the NAViz tool.
-  /// @param path the path to the `.namachine`-file to write the
-  /// NAViz-compatible architecture
+  /**
+   * Export the architecture for the NAViz tool.
+   * NAViz-compatible architecture
+   */
   auto exportNAVizMachine(const std::filesystem::path& path) const -> void {
     exportNAVizMachine(std::ofstream(path));
   }
-  /// Export the architecture for the NAViz tool.
-  /// @param filename the name of the `.namachine`-file to write the
-  /// NAViz-compatible architecture
+  /**
+   * Export the architecture for the NAViz tool.
+   * NAViz-compatible architecture
+   */
   auto exportNAVizMachine(const std::string& filename) const -> void {
     exportNAVizMachine(std::filesystem::path(filename));
   }
-  /// Check if the given position is a valid SLM position, i.e., whether the
-  /// given row and column are within the range of the SLM.
+  /**
+   * Check if the given position is a valid SLM position, i.e., whether the
+   * given row and column are within the range of the SLM.
+   */
   [[nodiscard]] auto isValidSLMPosition(const SLM& slm, std::size_t r,
                                         std::size_t c) const -> bool;
-  /// Compute the exact location of the SLM site given the row and column
-  /// indices expressed in coordinates in the global coordinate system.
+  /**
+   * Compute the exact location of the SLM site given the row and column
+   * indices expressed in coordinates in the global coordinate system.
+   */
   [[nodiscard]] auto exactSLMLocation(const SLM& slm, std::size_t r,
                                       std::size_t c) const
       -> std::pair<std::size_t, std::size_t>;
@@ -261,8 +299,10 @@ public:
   auto nearestStorageSite(const SLM& slm, std::size_t r, std::size_t c) const
       -> const
       std::tuple<std::reference_wrapper<const SLM>, std::size_t, std::size_t>&;
-  /// return the nearest entanglement site for two qubit in the storage zone
-  /// based on the position of two qubits
+  /**
+   * return the nearest entanglement site for two qubit in the storage zone
+   * based on the position of two qubits
+   */
   auto nearestEntanglementSite(const SLM& idx1, std::size_t r1, std::size_t c1,
                                const SLM& idx2, std::size_t r2,
                                std::size_t c2) const -> const

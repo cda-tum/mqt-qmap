@@ -32,8 +32,10 @@ class VMReuseAnalyzer {
   friend class VMReuseAnalyzerMaximumBipartiteMatchingInvertedTest_Direct_Test;
 
 public:
-  /// The configuration of the VMReuseAnalyzer
-  /// @note VMReuseAnalyzer does not have any configuration parameters.
+  /**
+   * The configuration of the VMReuseAnalyzer
+   * @note VMReuseAnalyzer does not have any configuration parameters.
+   */
   struct Config {
     template <typename BasicJsonType>
     friend void to_json(BasicJsonType& /* unused */,
@@ -55,9 +57,10 @@ public:
       -> std::vector<std::unordered_set<qc::Qubit>>;
 
 private:
-  /// Computes a maximum matching in a bipartite graph
-  /// @note implemented pseudocode from
-  /// https://epubs.siam.org/doi/pdf/10.1137/0202019?download=true
+  /**
+   * Computes a maximum matching in a bipartite graph
+   * https://epubs.siam.org/doi/pdf/10.1137/0202019?download=true
+   */
   [[nodiscard]] static auto maximumBipartiteMatching(
       const std::vector<std::vector<std::size_t>>& sparseMatrix,
       bool inverted = false) -> std::vector<std::optional<std::size_t>>;

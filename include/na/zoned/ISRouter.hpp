@@ -31,8 +31,10 @@ class ISRouter {
   std::reference_wrapper<const Architecture> architecture_;
 
 public:
-  /// The configuration of the ISRouter
-  /// @note ISRouter does not have any configuration parameters.
+  /**
+   * The configuration of the ISRouter
+   * @note ISRouter does not have any configuration parameters.
+   */
   struct Config {
     template <typename BasicJsonType>
     friend void to_json(BasicJsonType& /* unused */,

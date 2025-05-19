@@ -475,8 +475,10 @@ auto AStarPlacer::placeGatesInEntanglementZone(
   //===------------------------------------------------------------------===//
   /// The number of either atom or gate jobs that must be performed
   const size_t nJobs = gatesToPlace.size();
-  /// a list of all gates that must be placed in the entanglement zone before a
-  /// rydberg layer
+  /**
+   * a list of all gates that must be placed in the entanglement zone before a
+   * rydberg layer
+   */
   std::vector<GateJob> gateJobs;
   gateJobs.reserve(nJobs);
   for (const auto& [_, gate] : gatesToPlace) {
@@ -697,9 +699,10 @@ auto AStarPlacer::placeGatesInEntanglementZone(
   //===------------------------------------------------------------------===//
   // Run the A* algorithm
   //===------------------------------------------------------------------===//
-  /// A list of all nodes that have been created so far.
-  /// This list is dynamically extended when new nodes are created.
-  /// This happens when a node is expanded by calling getNeighbors.
+  /**
+   * A list of all nodes that have been created so far.
+   * This happens when a node is expanded by calling getNeighbors.
+   */
   std::deque<std::unique_ptr<GateNode>> nodes;
   // make the root node
   nodes.emplace_back(std::make_unique<GateNode>());
@@ -819,8 +822,10 @@ auto AStarPlacer::placeAtomsInStorageZone(
   //===------------------------------------------------------------------===//
   /// The number of either atom or gate jobs that must be performed
   size_t nJobs = atomsToPlace.size();
-  /// a list of all atoms that must be placed in the storage zone after a
-  /// rydberg layer
+  /**
+   * a list of all atoms that must be placed in the storage zone after a
+   * rydberg layer
+   */
   std::vector<AtomJob> atomJobs;
   atomJobs.reserve(nJobs);
   uint8_t minDiscreteColumnOfNearestSite = std::numeric_limits<uint8_t>::max();
@@ -1081,9 +1086,10 @@ auto AStarPlacer::placeAtomsInStorageZone(
   //===------------------------------------------------------------------===//
   // Run the A* algorithm
   //===------------------------------------------------------------------===//
-  /// A list of all nodes that have been created so far.
-  /// This list is dynamically extended when new nodes are created.
-  /// This happens when a node is expanded by calling getNeighbors.
+  /**
+   * A list of all nodes that have been created so far.
+   * This happens when a node is expanded by calling getNeighbors.
+   */
   std::deque<std::unique_ptr<AtomNode>> nodes;
   nodes.emplace_back(std::make_unique<AtomNode>());
   const auto deepeningFactor = config_.deepeningFactor;
