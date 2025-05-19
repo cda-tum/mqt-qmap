@@ -188,24 +188,24 @@ private:
       storageToNearestEntanglementSite;
 
 public:
-  /// Creates an Architecture from a file containing a JSON specification.
+  /// Creates an Architecture from a JSON file.
   /// @param filename the name of the file given as a string
   [[nodiscard]] static auto fromJSONFile(const std::string& filename)
       -> Architecture {
     return fromJSON(std::ifstream(filename));
   }
-  /// Creates an Architecture from a JSON specification.
+  /// Creates an Architecture from a JSON stream.
   /// @param ifs the input stream containing the JSON specification
   [[nodiscard]] static auto fromJSON(std::istream&& ifs) -> Architecture {
     return fromJSON(nlohmann::json::parse(std::move(ifs)));
   }
-  /// Creates an Architecture from a JSON specification.
+  /// Creates an Architecture from a JSON string.
   /// @param json the JSON string
   [[nodiscard]] static auto fromJSONString(const std::string_view& json)
       -> Architecture {
     return fromJSON(nlohmann::json::parse(json));
   }
-  /// Creates an Architecture from a JSON specification.
+  /// Creates an Architecture from a JSON object.
   /// @param json the JSON specification
   [[nodiscard]] static auto fromJSON(const nlohmann::json& json)
       -> Architecture;
