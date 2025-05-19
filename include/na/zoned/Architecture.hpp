@@ -29,7 +29,7 @@
 #include <vector>
 
 namespace na::zoned {
-/// An 2D-Array of AOD traps
+/// A 2D-Array of AOD traps
 struct AOD {
   std::size_t id = 0;
   std::size_t siteSeparation = 0;
@@ -42,7 +42,7 @@ struct AOD {
   [[nodiscard]] static auto fromJSON(nlohmann::json aodSpec) -> AOD;
 };
 
-/// An 2D-array of SLM traps.
+/// A 2D-array of SLM traps.
 struct SLM {
   std::size_t id = 0; ///< SLM id, used only in output
   /// separation of individual sites in x and y direction.
