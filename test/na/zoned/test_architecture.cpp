@@ -83,10 +83,10 @@ TEST_F(TwoZoneArchitectureTest, Distance) {
 }
 TEST_F(TwoZoneArchitectureTest, NearestStorageSite) {
   const auto& entanglementSLM = arch.entanglementZones.front()->front();
-  const auto& [nearestSlm, nearestRow, nearestCol] =
+  const auto& [nearestSLM, nearestRow, nearestCol] =
       arch.nearestStorageSite(entanglementSLM, 0, 0);
   const auto minDistance =
-      arch.distance(entanglementSLM, 0, 0, nearestSlm, nearestRow, nearestCol);
+      arch.distance(entanglementSLM, 0, 0, nearestSLM, nearestRow, nearestCol);
   for (const auto& slm : arch.storageZones) {
     for (std::size_t r = 0; r < slm->nRows; ++r) {
       for (std::size_t c = 0; c < slm->nCols; ++c) {
@@ -97,18 +97,18 @@ TEST_F(TwoZoneArchitectureTest, NearestStorageSite) {
   }
 }
 TEST_F(TwoZoneArchitectureTest, NearestEntanglementSite) {
-  const auto& storageSlm = *arch.storageZones.front();
-  const auto& [nearestSlm, nearestRow, nearestCol] =
-      arch.nearestEntanglementSite(storageSlm, 0, 0, storageSlm, 0, 1);
+  const auto& storageSLM = *arch.storageZones.front();
+  const auto& [nearestSLM, nearestRow, nearestCol] =
+      arch.nearestEntanglementSite(storageSLM, 0, 0, storageSLM, 0, 1);
   const auto minDistance =
-      arch.distance(storageSlm, 0, 0, nearestSlm, nearestRow, nearestCol) +
-      arch.distance(storageSlm, 0, 1, nearestSlm, nearestRow, nearestCol);
+      arch.distance(storageSLM, 0, 0, nearestSLM, nearestRow, nearestCol) +
+      arch.distance(storageSLM, 0, 1, nearestSLM, nearestRow, nearestCol);
   for (const auto& slms : arch.entanglementZones) {
     for (const auto& slm : *slms) {
       for (std::size_t r = 0; r < slm.nRows; ++r) {
         for (std::size_t c = 0; c < slm.nCols; ++c) {
-          const auto distance = arch.distance(storageSlm, 0, 0, slm, r, c) +
-                                arch.distance(storageSlm, 0, 1, slm, r, c);
+          const auto distance = arch.distance(storageSLM, 0, 0, slm, r, c) +
+                                arch.distance(storageSLM, 0, 1, slm, r, c);
           EXPECT_GE(distance, minDistance);
         }
       }

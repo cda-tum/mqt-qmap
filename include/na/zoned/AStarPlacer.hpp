@@ -646,22 +646,22 @@ private:
    * indices
    * @param discreteTargetColumns is a map from concrete columns to their
    * discrete indices
-   * @param leftSlm is the SLM of the left atom
+   * @param leftSLM is the SLM of the left atom
    * @param leftRow is the row of the left atom
    * @param leftCol is the column of the left atom
-   * @param rightSlm is the SLM of the right atom
+   * @param rightSLM is the SLM of the right atom
    * @param rightRow is the row of the right atom
    * @param rightCol is the column of the right atom
-   * @param nearestSlm is the SLM of the nearest atom
+   * @param nearestSLM is the SLM of the nearest atom
    * @param r is the row of the nearest atom
    * @param c is the column of the nearest atom
    * @param job is the GateJob to be initialized
    */
   auto addGateOption(const RowColumnMap<uint8_t>& discreteTargetRows,
                      const RowColumnMap<uint8_t>& discreteTargetColumns,
-                     const SLM& leftSlm, size_t leftRow, size_t leftCol,
-                     const SLM& rightSlm, size_t rightRow, size_t rightCol,
-                     const SLM& nearestSlm, size_t r, size_t c,
+                     const SLM& leftSLM, size_t leftRow, size_t leftCol,
+                     const SLM& rightSLM, size_t rightRow, size_t rightCol,
+                     const SLM& nearestSLM, size_t r, size_t c,
                      GateJob& job) const -> void;
 };
 } // namespace na::zoned

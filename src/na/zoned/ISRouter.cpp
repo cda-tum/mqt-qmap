@@ -54,12 +54,12 @@ auto ISRouter::getMovementVector(
     const std::tuple<const SLM&, size_t, size_t>& start,
     const std::tuple<const SLM&, size_t, size_t>& target) const
     -> std::tuple<size_t, size_t, size_t, size_t> {
-  const auto& [startSlm, startRow, startColumn] = start;
+  const auto& [startSLM, startRow, startColumn] = start;
   const auto& [startX, startY] =
-      architecture_.get().exactSlmLocation(startSlm, startRow, startColumn);
-  const auto& [targetSlm, targetRow, targetColumn] = target;
+      architecture_.get().exactSLMLocation(startSLM, startRow, startColumn);
+  const auto& [targetSLM, targetRow, targetColumn] = target;
   const auto& [targetX, targetY] =
-      architecture_.get().exactSlmLocation(targetSlm, targetRow, targetColumn);
+      architecture_.get().exactSLMLocation(targetSLM, targetRow, targetColumn);
   return std::make_tuple(startX, startY, targetX, targetY);
 }
 auto ISRouter::isCompatibleMovement(
@@ -98,14 +98,14 @@ auto ISRouter::route(const std::vector<Placement>& placement) const
         atomsToMoveOrderedAscByDist;
     assert(startPlacement.size() == targetPlacement.size());
     for (qc::Qubit atom = 0; atom < startPlacement.size(); ++atom) {
-      const auto& [startSlm, startRow, startColumn] = startPlacement[atom];
-      const auto& [targetSlm, targetRow, targetColumn] = targetPlacement[atom];
+      const auto& [startSLM, startRow, startColumn] = startPlacement[atom];
+      const auto& [targetSLM, targetRow, targetColumn] = targetPlacement[atom];
       // if atom must be moved
-      if (&startSlm.get() != &targetSlm.get() || startRow != targetRow ||
+      if (&startSLM.get() != &targetSLM.get() || startRow != targetRow ||
           startColumn != targetColumn) {
         const auto distance =
-            architecture_.get().distance(startSlm, startRow, startColumn,
-                                         targetSlm, targetRow, targetColumn);
+            architecture_.get().distance(startSLM, startRow, startColumn,
+                                         targetSLM, targetRow, targetColumn);
         atomsToMoveOrderedAscByDist.emplace(distance, atom);
       }
     }

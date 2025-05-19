@@ -246,11 +246,11 @@ public:
   }
   /// Check if the given position is a valid SLM position, i.e., whether the
   /// given row and column are within the range of the SLM.
-  [[nodiscard]] auto isValidSlmPosition(const SLM& slm, std::size_t r,
+  [[nodiscard]] auto isValidSLMPosition(const SLM& slm, std::size_t r,
                                         std::size_t c) const -> bool;
   /// Compute the exact location of the SLM site given the row and column
   /// indices expressed in coordinates in the global coordinate system.
-  [[nodiscard]] auto exactSlmLocation(const SLM& slm, std::size_t r,
+  [[nodiscard]] auto exactSLMLocation(const SLM& slm, std::size_t r,
                                       std::size_t c) const
       -> std::pair<std::size_t, std::size_t>;
   /// Compute the distance between two specific SLM sites

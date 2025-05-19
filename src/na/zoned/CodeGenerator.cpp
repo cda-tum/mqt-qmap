@@ -190,13 +190,13 @@ auto CodeGenerator::appendRearrangement(
     for (const auto& qubit : qubits) {
       // get the current location of the qubit
       const auto& [slm, r, c] = startPlacement[qubit];
-      const auto& [x, y] = architecture_.get().exactSlmLocation(slm, r, c);
+      const auto& [x, y] = architecture_.get().exactSLMLocation(slm, r, c);
       rowsWithQubits.try_emplace(y).first->second.emplace(x, qubit);
       atomsToMove.emplace_back(&atoms[qubit].get());
       // get the target location of the qubit
-      const auto& [targetSlm, targetR, targetC] = targetPlacement[qubit];
+      const auto& [targetSLM, targetR, targetC] = targetPlacement[qubit];
       const auto& [targetX, targetY] =
-          architecture_.get().exactSlmLocation(targetSlm, targetR, targetC);
+          architecture_.get().exactSLMLocation(targetSLM, targetR, targetC);
       targetLocations.emplace_back(
           Location{static_cast<double>(targetX), static_cast<double>(targetY)});
     }
@@ -289,7 +289,7 @@ auto CodeGenerator::generate(
   for (const auto& [slm, r, c] : initialPlacement) {
     atoms.emplace_back(
         code.emplaceBackAtom("atom" + std::to_string(atoms.size())));
-    const auto& [x, y] = architecture_.get().exactSlmLocation(slm, r, c);
+    const auto& [x, y] = architecture_.get().exactSLMLocation(slm, r, c);
     code.emplaceInitialLocation(atoms.back(), x, y);
   }
   // early return if no single-qubit gates are given

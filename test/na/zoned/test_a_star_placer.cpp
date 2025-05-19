@@ -91,7 +91,7 @@ TEST_F(AStarPlacerPlaceTest, TwoGatesCons) {
   for (qc::Qubit q = 0; q < placement.front().size(); ++q) {
     const auto& [slm, r, c] = placement.front()[q];
     EXPECT_TRUE(slm.get().isStorage());
-    const auto& [x, y] = architecture.exactSlmLocation(slm, r, c);
+    const auto& [x, y] = architecture.exactSLMLocation(slm, r, c);
     qubitsInStorageByX.emplace(x, q);
     qubitsInStorageYs.emplace(y);
   }
@@ -106,7 +106,7 @@ TEST_F(AStarPlacerPlaceTest, TwoGatesCons) {
   for (qc::Qubit q = 0; q < placement[1].size(); ++q) {
     const auto& [slm, r, c] = placement[1][q];
     EXPECT_TRUE(slm.get().isEntanglement());
-    const auto& [x, y] = architecture.exactSlmLocation(slm, r, c);
+    const auto& [x, y] = architecture.exactSLMLocation(slm, r, c);
     qubitsInEntanglementByX.emplace(x, q);
     qubitsInEntanglementYs.emplace(y);
   }
@@ -128,7 +128,7 @@ TEST_F(AStarPlacerPlaceTest, OneGateCross) {
   for (qc::Qubit q = 0; q < placement[1].size(); ++q) {
     const auto& [slm, r, c] = placement[1][q];
     EXPECT_TRUE(slm.get().isEntanglement());
-    const auto x = architecture.exactSlmLocation(slm, r, c).first;
+    const auto x = architecture.exactSLMLocation(slm, r, c).first;
     qubitsInEntanglementByX.emplace(x, q);
   }
   std::vector<qc::Qubit> qubitsInEntanglementAsc;
@@ -150,7 +150,7 @@ TEST_F(AStarPlacerPlaceTest, TwoGatesZip) {
   for (qc::Qubit q = 0; q < placement[1].size(); ++q) {
     const auto& [slm, r, c] = placement[1][q];
     EXPECT_TRUE(slm.get().isEntanglement());
-    const auto& [x, y] = architecture.exactSlmLocation(slm, r, c);
+    const auto& [x, y] = architecture.exactSLMLocation(slm, r, c);
     qubitsInEntanglementByX.emplace(x, q);
     qubitsInEntanglementYs.emplace(y);
   }
@@ -190,7 +190,7 @@ TEST_F(AStarPlacerPlaceTest, FullEntanglementZone) {
   for (qc::Qubit q = 0; q < placement[1].size(); ++q) {
     const auto& [slm, r, c] = placement[1][q];
     EXPECT_TRUE(slm.get().isEntanglement());
-    const auto& [x, y] = architecture.exactSlmLocation(slm, r, c);
+    const auto& [x, y] = architecture.exactSLMLocation(slm, r, c);
     qubitsLocationsInEntanglement.emplace(x, y);
   }
   EXPECT_THAT(qubitsLocationsInEntanglement, ::testing::SizeIs(nQubits));
@@ -280,7 +280,7 @@ TEST(AStarPlacerTest, WindowExpansion) {
                           {{0U, 3U}, {1U, 2U}}},
                       std::vector<std::unordered_set<qc::Qubit>>{}));
 }
-TEST(AStarPlacerTest, InitialPlacementForTwoSlms) {
+TEST(AStarPlacerTest, InitialPlacementForTwoSLMs) {
   const auto architecture = Architecture::fromJSON(R"({
   "name": "a_star_placer_architecture",
   "storage_zones": [{

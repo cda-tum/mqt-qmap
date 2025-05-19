@@ -134,7 +134,7 @@ auto AStarPlacer::discretizePlacementOfAtoms(
   std::map<size_t, RowColumnSet> columns;
   for (const auto atom : atoms) {
     const auto& [slm, r, c] = placement[atom];
-    const auto& [x, y] = architecture_.get().exactSlmLocation(slm, r, c);
+    const auto& [x, y] = architecture_.get().exactSLMLocation(slm, r, c);
     rows.try_emplace(y).first->second.emplace(std::pair{std::cref(slm), r});
     columns.try_emplace(x).first->second.emplace(std::pair{std::cref(slm), c});
   }
@@ -297,9 +297,9 @@ auto AStarPlacer::makeIntermediatePlacement(
 
 auto AStarPlacer::addGateOption(
     const RowColumnMap<uint8_t>& discreteTargetRows,
-    const RowColumnMap<uint8_t>& discreteTargetColumns, const SLM& leftSlm,
-    const size_t leftRow, const size_t leftCol, const SLM& rightSlm,
-    const size_t rightRow, const size_t rightCol, const SLM& nearestSlm,
+    const RowColumnMap<uint8_t>& discreteTargetColumns, const SLM& leftSLM,
+    const size_t leftRow, const size_t leftCol, const SLM& rightSLM,
+    const size_t rightRow, const size_t rightCol, const SLM& nearestSLM,
     const size_t r, const size_t c, GateJob& job) const -> void {
   //                  other
   //         ┌─┐       ┌─┐ <-- Entanglement sites
@@ -313,37 +313,37 @@ auto AStarPlacer::addGateOption(
   //         └─┘       └─┘
   //          ^         ^
   //        atom1     atom2
-  const auto& [otherSlm, otherRow, otherCol] =
-      architecture_.get().otherEntanglementSite(nearestSlm, r, c);
+  const auto& [otherSLM, otherRow, otherCol] =
+      architecture_.get().otherEntanglementSite(nearestSLM, r, c);
   const auto dis1 = static_cast<float>(architecture_.get().distance(
-      leftSlm, leftRow, leftCol, nearestSlm, r, c));
+      leftSLM, leftRow, leftCol, nearestSLM, r, c));
   const auto dis2 = static_cast<float>(architecture_.get().distance(
-      rightSlm, rightRow, rightCol, nearestSlm, r, c));
+      rightSLM, rightRow, rightCol, nearestSLM, r, c));
   const auto dis3 = static_cast<float>(architecture_.get().distance(
-      leftSlm, leftRow, leftCol, otherSlm, otherRow, otherCol));
+      leftSLM, leftRow, leftCol, otherSLM, otherRow, otherCol));
   const auto dis4 = static_cast<float>(architecture_.get().distance(
-      rightSlm, rightRow, rightCol, otherSlm, otherRow, otherCol));
+      rightSLM, rightRow, rightCol, otherSLM, otherRow, otherCol));
   if (dis1 + dis4 <= dis2 + dis3) {
     job.options.emplace_back(GateJob::Option{
         std::array{
             std::array{
-                discreteTargetRows.at(std::pair{std::cref(nearestSlm), r}),
-                discreteTargetColumns.at(std::pair{std::cref(nearestSlm), c})},
+                discreteTargetRows.at(std::pair{std::cref(nearestSLM), r}),
+                discreteTargetColumns.at(std::pair{std::cref(nearestSLM), c})},
             std::array{
-                discreteTargetRows.at(std::pair{std::cref(otherSlm), otherRow}),
+                discreteTargetRows.at(std::pair{std::cref(otherSLM), otherRow}),
                 discreteTargetColumns.at(
-                    std::pair{std::cref(otherSlm), otherCol})}},
+                    std::pair{std::cref(otherSLM), otherCol})}},
         std::array{dis1, dis4}});
   } else {
     job.options.emplace_back(GateJob::Option{
         std::array{
             std::array{
-                discreteTargetRows.at(std::pair{std::cref(otherSlm), otherRow}),
+                discreteTargetRows.at(std::pair{std::cref(otherSLM), otherRow}),
                 discreteTargetColumns.at(
-                    std::pair{std::cref(otherSlm), otherCol})},
+                    std::pair{std::cref(otherSLM), otherCol})},
             std::array{
-                discreteTargetRows.at(std::pair{std::cref(nearestSlm), r}),
-                discreteTargetColumns.at(std::pair{std::cref(nearestSlm), c})}},
+                discreteTargetRows.at(std::pair{std::cref(nearestSLM), r}),
+                discreteTargetColumns.at(std::pair{std::cref(nearestSLM), c})}},
         std::array{dis2, dis3}});
   }
 }
@@ -369,16 +369,16 @@ auto AStarPlacer::placeGatesInEntanglementZone(
         !firstQubitReuse &&
         (reuseQubits.find(second) == reuseQubits.end() ||
          std::get<0>(previousPlacement[second]).get().isStorage())) {
-      const auto& [storageSlm1, storageRow1, storageCol1] =
+      const auto& [storageSLM1, storageRow1, storageCol1] =
           previousPlacement[first];
-      const auto& [storageSlm2, storageRow2, storageCol2] =
+      const auto& [storageSLM2, storageRow2, storageCol2] =
           previousPlacement[second];
-      const auto& [nearestSlm, nearestRow, nearestCol] =
-          architecture_.get().nearestEntanglementSite(storageSlm1, storageRow1,
-                                                      storageCol1, storageSlm2,
+      const auto& [nearestSLM, nearestRow, nearestCol] =
+          architecture_.get().nearestEntanglementSite(storageSLM1, storageRow1,
+                                                      storageCol1, storageSLM2,
                                                       storageRow2, storageCol2);
-      const auto& [otherSlm, otherRow, otherCol] =
-          architecture_.get().otherEntanglementSite(nearestSlm, nearestRow,
+      const auto& [otherSLM, otherRow, otherCol] =
+          architecture_.get().otherEntanglementSite(nearestSLM, nearestRow,
                                                     nearestCol);
       // Calculate the various distances to the entanglement sites
       //
@@ -396,15 +396,15 @@ auto AStarPlacer::placeGatesInEntanglementZone(
       //          ^         ^
       //   gate->first   gate->second
       const auto dis1 =
-          architecture_.get().distance(storageSlm1, storageRow1, storageCol1,
-                                       nearestSlm, nearestRow, nearestCol);
+          architecture_.get().distance(storageSLM1, storageRow1, storageCol1,
+                                       nearestSLM, nearestRow, nearestCol);
       const auto dis2 =
-          architecture_.get().distance(storageSlm2, storageRow2, storageCol2,
-                                       nearestSlm, nearestRow, nearestCol);
+          architecture_.get().distance(storageSLM2, storageRow2, storageCol2,
+                                       nearestSLM, nearestRow, nearestCol);
       const auto dis3 = architecture_.get().distance(
-          storageSlm1, storageRow1, storageCol1, otherSlm, otherRow, otherCol);
+          storageSLM1, storageRow1, storageCol1, otherSLM, otherRow, otherCol);
       const auto dis4 = architecture_.get().distance(
-          storageSlm2, storageRow2, storageCol2, otherSlm, otherRow, otherCol);
+          storageSLM2, storageRow2, storageCol2, otherSLM, otherRow, otherCol);
       if (dis1 + dis4 <= dis2 + dis3) {
         // if the situation is as depicted in the example above
         gatesToPlace.emplace(std::max(dis1, dis4), gate);
@@ -448,9 +448,9 @@ auto AStarPlacer::placeGatesInEntanglementZone(
     if (slm.get().isEntanglement()) {
       occupiedEntanglementSites.emplace(slm, r, c);
       // also add the interaction partner's site to the set
-      const auto& [otherSlm, otherRow, otherCol] =
+      const auto& [otherSLM, otherRow, otherCol] =
           architecture_.get().otherEntanglementSite(slm, r, c);
-      occupiedEntanglementSites.emplace(otherSlm, otherRow, otherCol);
+      occupiedEntanglementSites.emplace(otherSLM, otherRow, otherCol);
     }
   }
   //===------------------------------------------------------------------===//
@@ -481,42 +481,42 @@ auto AStarPlacer::placeGatesInEntanglementZone(
   gateJobs.reserve(nJobs);
   for (const auto& [_, gate] : gatesToPlace) {
     const auto& [leftAtom, rightAtom] = gate;
-    const auto& [leftSlm, leftRow, leftCol] = previousPlacement[leftAtom];
-    const auto& [rightSlm, rightRow, rightCol] = previousPlacement[rightAtom];
-    const auto& [nearestSlm, nearestRow, nearestCol] =
+    const auto& [leftSLM, leftRow, leftCol] = previousPlacement[leftAtom];
+    const auto& [rightSLM, rightRow, rightCol] = previousPlacement[rightAtom];
+    const auto& [nearestSLM, nearestRow, nearestCol] =
         architecture_.get().nearestEntanglementSite(
-            leftSlm, leftRow, leftCol, rightSlm, rightRow, rightCol);
+            leftSLM, leftRow, leftCol, rightSLM, rightRow, rightCol);
     auto& job = gateJobs.emplace_back();
     job.qubits = gate;
     job.currentSites = std::array{
-        std::array{discreteRows.at(std::pair{std::cref(leftSlm), leftRow}),
-                   discreteColumns.at(std::pair{std::cref(leftSlm), leftCol})},
+        std::array{discreteRows.at(std::pair{std::cref(leftSLM), leftRow}),
+                   discreteColumns.at(std::pair{std::cref(leftSLM), leftCol})},
         std::array{
-            discreteRows.at(std::pair{std::cref(rightSlm), rightRow}),
-            discreteColumns.at(std::pair{std::cref(rightSlm), rightCol})}};
+            discreteRows.at(std::pair{std::cref(rightSLM), rightRow}),
+            discreteColumns.at(std::pair{std::cref(rightSLM), rightCol})}};
     size_t rLow = 0;
-    size_t rHigh = nearestSlm.get().nRows;
+    size_t rHigh = nearestSLM.get().nRows;
     size_t cLow = 0;
-    size_t cHigh = nearestSlm.get().nCols;
+    size_t cHigh = nearestSLM.get().nCols;
     if (config_.useWindow) {
       rLow = nearestRow > windowMinHeight_ / 2
                  ? nearestRow - (windowMinHeight_ / 2)
                  : 0;
       rHigh = std::min(nearestRow + (windowMinHeight_ / 2) + 1,
-                       nearestSlm.get().nRows);
+                       nearestSLM.get().nRows);
       cLow = nearestCol > config_.windowMinWidth / 2
                  ? nearestCol - (config_.windowMinWidth / 2)
                  : 0;
       cHigh = std::min(nearestCol + (config_.windowMinWidth / 2) + 1,
-                       nearestSlm.get().nCols);
+                       nearestSLM.get().nCols);
     }
     for (size_t r = rLow; r < rHigh; ++r) {
       for (size_t c = cLow; c < cHigh; ++c) {
-        if (occupiedEntanglementSites.find(std::tie(nearestSlm, r, c)) ==
+        if (occupiedEntanglementSites.find(std::tie(nearestSLM, r, c)) ==
             occupiedEntanglementSites.end()) {
-          addGateOption(discreteTargetRows, discreteTargetColumns, leftSlm,
-                        leftRow, leftCol, rightSlm, rightRow, rightCol,
-                        nearestSlm, r, c, job);
+          addGateOption(discreteTargetRows, discreteTargetColumns, leftSLM,
+                        leftRow, leftCol, rightSLM, rightRow, rightCol,
+                        nearestSLM, r, c, job);
         }
       }
     }
@@ -542,19 +542,19 @@ auto AStarPlacer::placeGatesInEntanglementZone(
       auto rLowNew =
           nearestRow > windowHeight / 2 ? nearestRow - (windowHeight / 2) : 0;
       auto rHighNew =
-          std::min(nearestRow + (windowHeight / 2) + 1, nearestSlm.get().nRows);
+          std::min(nearestRow + (windowHeight / 2) + 1, nearestSLM.get().nRows);
       auto cLowNew =
           nearestCol > windowWidth / 2 ? nearestCol - (windowWidth / 2) : 0;
       auto cHighNew =
-          std::min(nearestCol + (windowWidth / 2) + 1, nearestSlm.get().nCols);
+          std::min(nearestCol + (windowWidth / 2) + 1, nearestSLM.get().nCols);
       if (rLowNew < rLow) {
         assert(rLow - rLowNew == 1);
         for (size_t c = cLowNew; c < cHighNew; ++c) {
           if (occupiedEntanglementSites.find(std::tie(
-                  nearestSlm, rLowNew, c)) == occupiedEntanglementSites.end()) {
-            addGateOption(discreteTargetRows, discreteTargetColumns, leftSlm,
-                          leftRow, leftCol, rightSlm, rightRow, rightCol,
-                          nearestSlm, rLowNew, c, job);
+                  nearestSLM, rLowNew, c)) == occupiedEntanglementSites.end()) {
+            addGateOption(discreteTargetRows, discreteTargetColumns, leftSLM,
+                          leftRow, leftCol, rightSLM, rightRow, rightCol,
+                          nearestSLM, rLowNew, c, job);
           }
         }
       }
@@ -562,11 +562,11 @@ auto AStarPlacer::placeGatesInEntanglementZone(
         assert(rHighNew - rHigh == 1);
         for (size_t c = cLowNew; c < cHighNew; ++c) {
           // NOTE: we have to use rHighNew - 1 here, which is equal to rHigh
-          if (occupiedEntanglementSites.find(std::tie(nearestSlm, rHigh, c)) ==
+          if (occupiedEntanglementSites.find(std::tie(nearestSLM, rHigh, c)) ==
               occupiedEntanglementSites.end()) {
-            addGateOption(discreteTargetRows, discreteTargetColumns, leftSlm,
-                          leftRow, leftCol, rightSlm, rightRow, rightCol,
-                          nearestSlm, rHigh, c, job);
+            addGateOption(discreteTargetRows, discreteTargetColumns, leftSLM,
+                          leftRow, leftCol, rightSLM, rightRow, rightCol,
+                          nearestSLM, rHigh, c, job);
           }
         }
       }
@@ -574,10 +574,10 @@ auto AStarPlacer::placeGatesInEntanglementZone(
         assert(cLow - cLowNew == 1);
         for (size_t r = rLow; r < rHigh; ++r) {
           if (occupiedEntanglementSites.find(std::tie(
-                  nearestSlm, r, cLowNew)) == occupiedEntanglementSites.end()) {
-            addGateOption(discreteTargetRows, discreteTargetColumns, leftSlm,
-                          leftRow, leftCol, rightSlm, rightRow, rightCol,
-                          nearestSlm, r, cLowNew, job);
+                  nearestSLM, r, cLowNew)) == occupiedEntanglementSites.end()) {
+            addGateOption(discreteTargetRows, discreteTargetColumns, leftSLM,
+                          leftRow, leftCol, rightSLM, rightRow, rightCol,
+                          nearestSLM, r, cLowNew, job);
           }
         }
       }
@@ -585,11 +585,11 @@ auto AStarPlacer::placeGatesInEntanglementZone(
         assert(cHighNew - cHigh == 1);
         for (size_t r = rLow; r < rHigh; ++r) {
           // NOTE: we have to use cHighNew - 1 here, which is equal to cHigh
-          if (occupiedEntanglementSites.find(std::tie(nearestSlm, r, cHigh)) ==
+          if (occupiedEntanglementSites.find(std::tie(nearestSLM, r, cHigh)) ==
               occupiedEntanglementSites.end()) {
-            addGateOption(discreteTargetRows, discreteTargetColumns, leftSlm,
-                          leftRow, leftCol, rightSlm, rightRow, rightCol,
-                          nearestSlm, r, cHigh, job);
+            addGateOption(discreteTargetRows, discreteTargetColumns, leftSLM,
+                          leftRow, leftCol, rightSLM, rightRow, rightCol,
+                          nearestSLM, r, cHigh, job);
           }
         }
       }
@@ -635,14 +635,14 @@ auto AStarPlacer::placeGatesInEntanglementZone(
         }
       }
       job.meanLookaheadCost = 0.0F;
-      const auto& [nextSlm, nextRow, nextCol] =
+      const auto& [nextSLM, nextRow, nextCol] =
           previousPlacement[nextInteractionPartner];
       for (auto& option : job.options) {
         const auto& [row, col] = option.sites[leftReuse ? 0 : 1];
-        const auto& [targetSlm, targetRow, targetCol] =
+        const auto& [targetSLM, targetRow, targetCol] =
             targetSites.at(row).at(col);
         const auto distance = static_cast<float>(architecture_.get().distance(
-            nextSlm, nextRow, nextCol, targetSlm, targetRow, targetCol));
+            nextSLM, nextRow, nextCol, targetSLM, targetRow, targetCol));
         option.lookaheadCost = config_.lookaheadFactor * std::sqrt(distance);
         job.meanLookaheadCost += option.lookaheadCost;
       }
@@ -753,10 +753,10 @@ auto AStarPlacer::placeAtomsInStorageZone(
   for (const auto& gate : twoQubitGates) {
     for (const auto qubit : gate) {
       const auto& [slm, r, c] = previousPlacement[qubit];
-      const auto& [nearestSlm, nearestRow, nearestCol] =
+      const auto& [nearestSLM, nearestRow, nearestCol] =
           architecture_.get().nearestStorageSite(slm, r, c);
       const auto distance = architecture_.get().distance(
-          slm, r, c, nearestSlm, nearestRow, nearestCol);
+          slm, r, c, nearestSLM, nearestRow, nearestCol);
       if (distance > maxDistance) {
         maxDistance = distance;
         atomIndexWithMaxDistance = atomsToPlace.size();
@@ -775,10 +775,10 @@ auto AStarPlacer::placeAtomsInStorageZone(
   std::set<std::pair<double, qc::Qubit>> atomsWithoutFirstAtom;
   for (auto atomIt = atomsToPlace.cbegin() + 1; atomIt != atomsToPlace.cend();
        ++atomIt) {
-    const auto& [frontSlm, frontRow, frontCol] = frontPlacement;
+    const auto& [frontSLM, frontRow, frontCol] = frontPlacement;
     const auto& [slm, r, c] = previousPlacement[*atomIt];
     const auto distance =
-        architecture_.get().distance(slm, r, c, frontSlm, frontRow, frontCol);
+        architecture_.get().distance(slm, r, c, frontSLM, frontRow, frontCol);
     atomsWithoutFirstAtom.emplace(distance, *atomIt);
   }
   std::transform(atomsWithoutFirstAtom.cbegin(), atomsWithoutFirstAtom.cend(),
@@ -826,13 +826,13 @@ auto AStarPlacer::placeAtomsInStorageZone(
   uint8_t minDiscreteColumnOfNearestSite = std::numeric_limits<uint8_t>::max();
   uint8_t maxDiscreteColumnOfNearestSite = 0;
   for (const auto atom : atomsToPlace) {
-    const auto& [previousSlm, previousRow, previousCol] =
+    const auto& [previousSLM, previousRow, previousCol] =
         previousPlacement[atom];
-    const auto& [nearestSlm, nearestRow, nearestCol] =
-        architecture_.get().nearestStorageSite(previousSlm, previousRow,
+    const auto& [nearestSLM, nearestRow, nearestCol] =
+        architecture_.get().nearestStorageSite(previousSLM, previousRow,
                                                previousCol);
     const auto discreteColumnOfNearestSite =
-        discreteTargetColumns.at(std::pair{std::cref(nearestSlm), nearestCol});
+        discreteTargetColumns.at(std::pair{std::cref(nearestSLM), nearestCol});
     minDiscreteColumnOfNearestSite =
         std::min(minDiscreteColumnOfNearestSite, discreteColumnOfNearestSite);
     maxDiscreteColumnOfNearestSite =
@@ -840,38 +840,38 @@ auto AStarPlacer::placeAtomsInStorageZone(
     auto& job = atomJobs.emplace_back();
     job.atom = atom;
     job.currentSite = std::array{
-        discreteRows.at(std::pair{std::cref(previousSlm), previousRow}),
-        discreteColumns.at(std::pair{std::cref(previousSlm), previousCol})};
+        discreteRows.at(std::pair{std::cref(previousSLM), previousRow}),
+        discreteColumns.at(std::pair{std::cref(previousSLM), previousCol})};
     if (reuseQubits.find(atom) != reuseQubits.end()) {
       // atom can be reused, so we add an option for the atom to stay at the
       // current site
       job.options.emplace_back(AtomJob::Option{{0, 0}, true, 0.0F});
     }
     size_t rLow = 0;
-    size_t rHigh = nearestSlm.get().nRows;
+    size_t rHigh = nearestSLM.get().nRows;
     size_t cLow = 0;
-    size_t cHigh = nearestSlm.get().nCols;
+    size_t cHigh = nearestSLM.get().nCols;
     if (config_.useWindow) {
       rLow = nearestRow > windowMinHeight_ / 2
                  ? nearestRow - (windowMinHeight_ / 2)
                  : 0;
       rHigh = std::min(nearestRow + (windowMinHeight_ / 2) + 1,
-                       nearestSlm.get().nRows);
+                       nearestSLM.get().nRows);
       cLow = nearestCol > config_.windowMinWidth / 2
                  ? nearestCol - (config_.windowMinWidth / 2)
                  : 0;
       cHigh = std::min(nearestCol + (config_.windowMinWidth / 2) + 1,
-                       nearestSlm.get().nCols);
+                       nearestSLM.get().nCols);
     }
     for (size_t r = rLow; r < rHigh; ++r) {
       for (size_t c = cLow; c < cHigh; ++c) {
-        if (occupiedStorageSites.find(std::tie(nearestSlm, r, c)) ==
+        if (occupiedStorageSites.find(std::tie(nearestSLM, r, c)) ==
             occupiedStorageSites.end()) {
           const auto distance = static_cast<float>(architecture_.get().distance(
-              previousSlm, previousRow, previousCol, nearestSlm, r, c));
+              previousSLM, previousRow, previousCol, nearestSLM, r, c));
           job.options.emplace_back(AtomJob::Option{
-              {discreteTargetRows.at(std::pair{std::cref(nearestSlm), r}),
-               discreteTargetColumns.at(std::pair{std::cref(nearestSlm), c})},
+              {discreteTargetRows.at(std::pair{std::cref(nearestSLM), r}),
+               discreteTargetColumns.at(std::pair{std::cref(nearestSLM), c})},
               false,
               distance});
         }
@@ -903,24 +903,24 @@ auto AStarPlacer::placeAtomsInStorageZone(
       auto rLowNew =
           nearestRow > windowHeight / 2 ? nearestRow - (windowHeight / 2) : 0;
       auto rHighNew =
-          std::min(nearestRow + (windowHeight / 2) + 1, nearestSlm.get().nRows);
+          std::min(nearestRow + (windowHeight / 2) + 1, nearestSLM.get().nRows);
       auto cLowNew =
           nearestCol > windowWidth / 2 ? nearestCol - (windowWidth / 2) : 0;
       auto cHighNew =
-          std::min(nearestCol + (windowWidth / 2) + 1, nearestSlm.get().nCols);
+          std::min(nearestCol + (windowWidth / 2) + 1, nearestSLM.get().nCols);
       if (rLowNew < rLow) {
         assert(rLow - rLowNew == 1);
         for (size_t c = cLowNew; c < cHighNew; ++c) {
-          if (occupiedStorageSites.find(std::tie(nearestSlm, rLowNew, c)) ==
+          if (occupiedStorageSites.find(std::tie(nearestSLM, rLowNew, c)) ==
               occupiedStorageSites.end()) {
             const auto distance =
                 static_cast<float>(architecture_.get().distance(
-                    previousSlm, previousRow, previousCol, nearestSlm, rLowNew,
+                    previousSLM, previousRow, previousCol, nearestSLM, rLowNew,
                     c));
             job.options.emplace_back(AtomJob::Option{
                 {discreteTargetRows.at(
-                     std::pair{std::cref(nearestSlm), rLowNew}),
-                 discreteTargetColumns.at(std::pair{std::cref(nearestSlm), c})},
+                     std::pair{std::cref(nearestSLM), rLowNew}),
+                 discreteTargetColumns.at(std::pair{std::cref(nearestSLM), c})},
                 false,
                 distance});
           }
@@ -930,15 +930,15 @@ auto AStarPlacer::placeAtomsInStorageZone(
         assert(rHighNew - rHigh == 1);
         for (size_t c = cLowNew; c < cHighNew; ++c) {
           // NOTE: we have to use rHighNew - 1 here, which is equal to rHigh
-          if (occupiedStorageSites.find(std::tie(nearestSlm, rHigh, c)) ==
+          if (occupiedStorageSites.find(std::tie(nearestSLM, rHigh, c)) ==
               occupiedStorageSites.end()) {
             const auto distance =
                 static_cast<float>(architecture_.get().distance(
-                    previousSlm, previousRow, previousCol, nearestSlm, rHigh,
+                    previousSLM, previousRow, previousCol, nearestSLM, rHigh,
                     c));
             job.options.emplace_back(AtomJob::Option{
-                {discreteTargetRows.at(std::pair{std::cref(nearestSlm), rHigh}),
-                 discreteTargetColumns.at(std::pair{std::cref(nearestSlm), c})},
+                {discreteTargetRows.at(std::pair{std::cref(nearestSLM), rHigh}),
+                 discreteTargetColumns.at(std::pair{std::cref(nearestSLM), c})},
                 false,
                 distance});
           }
@@ -947,16 +947,16 @@ auto AStarPlacer::placeAtomsInStorageZone(
       if (cLowNew < cLow) {
         assert(cLow - cLowNew == 1);
         for (size_t r = rLow; r < rHigh; ++r) {
-          if (occupiedStorageSites.find(std::tie(nearestSlm, r, cLowNew)) ==
+          if (occupiedStorageSites.find(std::tie(nearestSLM, r, cLowNew)) ==
               occupiedStorageSites.end()) {
             const auto distance =
                 static_cast<float>(architecture_.get().distance(
-                    previousSlm, previousRow, previousCol, nearestSlm, r,
+                    previousSLM, previousRow, previousCol, nearestSLM, r,
                     cLowNew));
             job.options.emplace_back(AtomJob::Option{
-                {discreteTargetRows.at(std::pair{std::cref(nearestSlm), r}),
+                {discreteTargetRows.at(std::pair{std::cref(nearestSLM), r}),
                  discreteTargetColumns.at(
-                     std::pair{std::cref(nearestSlm), cLowNew})},
+                     std::pair{std::cref(nearestSLM), cLowNew})},
                 false,
                 distance});
           }
@@ -966,16 +966,16 @@ auto AStarPlacer::placeAtomsInStorageZone(
         assert(cHighNew - cHigh == 1);
         for (size_t r = rLow; r < rHigh; ++r) {
           // NOTE: we have to use cHighNew - 1 here, which is equal to cHigh
-          if (occupiedStorageSites.find(std::tie(nearestSlm, r, cHigh)) ==
+          if (occupiedStorageSites.find(std::tie(nearestSLM, r, cHigh)) ==
               occupiedStorageSites.end()) {
             const auto distance =
                 static_cast<float>(architecture_.get().distance(
-                    previousSlm, previousRow, previousCol, nearestSlm, r,
+                    previousSLM, previousRow, previousCol, nearestSLM, r,
                     cHigh));
             job.options.emplace_back(AtomJob::Option{
-                {discreteTargetRows.at(std::pair{std::cref(nearestSlm), r}),
+                {discreteTargetRows.at(std::pair{std::cref(nearestSLM), r}),
                  discreteTargetColumns.at(
-                     std::pair{std::cref(nearestSlm), cHigh})},
+                     std::pair{std::cref(nearestSLM), cHigh})},
                 false,
                 distance});
           }
@@ -997,7 +997,7 @@ auto AStarPlacer::placeAtomsInStorageZone(
       if (nextLeftAtom == atom || nextRightAtom == atom) {
         const qc::Qubit nextInteractionPartner =
             nextLeftAtom == atom ? nextRightAtom : nextLeftAtom;
-        const auto& [nextSlm, nextRow, nextCol] =
+        const auto& [nextSLM, nextRow, nextCol] =
             previousPlacement[nextInteractionPartner];
         // use this attribute to sum up the costs and calculate the mean by
         // dividing by the number of options
@@ -1006,7 +1006,7 @@ auto AStarPlacer::placeAtomsInStorageZone(
           if (option.reuse) {
             const auto distance =
                 static_cast<float>(architecture_.get().distance(
-                    nextSlm, nextRow, nextCol, previousSlm, previousRow,
+                    nextSLM, nextRow, nextCol, previousSLM, previousRow,
                     previousCol));
             // NOTE: the multiplication with the lookahead factor is missing
             // here on purpose as this is the distance the "reuse" costs by
@@ -1015,11 +1015,11 @@ auto AStarPlacer::placeAtomsInStorageZone(
                 std::max(0.0F, std::sqrt(distance) - config_.reuseLevel);
           } else {
             const auto& [row, col] = option.site;
-            const auto& [targetSlm, targetRow, targetCol] =
+            const auto& [targetSLM, targetRow, targetCol] =
                 targetSites.at(row).at(col);
             const auto distance = static_cast<float>(
-                architecture_.get().distance(nextSlm, nextRow, nextCol,
-                                             targetSlm, targetRow, targetCol));
+                architecture_.get().distance(nextSLM, nextRow, nextCol,
+                                             targetSLM, targetRow, targetCol));
             option.lookaheadCost =
                 config_.lookaheadFactor * std::sqrt(distance);
           }
@@ -1412,12 +1412,12 @@ auto AStarPlacer::checkCompatibilityAndAddPlacement(
 AStarPlacer::AStarPlacer(const Architecture& architecture, const Config& config)
     : architecture_(architecture), config_(config) {
   // get first storage SLM and first entanglement SLM
-  const auto& firstStorageSlm = *architecture_.get().storageZones.front();
-  const auto& firstEntanglementSlm =
+  const auto& firstStorageSLM = *architecture_.get().storageZones.front();
+  const auto& firstEntanglementSLM =
       architecture_.get().entanglementZones.front()->front();
   // check which side of the first storage SLM is closer to the entanglement
   // SLM
-  if (firstStorageSlm.location.second < firstEntanglementSlm.location.second) {
+  if (firstStorageSLM.location.second < firstEntanglementSLM.location.second) {
     // if the entanglement SLM is closer to the last row of the storage SLM
     // start initial placement of the atoms in the last row instead of the
     // first and hence revert initial placement

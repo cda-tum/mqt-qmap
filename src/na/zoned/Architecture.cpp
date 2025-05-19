@@ -534,7 +534,7 @@ auto Architecture::exportNAVizMachine() const -> std::string {
   for (const auto& slm : storageZones) {
     for (std::size_t row = 0; row < slm->nRows; ++row) {
       for (std::size_t col = 0; col < slm->nCols; ++col) {
-        const auto& [x, y] = exactSlmLocation(*slm, row, col);
+        const auto& [x, y] = exactSLMLocation(*slm, row, col);
         ss << "trap trap" << slm->id << "_" << row << "_" << col << " {\n";
         ss << "    position: (" << x << ", " << y << ")\n";
         ss << "}\n";
@@ -546,7 +546,7 @@ auto Architecture::exportNAVizMachine() const -> std::string {
     for (const auto& slm : *zone) {
       for (std::size_t row = 0; row < slm.nRows; ++row) {
         for (std::size_t col = 0; col < slm.nCols; ++col) {
-          const auto& [x, y] = exactSlmLocation(slm, row, col);
+          const auto& [x, y] = exactSLMLocation(slm, row, col);
           ss << "trap trap" << slm.id << "_" << row << "_" << col << " {\n";
           ss << "    position: (" << x << ", " << y << ")\n";
           ss << "}\n";
@@ -557,15 +557,15 @@ auto Architecture::exportNAVizMachine() const -> std::string {
   return ss.str();
 }
 
-auto Architecture::isValidSlmPosition(const SLM& slm, const std::size_t r,
+auto Architecture::isValidSLMPosition(const SLM& slm, const std::size_t r,
                                       const std::size_t c) const -> bool {
   return r < slm.nRows && c < slm.nCols;
 }
 
-auto Architecture::exactSlmLocation(const SLM& slm, const std::size_t r,
+auto Architecture::exactSLMLocation(const SLM& slm, const std::size_t r,
                                     const std::size_t c) const
     -> std::pair<std::size_t, std::size_t> {
-  assert(isValidSlmPosition(slm, r, c));
+  assert(isValidSLMPosition(slm, r, c));
   return {(slm.siteSeparation.first * c) + slm.location.first,
           (slm.siteSeparation.second * r) + slm.location.second};
 }
@@ -668,7 +668,7 @@ auto Architecture::preprocessing() -> void {
         entanglementToNearestStorageSite.at(slm).emplace_back();
         entanglementToNearestStorageSite.at(slm).back().reserve(slm.nCols);
         for (std::size_t col = 0; col < slm.nCols; ++col) {
-          const auto& [x, y] = exactSlmLocation(slm, row, col);
+          const auto& [x, y] = exactSLMLocation(slm, row, col);
           //===------------------------------------------------------------===//
           // In the first step, find the nearest storage SLM (not the specific
           // site in the storage SLM yet)
@@ -722,34 +722,34 @@ auto Architecture::preprocessing() -> void {
       storageToNearestEntanglementSite.at(*slm).emplace_back();
       storageToNearestEntanglementSite.at(*slm).back().reserve(slm->nCols);
       for (std::size_t col = 0; col < slm->nCols; ++col) {
-        const auto& [x, y] = exactSlmLocation(*slm, row, col);
+        const auto& [x, y] = exactSLMLocation(*slm, row, col);
         auto& storageToNearestEntanglementSiteForThisSite =
             storageToNearestEntanglementSite.at(*slm).back().emplace_back();
-        for (const auto& otherSlm : storageZones) {
-          if (otherSlm < slm) {
+        for (const auto& otherSLM : storageZones) {
+          if (otherSLM < slm) {
             continue;
           }
           storageToNearestEntanglementSiteForThisSite.emplace(
-              *otherSlm,
+              *otherSLM,
               std::vector<
                   std::vector<std::tuple<std::reference_wrapper<const SLM>,
                                          std::size_t, std::size_t>>>{});
-          storageToNearestEntanglementSiteForThisSite.at(*otherSlm).reserve(
-              slm == otherSlm ? otherSlm->nRows - row : otherSlm->nRows);
-          for (std::size_t otherRow = (slm == otherSlm ? row : 0);
-               otherRow < otherSlm->nRows; ++otherRow) {
-            storageToNearestEntanglementSiteForThisSite[*otherSlm]
+          storageToNearestEntanglementSiteForThisSite.at(*otherSLM).reserve(
+              slm == otherSLM ? otherSLM->nRows - row : otherSLM->nRows);
+          for (std::size_t otherRow = (slm == otherSLM ? row : 0);
+               otherRow < otherSLM->nRows; ++otherRow) {
+            storageToNearestEntanglementSiteForThisSite[*otherSLM]
                 .emplace_back();
-            storageToNearestEntanglementSiteForThisSite[*otherSlm]
+            storageToNearestEntanglementSiteForThisSite[*otherSLM]
                 .back()
-                .reserve(slm == otherSlm && row == otherRow
-                             ? otherSlm->nCols - col
-                             : otherSlm->nCols);
+                .reserve(slm == otherSLM && row == otherRow
+                             ? otherSLM->nCols - col
+                             : otherSLM->nCols);
             for (std::size_t otherCol =
-                     (slm == otherSlm && row == otherRow ? col : 0);
-                 otherCol < otherSlm->nCols; ++otherCol) {
+                     (slm == otherSLM && row == otherRow ? col : 0);
+                 otherCol < otherSLM->nCols; ++otherCol) {
               const auto& [otherX, otherY] =
-                  exactSlmLocation(*otherSlm, otherRow, otherCol);
+                  exactSLMLocation(*otherSLM, otherRow, otherCol);
               //===------------------------------------------------------------===//
               // In the first step, find the nearest storage SLM (not the
               // specific site in the storage SLM yet)
@@ -786,7 +786,7 @@ auto Architecture::preprocessing() -> void {
                      (nearestEntanglementSLM.siteSeparation.second / 2)) /
                     nearestEntanglementSLM.siteSeparation.second;
               }
-              storageToNearestEntanglementSiteForThisSite.at(*otherSlm)
+              storageToNearestEntanglementSiteForThisSite.at(*otherSLM)
                   .back()
                   .emplace_back(nearestEntanglementSLM, entangleRow,
                                 entangleCol);
@@ -802,8 +802,8 @@ auto Architecture::distance(const SLM& idx1, const std::size_t r1,
                             const std::size_t c1, const SLM& idx2,
                             const std::size_t r2, const std::size_t c2) const
     -> double {
-  const auto& [x1, y1] = exactSlmLocation(idx1, r1, c1);
-  const auto& [x2, y2] = exactSlmLocation(idx2, r2, c2);
+  const auto& [x1, y1] = exactSLMLocation(idx1, r1, c1);
+  const auto& [x2, y2] = exactSLMLocation(idx2, r2, c2);
   return std::hypot(static_cast<double>(x1) - static_cast<double>(x2),
                     static_cast<double>(y1) - static_cast<double>(y2));
 }
@@ -834,12 +834,12 @@ auto Architecture::nearestEntanglementSiteDistance(
     const SLM& slm1, const std::size_t r1, const std::size_t c1,
     const SLM& slm2, const std::size_t r2, const std::size_t c2) const
     -> double {
-  const auto& [x1, y1] = exactSlmLocation(slm1, r1, c1);
-  const auto& [x2, y2] = exactSlmLocation(slm2, r2, c2);
-  const auto& [entangleSlm, entangleRow, entangleCol] =
+  const auto& [x1, y1] = exactSLMLocation(slm1, r1, c1);
+  const auto& [x2, y2] = exactSLMLocation(slm2, r2, c2);
+  const auto& [entangleSLM, entangleRow, entangleCol] =
       nearestEntanglementSite(slm1, r1, c1, slm2, r2, c2);
   const auto& [entangleX, entangleY] =
-      exactSlmLocation(entangleSlm, entangleRow, entangleCol);
+      exactSLMLocation(entangleSLM, entangleRow, entangleCol);
   auto dis = std::numeric_limits<double>::max();
   if (r1 == r2 and &slm1 == &slm2) {
     dis = std::min(
@@ -866,11 +866,11 @@ auto Architecture::otherEntanglementSite(const SLM& slm, std::size_t r,
                                          std::size_t c) const
     -> std::tuple<std::reference_wrapper<const SLM>, std::size_t, std::size_t> {
   assert(slm.entanglementZone_);
-  const auto& otherSlm = &slm.entanglementZone_->front() == &slm
+  const auto& otherSLM = &slm.entanglementZone_->front() == &slm
                              ? slm.entanglementZone_->back()
                              : slm.entanglementZone_->front();
-  assert(slm.nCols == otherSlm.nCols);
-  assert(slm.nRows == otherSlm.nRows);
-  return {otherSlm, r, c};
+  assert(slm.nCols == otherSLM.nCols);
+  assert(slm.nRows == otherSLM.nRows);
+  return {otherSLM, r, c};
 }
 } // namespace na::zoned

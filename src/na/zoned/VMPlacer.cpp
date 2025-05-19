@@ -211,8 +211,8 @@ auto VMPlacer::computeMovementCostBetweenPlacements(
     const auto& [slm1, r1, c1] = placementBefore[q];
     const auto& [slm2, r2, c2] = placementAfter[q];
     if (&slm1.get() != &slm2.get() || r1 != r2 || c1 != c2) {
-      const auto y1 = architecture_.get().exactSlmLocation(slm1, r1, c1).second;
-      const auto y2 = architecture_.get().exactSlmLocation(slm2, r2, c2).second;
+      const auto y1 = architecture_.get().exactSLMLocation(slm1, r1, c1).second;
+      const auto y2 = architecture_.get().exactSLMLocation(slm2, r2, c2).second;
       const double dis =
           architecture_.get().distance(slm1, r1, c1, slm2, r2, c2);
       if (const auto& [it, inserted] =
@@ -313,18 +313,18 @@ auto VMPlacer::placeGatesInEntanglementZone(
       const auto& [slm2, r2, c2] = previousQubitPlacement[q2];
       // add the nearest entanglement site as well as the site in the same
       // column on top and bottom to the set
-      const auto& [nearestSlm, nearestR, nearestC] =
+      const auto& [nearestSLM, nearestR, nearestC] =
           architecture_.get().nearestEntanglementSite(slm1, r1, c1, slm2, r2,
                                                       c2);
-      nearestSites.emplace(*nearestSlm.get().entanglementZone_, nearestR,
+      nearestSites.emplace(*nearestSLM.get().entanglementZone_, nearestR,
                            nearestC);
-      const auto& [topSlm, topR, topC] =
+      const auto& [topSLM, topR, topC] =
           architecture_.get().nearestEntanglementSite(slm1, 0, c1, slm2, 0, c2);
-      nearestSites.emplace(*topSlm.get().entanglementZone_, topR, topC);
-      const auto& [bottomSlm, bottomR, bottomC] =
+      nearestSites.emplace(*topSLM.get().entanglementZone_, topR, topC);
+      const auto& [bottomSLM, bottomR, bottomC] =
           architecture_.get().nearestEntanglementSite(
               slm1, slm1.get().nRows - 1, c1, slm2, slm2.get().nRows - 1, c2);
-      nearestSites.emplace(*bottomSlm.get().entanglementZone_, bottomR,
+      nearestSites.emplace(*bottomSLM.get().entanglementZone_, bottomR,
                            bottomC);
       for (const auto& nearestSite : nearestSites) {
         nearestSites.emplace(nearestSite);
@@ -542,10 +542,10 @@ auto VMPlacer::placeAtomsInStorageZone(
     auto leftCol = c;
     auto rightCol = leftCol;
     const std::pair<size_t, size_t>& exactLocQ =
-        architecture_.get().exactSlmLocation(slm, r, c);
-    const auto& [initSlm, initRow, initCol] = initialPlacement[q];
+        architecture_.get().exactSLMLocation(slm, r, c);
+    const auto& [initSLM, initRow, initCol] = initialPlacement[q];
     const std::pair<size_t, size_t>& exactLocGate =
-        architecture_.get().exactSlmLocation(initSlm, initRow, initCol);
+        architecture_.get().exactSLMLocation(initSLM, initRow, initCol);
     if (exactLocGate.second < exactLocQ.second) {
       lowerRow = 0;
     } else {
@@ -555,12 +555,12 @@ auto VMPlacer::placeAtomsInStorageZone(
     dictBoudingbox.emplace(std::get<0>(initialPlacement[q]),
                            std::tuple{lowerRow, upperRow, leftCol, rightCol});
     for (const qc::Qubit neighbor : dictQubitInteraction.at(q)) {
-      const auto& [tmpSlm, tmpRow, tmpCol] = previousGatePlacement[neighbor];
-      const auto& [neighborSlm, neighborRow, neighborCol] =
-          tmpSlm.get().isEntanglement()
-              ? architecture_.get().nearestStorageSite(tmpSlm, tmpRow, tmpCol)
+      const auto& [tmpSLM, tmpRow, tmpCol] = previousGatePlacement[neighbor];
+      const auto& [neighborSLM, neighborRow, neighborCol] =
+          tmpSLM.get().isEntanglement()
+              ? architecture_.get().nearestStorageSite(tmpSLM, tmpRow, tmpCol)
               : previousGatePlacement[neighbor];
-      if (const auto& it = dictBoudingbox.find(neighborSlm);
+      if (const auto& it = dictBoudingbox.find(neighborSLM);
           it != dictBoudingbox.end()) {
         const auto& [lower, upper, left, right] = it->second;
         it->second = std::tuple{
@@ -573,22 +573,22 @@ auto VMPlacer::placeAtomsInStorageZone(
         rightCol = neighborCol;
         const auto y =
             architecture_.get()
-                .exactSlmLocation(neighborSlm, neighborRow, neighborCol)
+                .exactSLMLocation(neighborSLM, neighborRow, neighborCol)
                 .second;
         if (exactLocGate.second < y) {
           lowerRow = 0;
         } else {
-          upperRow = neighborSlm.get().nRows;
+          upperRow = neighborSLM.get().nRows;
         }
         it->second = std::tuple{lowerRow, upperRow, leftCol, rightCol};
       }
     }
-    const auto& [gateSlm, gateRow, gateCol] = previousGatePlacement[q];
-    const auto& [nearestSlm, nearestRow, nearestCol] =
-        architecture_.get().nearestStorageSite(gateSlm, gateRow, gateCol);
+    const auto& [gateSLM, gateRow, gateCol] = previousGatePlacement[q];
+    const auto& [nearestSLM, nearestRow, nearestCol] =
+        architecture_.get().nearestStorageSite(gateSLM, gateRow, gateCol);
     // todo: what is ratio?
     const size_t ratio = 3;
-    if (const auto it = dictBoudingbox.find(nearestSlm);
+    if (const auto it = dictBoudingbox.find(nearestSLM);
         it != dictBoudingbox.end()) {
       const auto& [lower, upper, left, right] = it->second;
       it->second = std::tuple{std::min(nearestRow - ratio, lower),
@@ -600,7 +600,7 @@ auto VMPlacer::placeAtomsInStorageZone(
                               nearestCol - ratio, nearestCol + ratio};
     }
     auto setNearbySite = commonSite;
-    if (isEmptyStorageSite.at(initSlm)[initRow][initCol]) {
+    if (isEmptyStorageSite.at(initSLM)[initRow][initCol]) {
       setNearbySite.emplace(initialPlacement[q]);
     }
 
@@ -627,19 +627,19 @@ auto VMPlacer::placeAtomsInStorageZone(
         listStorage.emplace_back(site);
       }
       const auto idxStorage = it->second;
-      const auto& [siteSlm, siteRow, siteCol] = site;
+      const auto& [siteSLM, siteRow, siteCol] = site;
       const double dis = architecture_.get().distance(
-          gateSlm, gateRow, gateCol, siteSlm, siteRow, siteCol);
+          gateSLM, gateRow, gateCol, siteSLM, siteRow, siteCol);
       double lookaheadCost = 0;
       for (const auto& neighbor : dictQubitInteraction.at(q)) {
-        const auto& [neighborSlm, neighborRow, neighborCol] =
+        const auto& [neighborSLM, neighborRow, neighborCol] =
             previousGatePlacement[neighbor];
-        if (neighborSlm.get().isStorage()) {
+        if (neighborSLM.get().isStorage()) {
           lookaheadCost += architecture_.get().nearestEntanglementSiteDistance(
-              siteSlm, siteRow, siteCol, neighborSlm, neighborRow, neighborCol);
+              siteSLM, siteRow, siteCol, neighborSLM, neighborRow, neighborCol);
         } else {
           const std::pair<size_t, size_t>& exactLocNeighborQ =
-              architecture_.get().exactSlmLocation(neighborSlm, neighborRow,
+              architecture_.get().exactSLMLocation(neighborSLM, neighborRow,
                                                    neighborCol);
           const auto dx = static_cast<std::int64_t>(exactLocNeighborQ.first) -
                           static_cast<std::int64_t>(exactLocQ.first);
@@ -676,12 +676,12 @@ auto VMPlacer::placeAtomsInStorageZone(
 VMPlacer::VMPlacer(const Architecture& architecture, const Config& config)
     : architecture_(architecture), config_(config) {
   // get first storage SLM and first entanglement SLM
-  const auto& firstStorageSlm = *architecture_.get().storageZones.front();
-  const auto& firstEntanglementSlm =
+  const auto& firstStorageSLM = *architecture_.get().storageZones.front();
+  const auto& firstEntanglementSLM =
       architecture_.get().entanglementZones.front()->front();
   // check which side of the first storage SLM is closer to the entanglement
   // SLM
-  if (firstStorageSlm.location.second < firstEntanglementSlm.location.second) {
+  if (firstStorageSLM.location.second < firstEntanglementSLM.location.second) {
     // if the entanglement SLM is closer to the last row of the storage SLM
     // start initial placement of the atoms in the last row instead of the
     // first and hence revert initial placement
