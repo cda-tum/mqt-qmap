@@ -149,30 +149,26 @@ This tool allows visualizing the resulting quantum computation.
 
 ```{code-cell} ipython3
 from mqt.core import load
+
 circ = load(qc)
 code = compiler.compile(circ)
 print(code)
 ```
 
+```{note}
+The A* search in the placer of the routing aware compiler is quite memory intensive.
+Right now the maximum number of nodes considered in the A* search is limited to 50M.
+If this limit is hit, you will get an error message. You can freely adapt this limit
+by setting the argument `max_nodes` in the constructor of the `RoutingAwareCompiler`, see below.
+```
+
 Above, we have used the default settings for the compiler.
-However, the different stages of the compiler can also be configured with a set of parameters.
+However, the different stages of the compiler can also be configured, e.g., the deepening factor of the A\*-placer:
 
 ```{code-cell} ipython3
-compiler = RoutingAwareCompiler(arch, parse_json("""{
-  "code_generator": {
-    "parking_offset": 1,
-    "warn_unsupported_gates": true
-  },
-  "a_star_placer" : {
-    "use_window" : true,
-    "window_min_width" : 8,
-    "window_ratio" : 1.5,
-    "window_share" : 0.6,
-    "deepening_factor" : 0.6,
-    "deepening_value" : 0.2,
-    "lookahead_factor": 0.2,
-    "reuse_level": 5.0,
-    "max_nodes": 50000000
-  }
-}"""))
+compiler = RoutingAwareCompiler(arch, deepening_factor = 0.6)
+
+circ = load(qc)
+code = compiler.compile(circ)
+print(code)
 ```

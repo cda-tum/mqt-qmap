@@ -174,9 +174,9 @@ private:
       /// The target site
       DiscreteSite site;
       /**
-       * When this flag is set to false, it indicates that the atom should not
+       * When this flag is set to true, it indicates that the atom should not
        * move at all and remain in the entanglement zone. Then the attribute
-       * site is ignored.
+       * `site` is ignored.
        */
       bool reuse;
       /// The distance the atom must travel to reach the target site
