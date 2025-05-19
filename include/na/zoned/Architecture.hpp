@@ -76,8 +76,7 @@ using Site =
 /// An unordered map from an SLM to a value of type V.
 /// @tparam V the type of the value
 template <class V>
-using SLMMap = std::unordered_map<std::reference_wrapper<const SLM>, V,
-                                  std::hash<SLM>, std::equal_to<SLM>>;
+using SLMMap = std::unordered_map<std::reference_wrapper<const SLM>, V>;
 } // namespace na::zoned
 /// Hash function for pairs where both unqualified types have a hash function.
 template <class F, class S> struct std::hash<std::pair<F, S>> {
@@ -117,9 +116,21 @@ template <class T> struct std::hash<std::array<T, 2>> {
     return qc::combineHash(h1, h2);
   }
 };
-
+/// Hash function for std::reference_wrapper
+template <class T> struct std::hash<std::reference_wrapper<T>> {
+  size_t operator()(const T& ref) const noexcept {
+    return std::hash<std::remove_const_t<std::remove_reference_t<T>>>{}(ref);
+  }
+};
+namespace std {
+/// Equality operator for std::reference_wrapper
+template <typename T>
+bool operator==(const std::reference_wrapper<const T>& lhs,
+                const std::reference_wrapper<const T>& rhs) {
+  return lhs.get() == rhs.get();
+}
+} // namespace std
 namespace na::zoned {
-
 /// Class to define zone architecture.
 struct Architecture {
   std::string name; ///< name of the architecture

@@ -34,14 +34,10 @@ namespace na::zoned {
 /// @tparam T the type of the value
 template <class T>
 using RowColumnMap =
-    std::unordered_map<std::pair<std::reference_wrapper<const SLM>, size_t>, T,
-                       std::hash<std::pair<const SLM&, size_t>>,
-                       std::equal_to<std::pair<const SLM&, size_t>>>;
+    std::unordered_map<std::pair<std::reference_wrapper<const SLM>, size_t>, T>;
 /// An unordered set of rows or columns of an SLM.
 using RowColumnSet =
-    std::unordered_set<std::pair<std::reference_wrapper<const SLM>, size_t>,
-                       std::hash<std::pair<const SLM&, size_t>>,
-                       std::equal_to<std::pair<const SLM&, size_t>>>;
+    std::unordered_set<std::pair<std::reference_wrapper<const SLM>, size_t>>;
 /**
  * @brief The A* placer is a class that provides a method to determine the
  * placement of the atoms in each layer using the A* search algorithm.

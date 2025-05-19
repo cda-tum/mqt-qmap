@@ -715,9 +715,8 @@ auto Architecture::preprocessing() -> void {
         *slm,
         std::vector<std::vector<std::unordered_map<
             std::reference_wrapper<const SLM>,
-            std::vector<std::vector<
-                std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>>>,
-            std::hash<SLM>, std::equal_to<SLM>>>>{});
+            std::vector<std::vector<std::tuple<
+                std::reference_wrapper<const SLM>, size_t, size_t>>>>>>{});
     storageToNearestEntanglementSite.at(*slm).reserve(slm->nRows);
     for (std::size_t row = 0; row < slm->nRows; ++row) {
       storageToNearestEntanglementSite.at(*slm).emplace_back();

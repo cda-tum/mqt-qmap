@@ -283,8 +283,7 @@ auto VMPlacer::placeGatesInEntanglementZone(
   std::unordered_map<
       std::tuple<std::reference_wrapper<const std::array<SLM, 2>>, size_t,
                  size_t>,
-      size_t, std::hash<std::tuple<const std::array<SLM, 2>&, size_t, size_t>>,
-      std::equal_to<std::tuple<const std::array<SLM, 2>&, size_t, size_t>>>
+      size_t>
       siteRydbergToIdx;
   std::vector<std::tuple<std::reference_wrapper<const std::array<SLM, 2>>,
                          size_t, size_t>>
@@ -298,11 +297,8 @@ auto VMPlacer::placeGatesInEntanglementZone(
   for (size_t i = 0; i < twoQubitGates.size(); ++i) {
     const auto& [q1, q2] = twoQubitGates[i];
     // a set of possible locations sites for one operand of the gate
-    std::unordered_set<
-        std::tuple<std::reference_wrapper<const std::array<SLM, 2>>, size_t,
-                   size_t>,
-        std::hash<std::tuple<const std::array<SLM, 2>&, size_t, size_t>>,
-        std::equal_to<std::tuple<const std::array<SLM, 2>&, size_t, size_t>>>
+    std::unordered_set<std::tuple<
+        std::reference_wrapper<const std::array<SLM, 2>>, size_t, size_t>>
         nearestSites;
     if (reuse && reuseQubits.find(q1) != reuseQubits.end()) {
       const auto& [slm, r, c] = previousQubitPlacement[q1];

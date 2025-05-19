@@ -33,13 +33,7 @@ using Placement = std::vector<Site>;
 using Routing = std::vector<std::vector<qc::Qubit>>;
 /// An unordered map from sites to values of type T
 /// @tparam T the type of the value
-template <class T>
-using SiteMap =
-    std::unordered_map<Site, T,
-                       std::hash<std::tuple<const SLM&, size_t, size_t>>,
-                       std::equal_to<std::tuple<const SLM&, size_t, size_t>>>;
+template <class T> using SiteMap = std::unordered_map<Site, T>;
 /// An unordered set of sites
-using SiteSet =
-    std::unordered_set<Site, std::hash<std::tuple<const SLM&, size_t, size_t>>,
-                       std::equal_to<std::tuple<const SLM&, size_t, size_t>>>;
+using SiteSet = std::unordered_set<Site>;
 } // namespace na::zoned
