@@ -173,14 +173,21 @@ struct Architecture {
   /// Maximum Y coordinates of the different Rydberg zones, i.e., where the
   /// Rydberg laser can affect the atoms.
   std::vector<std::size_t> rydbergRangeMaxY;
-  /// A map from an entanglement site to the nearest storage site.
+
+private:
+  /// A map from an entanglement site to its nearest storage site. The nearest
+  /// site is the first candidate considered when moving an atom from this site
+  /// to the storage zone.
   /// @see storageToNearestEntanglementSite
   SLMMap<std::vector<std::vector<Site>>> entanglementToNearestStorageSite;
-  /// A map from a pair of storage sites to the nearest Rydberg site.
+  /// A map from a pair of storage sites to their common nearest entanglement
+  /// site. The nearest site is the first candidate considered when moving a
+  /// pair of atoms from the storage zone to the entanglement zone.
   /// @see entanglementToNearestStorageSite
   SLMMap<std::vector<std::vector<SLMMap<std::vector<std::vector<Site>>>>>>
       storageToNearestEntanglementSite;
 
+public:
   /// Creates an Architecture from a file containing a JSON specification.
   /// @param filename the name of the file given as a string
   [[nodiscard]] static auto fromJSONFile(const std::string& filename)
