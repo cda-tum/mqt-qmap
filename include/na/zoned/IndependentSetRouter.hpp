@@ -54,7 +54,7 @@ public:
    * are sorted by their distance in decreasing order such that atoms with
    * larger distance are routed first and hopefully lead to more homogenous
    * routing groups with similar movement distances within one group.
-   * @param placement is a vector of the atom's placement at every layer
+   * @param placement is a vector of the atoms' placement at every layer
    * @return the routing, i.e., for every transition between two placements a
    * vector of groups containing atoms that can be moved simultaneously
    */
