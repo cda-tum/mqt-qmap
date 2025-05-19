@@ -18,6 +18,7 @@ class RoutingAgnosticCompiler:
     def __init__(
         self,
         arch: ZonedNeutralAtomArchitecture,
+        log_level: str = ...,
         use_window: bool = ...,
         window_size: int = ...,
         dynamic_placement: bool = ...,
@@ -33,6 +34,7 @@ class RoutingAwareCompiler:
     def __init__(
         self,
         arch: ZonedNeutralAtomArchitecture,
+        log_level: str = ...,
         use_window: bool = ...,
         window_min_width: int = ...,
         window_ratio: float = ...,

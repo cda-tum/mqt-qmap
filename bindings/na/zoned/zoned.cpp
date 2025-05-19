@@ -69,22 +69,26 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
       m, "RoutingAgnosticCompiler",
       "MQT QMAP's routing-agnostic Zoned Neutral Atom Compiler.");
   routingAgnosticCompiler.def(
-      py::init([](const na::zoned::Architecture& arch, const bool useWindow,
+      py::init([](const na::zoned::Architecture& arch,
+                  const std::string& logLevel, const bool useWindow,
                   const size_t windowSize, const bool dynamicPlacement,
                   const size_t parkingOffset, const bool warnUnsupportedGates)
                    -> na::zoned::RoutingAgnosticCompiler {
         na::zoned::RoutingAgnosticCompiler::Config config;
+        config.logLevel = spdlog::level::from_str(logLevel);
         config.placerConfig = {useWindow, windowSize, dynamicPlacement};
         config.codeGeneratorConfig = {parkingOffset, warnUnsupportedGates};
         return {arch, config};
       }),
-      py::keep_alive<1, 2>(), "arch"_a, "use_window"_a = true,
-      "window_size"_a = 10, "dynamic_placement"_a = true,
+      py::keep_alive<1, 2>(), "arch"_a, "log_level"_a = "WARN",
+      "use_window"_a = true, "window_size"_a = 10, "dynamic_placement"_a = true,
       "parking_offset"_a = 1, "warn_unsupported_gates"_a = true, R"pbdoc(
     Create a routing-agnostic compiler for the given architecture and configurations.
 
     Args:
         arch: is the zoned neutral atom architecture
+        log_level: is the log level for the compiler, possible values are
+            "INFO", "WARNING", "ERROR", "CRITICAL"
         use_window: whether to use a window for the placer
         window_size: the size of the window for the placer
         dynamic_placement: whether to use dynamic placement for the placer
@@ -141,7 +145,8 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
       m, "RoutingAwareCompiler",
       "MQT QMAP's routing-aware Zoned Neutral Atom Compiler.");
   routingAwareCompiler.def(
-      py::init([](const na::zoned::Architecture& arch, const bool useWindow,
+      py::init([](const na::zoned::Architecture& arch,
+                  const std::string& logLevel, const bool useWindow,
                   const size_t windowMinWidth, const double windowRatio,
                   const double windowShare, const float deepeningFactor,
                   const float deepeningValue, const float lookaheadFactor,
@@ -149,22 +154,25 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
                   const size_t parkingOffset, const bool warnUnsupportedGates)
                    -> na::zoned::RoutingAwareCompiler {
         na::zoned::RoutingAwareCompiler::Config config;
+        config.logLevel = spdlog::level::from_str(logLevel);
         config.placerConfig = {useWindow,       windowMinWidth,  windowRatio,
                                windowShare,     deepeningFactor, deepeningValue,
                                lookaheadFactor, reuseLevel,      maxNodes};
         config.codeGeneratorConfig = {parkingOffset, warnUnsupportedGates};
         return {arch, config};
       }),
-      py::keep_alive<1, 2>(), "arch"_a, "use_window"_a = true,
-      "window_min_width"_a = 8, "window_ratio"_a = 1.0, "window_share"_a = 0.6,
-      "deepening_factor"_a = 0.8, "deepening_value"_a = 0.2,
-      "lookahead_factor"_a = 0.2, "reuse_level"_a = 5.0,
-      "max_nodes"_a = 50000000, "parking_offset"_a = 1,
+      py::keep_alive<1, 2>(), "arch"_a, "log_level"_a = "WARN",
+      "use_window"_a = true, "window_min_width"_a = 8, "window_ratio"_a = 1.0,
+      "window_share"_a = 0.6, "deepening_factor"_a = 0.8,
+      "deepening_value"_a = 0.2, "lookahead_factor"_a = 0.2,
+      "reuse_level"_a = 5.0, "max_nodes"_a = 50000000, "parking_offset"_a = 1,
       "warn_unsupported_gates"_a = true, R"pbdoc(
     Create a routing-aware compiler for the given architecture and configurations.
 
     Args:
         arch: is the zoned neutral atom architecture
+        log_level: is the log level for the compiler, possible values are
+            "INFO", "WARNING", "ERROR", "CRITICAL"
         use_window: is a flag whether to use a window for the placer
         window_min_width: is the minimum width of the window for the placer
         window_ratio: is the ratio between the height and the width of the window
