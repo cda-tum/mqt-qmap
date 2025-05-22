@@ -8,7 +8,7 @@
  * Licensed under the MIT License
  */
 
-#include "na/zoned/CodeGenerator.hpp"
+#include "na/zoned/code_generator/CodeGenerator.hpp"
 
 #include "ir/Definitions.hpp"
 #include "ir/operations/CompoundOperation.hpp"

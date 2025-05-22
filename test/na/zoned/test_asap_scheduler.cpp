@@ -9,7 +9,7 @@
  */
 
 #include "ir/operations/StandardOperation.hpp"
-#include "na/zoned/ASAPScheduler.hpp"
+#include "na/zoned/scheduler/ASAPScheduler.hpp"
 
 #include <gmock/gmock-matchers.h>
 #include <gmock/gmock-more-matchers.h>

@@ -11,15 +11,15 @@
 #pragma once
 
 #include "Architecture.hpp"
+#include "code_generator/CodeGenerator.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/Operation.hpp"
 #include "na/NAComputation.hpp"
-#include "na/zoned/ASAPScheduler.hpp"
-#include "na/zoned/AStarPlacer.hpp"
-#include "na/zoned/CodeGenerator.hpp"
-#include "na/zoned/IndependentSetRouter.hpp"
-#include "na/zoned/VertexMatchingPlacer.hpp"
-#include "na/zoned/VertexMatchingReuseAnalyzer.hpp"
+#include "placer/AStarPlacer.hpp"
+#include "placer/VertexMatchingPlacer.hpp"
+#include "reuse_analyzer/VertexMatchingReuseAnalyzer.hpp"
+#include "router/IndependentSetRouter.hpp"
+#include "scheduler/ASAPScheduler.hpp"
 
 #include <cassert>
 #include <chrono>
@@ -218,18 +218,6 @@ NLOHMANN_JSON_NAMESPACE_BEGIN
 template <> struct adl_serializer<std::chrono::microseconds> {
   static void to_json(json& j, const std::chrono::microseconds& ms) {
     j = ms.count();
-  }
-};
-template <> struct adl_serializer<spdlog::level::level_enum> {
-  static void to_json(json& j, const spdlog::level::level_enum& level) {
-    j = spdlog::level::to_string_view(level).data();
-  }
-  static void from_json(const json& j, spdlog::level::level_enum& level) {
-    // transform the string to lower case
-    std::string str = j.get<std::string>();
-    std::transform(str.begin(), str.end(), str.begin(),
-                   [](unsigned char c) { return std::tolower(c); });
-    level = spdlog::level::from_str(str);
   }
 };
 NLOHMANN_JSON_NAMESPACE_END

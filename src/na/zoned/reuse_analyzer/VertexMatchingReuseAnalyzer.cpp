@@ -8,7 +8,7 @@
  * Licensed under the MIT License
  */
 
-#include "na/zoned/VertexMatchingReuseAnalyzer.hpp"
+#include "na/zoned/reuse_analyzer/VertexMatchingReuseAnalyzer.hpp"
 
 #include "ir/Definitions.hpp"
 #include "na/zoned/Types.hpp"

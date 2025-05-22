@@ -17,7 +17,6 @@
 #include "na/zoned/Types.hpp"
 
 #include <cstddef>
-#include <nlohmann/json.hpp>
 #include <vector>
 
 namespace na::zoned {
@@ -52,9 +51,9 @@ public:
    * Create a new CodeGenerator.
    * @details The code generation is based on the given architecture and the
    * placement and routing of the qubits. It generates a neutral atom
-   * computation. The second parameter of the constructor is unused.
+   * computation.
    * @param architecture is the architecture of the neutral atom system
-   * @param config is the configuration of the code generator
+   * @param config is the configuration of the code generator.
    */
   CodeGenerator(const Architecture& architecture, const Config& config)
       : architecture_(architecture), config_(config) {}

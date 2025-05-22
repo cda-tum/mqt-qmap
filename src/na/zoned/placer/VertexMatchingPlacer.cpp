@@ -8,7 +8,7 @@
  * Licensed under the MIT License
  */
 
-#include "na/zoned/VertexMatchingPlacer.hpp"
+#include "na/zoned/placer/VertexMatchingPlacer.hpp"
 
 #include "ir/Definitions.hpp"
 #include "na/zoned/Architecture.hpp"
@@ -23,7 +23,6 @@
 #include <iostream>
 #include <limits>
 #include <memory>
-#include <nlohmann/json.hpp>
 #include <optional>
 #include <queue>
 #include <sstream>

@@ -13,6 +13,7 @@
 #include "ir/Definitions.hpp"
 #include "na/zoned/Architecture.hpp"
 #include "na/zoned/Types.hpp"
+#include "na/zoned/placer/PlacerBase.hpp"
 
 #include <array>
 #include <cassert>
@@ -22,7 +23,6 @@
 #include <functional>
 #include <map>
 #include <memory>
-#include <nlohmann/json.hpp>
 #include <optional>
 #include <unordered_map>
 #include <unordered_set>
@@ -44,7 +44,7 @@ using RowColumnSet =
  * @brief The A* placer is a class that provides a method to determine the
  * placement of the atoms in each layer using the A* search algorithm.
  */
-class AStarPlacer {
+class AStarPlacer : public PlacerBase {
   friend class AStarPlacerTest_AStarSearch_Test;
   using DiscreteSite = std::array<uint8_t, 2>;
   using CompatibilityGroup = std::array<std::map<uint8_t, uint8_t>, 2>;
