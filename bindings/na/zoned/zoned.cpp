@@ -16,14 +16,13 @@
 #include "na/zoned/placer/VertexMatchingPlacer.hpp"
 
 #include <cstddef>
-#include <nlohmann/json.hpp>
-#include <nlohmann/json_fwd.hpp>
 #include <pybind11/attr.h>
 #include <pybind11/cast.h>
 #include <pybind11/detail/common.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11_json/pybind11_json.hpp>
+#include <spdlog/common.h>
 #include <string>
 
 namespace py = pybind11;
