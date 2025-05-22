@@ -8,7 +8,7 @@
  * Licensed under the MIT License
  */
 
-#include "../../../include/na/zoned/placer/VertexMatchingPlacer.hpp"
+#include "na/zoned/placer/VertexMatchingPlacer.hpp"
 
 #include <cstddef>
 #include <gmock/gmock-matchers.h>

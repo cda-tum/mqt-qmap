@@ -8,12 +8,12 @@
  * Licensed under the MIT License
  */
 
-#include "../../../include/na/zoned/code_generator/CodeGenerator.hpp"
-#include "../../../include/na/zoned/placer/AStarPlacer.hpp"
-#include "../../../include/na/zoned/placer/VertexMatchingPlacer.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "na/zoned/Architecture.hpp"
 #include "na/zoned/Compiler.hpp"
+#include "na/zoned/code_generator/CodeGenerator.hpp"
+#include "na/zoned/placer/AStarPlacer.hpp"
+#include "na/zoned/placer/VertexMatchingPlacer.hpp"
 
 #include <cstddef>
 #include <nlohmann/json.hpp>
