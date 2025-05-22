@@ -40,7 +40,7 @@ constexpr std::string_view architectureSpecification = R"({
   "rydberg_range": [[[5, 70], [55, 110]]]
 })";
 constexpr std::string_view routingAgnosticConfiguration = R"({
-  "logLevel" : "debug",
+  "logLevel" : 1,
   "placerConfig" : {
     "useWindow" : true,
     "windowSize" : 10,
@@ -52,7 +52,7 @@ constexpr std::string_view routingAgnosticConfiguration = R"({
   }
 })";
 constexpr std::string_view routingAwareConfiguration = R"({
-  "logLevel" : "debug",
+  "logLevel" : 1,
   "codeGeneratorConfig" : {
     "parkingOffset" : 1,
     "warnUnsupportedGates" : false
