@@ -62,14 +62,14 @@ struct SLM {
   SLM() = default;
   /// Creates an SLM array from a JSON specification.
   [[nodiscard]] static auto fromJSON(nlohmann::json slmSpec) -> SLM;
-  /// @returns true if the SLM is part of an entanglement zone.
+  /// @return true if the SLM is part of an entanglement zone.
   [[nodiscard]] auto isEntanglement() const -> bool {
     return entanglementZone_ != nullptr;
   }
-  /// @returns true, if the SLM is part of a storage zone.
+  /// @return true, if the SLM is part of a storage zone.
   [[nodiscard]] auto isStorage() const -> bool { return !isEntanglement(); }
   /**
-   * @returns true, if both SLMs are equal, i.e., they have the same
+   * @return true, if both SLMs are equal, i.e., they have the same
    * location and dimensions.
    */
   [[nodiscard]] auto operator==(const SLM& other) const -> bool;

@@ -74,7 +74,16 @@ public:
   /// Create a VertexMatchingPlacer based on the given architecture and
   /// configuration
   VertexMatchingPlacer(const Architecture& architecture, const Config& config);
-  /// generate qubit placement based on minimum weight matching
+  /**
+   * This function defines the interface of the placer. It places the qubits for
+   * all layers using a minimal weight matching algorithm.
+   *
+   * @param nQubits The number of qubits to be placed
+   * @param twoQubitGateLayers The qubit pairs that must be placed for each
+   * layer
+   * @param reuseQubits A set of qubits that can be reused for each layer
+   * @return a placement of the qubits for all layers
+   */
   [[nodiscard]] auto
   place(size_t nQubits,
         const std::vector<TwoQubitGateLayer>& twoQubitGateLayers,
@@ -99,7 +108,7 @@ private:
    *
    * @param placementBefore The placement before the movement
    * @param placementAfter The placement after the movement
-   * @returns The cost of the movement
+   * @return The cost of the movement
    */
   [[nodiscard]] auto
   computeMovementCostBetweenPlacements(const Placement& placementBefore,
@@ -113,7 +122,7 @@ private:
    * @param placementBefore The placement before the movement
    * @param placementBetween The placement between the movement
    * @param placementAfter The placement after the movement
-   * @returns The cost of the movement
+   * @return The cost of the movement
    */
   [[nodiscard]] auto
   computeLayersMovementCost(const Placement& placementBefore,
