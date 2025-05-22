@@ -18,7 +18,6 @@
 #include "hybridmap/NeutralAtomScheduler.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
 #include "ir/QuantumComputation.hpp"
-#include "ir/operations/OpType.hpp"
 #include "qasm3/Importer.hpp"
 #include "sc/Architecture.hpp"
 #include "sc/Mapper.hpp"
@@ -38,15 +37,14 @@
 #include "sc/heuristic/HeuristicMapper.hpp"
 #include "sc/utils.hpp"
 
-#include <algorithm>
 #include <cstdint>
 #include <exception>
 #include <memory>
 #include <nlohmann/json.hpp>
 #include <plog/Severity.h>
 #include <pybind11/pybind11.h>
+#include <pybind11/pytypes.h>
 #include <pybind11/stl.h>
-#include <pybind11_json/pybind11_json.hpp>
 #include <sstream>
 #include <stdexcept>
 #include <string>
