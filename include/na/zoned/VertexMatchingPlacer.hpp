@@ -92,17 +92,43 @@ private:
   [[nodiscard]] static auto minimumWeightFullBipartiteMatching(
       const std::vector<std::vector<std::optional<double>>>& costMatrix)
       -> std::vector<size_t>;
-
+  /**
+   * Calculates the cost of rearranging atoms from one placement to the next.
+   * @details This function is used to evaluate whether the option with or
+   * without reuse is the more cost effective one.
+   *
+   * @param placementBefore The placement before the movement
+   * @param placementAfter The placement after the movement
+   * @returns The cost of the movement
+   */
   [[nodiscard]] auto
   computeMovementCostBetweenPlacements(const Placement& placementBefore,
                                        const Placement& placementAfter) const
       -> double;
 
+  /**
+   * This combines the cost of moving the atoms to the entanglement zone and
+   * back.
+   *
+   * @param placementBefore The placement before the movement
+   * @param placementBetween The placement between the movement
+   * @param placementAfter The placement after the movement
+   * @returns The cost of the movement
+   */
   [[nodiscard]] auto
   computeLayersMovementCost(const Placement& placementBefore,
                             const Placement& placementBetween,
                             const Placement& placementAfter) const -> double;
 
+  /**
+   * Decides which placement to use for the next layer, i.e., with our without
+   * reuse.
+   *
+   * @param previousGatePlacement The placement before the movement
+   * @param placementsWithoutReuse The placement without reuse
+   * @param placementsWithReuse The placement with reuse
+   * @return The placement to use for the next layer
+   */
   [[nodiscard]] auto filterMapping(
       const Placement& previousGatePlacement,
       const std::pair<Placement, Placement>& placementsWithoutReuse,
