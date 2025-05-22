@@ -90,27 +90,29 @@ public:
       -> NAComputation {
     SPDLOG_INFO("*** MQT QMAP Zoned Neutral Atom Compiler ***");
 #if SPDLOG_ACTIVE_LEVEL <= SPDLOG_LEVEL_DEBUG
-    SPDLOG_DEBUG("Used compiler settings:");
-    std::string jsonStr =
-        config_.dump(2); // Pretty-print with 2-space indentation
-    std::istringstream iss(jsonStr);
-    std::string line;
-    while (std::getline(iss, line)) {
-      SPDLOG_DEBUG(line);
+    if (spdlog::should_log(spdlog::level::debug)) {
+      SPDLOG_DEBUG("Used compiler settings:");
+      std::string jsonStr =
+          config_.dump(2); // Pretty-print with 2-space indentation
+      std::istringstream iss(jsonStr);
+      std::string line;
+      while (std::getline(iss, line)) {
+        SPDLOG_DEBUG(line);
+      }
+      SPDLOG_DEBUG("Number of qubits: {}", qComp.getNqubits());
+      const auto nTwoQubitGates = static_cast<size_t>(
+          std::count_if(qComp.cbegin(), qComp.cend(),
+                        [](const std::unique_ptr<qc::Operation>& op) {
+                          return op->getNqubits() == 2;
+                        }));
+      SPDLOG_DEBUG("Number of two-qubit gates: {}", nTwoQubitGates);
+      const auto nSingleQubitGates = static_cast<size_t>(
+          std::count_if(qComp.cbegin(), qComp.cend(),
+                        [](const std::unique_ptr<qc::Operation>& op) {
+                          return op->getNqubits() == 1;
+                        }));
+      SPDLOG_DEBUG("Number of single-qubit gates: {}", nSingleQubitGates);
     }
-    SPDLOG_DEBUG("Number of qubits: {}", qComp.getNqubits());
-    const auto nTwoQubitGates = static_cast<size_t>(
-        std::count_if(qComp.cbegin(), qComp.cend(),
-                      [](const std::unique_ptr<qc::Operation>& op) {
-                        return op->getNqubits() == 2;
-                      }));
-    SPDLOG_DEBUG("Number of two-qubit gates: {}", nTwoQubitGates);
-    const auto nSingleQubitGates = static_cast<size_t>(
-        std::count_if(qComp.cbegin(), qComp.cend(),
-                      [](const std::unique_ptr<qc::Operation>& op) {
-                        return op->getNqubits() == 1;
-                      }));
-    SPDLOG_DEBUG("Number of single-qubit gates: {}", nSingleQubitGates);
 #endif // SPDLOG_ACTIVE_LEVEL <= SPDLOG_LEVEL_DEBUG
 
     const auto& schedulingStart = std::chrono::system_clock::now();
@@ -126,7 +128,8 @@ public:
                  singleQubitGateLayers.size());
     SPDLOG_DEBUG("Number of two-qubit gate layers: {}",
                  twoQubitGateLayers.size());
-    if (!twoQubitGateLayers.empty()) {
+    if (!twoQubitGateLayers.empty() &&
+        spdlog::should_log(spdlog::level::debug)) {
       const auto& [min, sum, max] = std::accumulate(
           twoQubitGateLayers.cbegin(), twoQubitGateLayers.cend(),
           std::array<size_t, 3>{std::numeric_limits<size_t>::max(), 0UL, 0UL},
