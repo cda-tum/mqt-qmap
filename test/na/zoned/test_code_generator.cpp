@@ -8,11 +8,11 @@
  * Licensed under the MIT License
  */
 
+#include "../../../include/na/zoned/code_generator/CodeGenerator.hpp"
 #include "ir/operations/CompoundOperation.hpp"
 #include "ir/operations/NonUnitaryOperation.hpp"
 #include "ir/operations/StandardOperation.hpp"
 #include "ir/operations/SymbolicOperation.hpp"
-#include "na/zoned/CodeGenerator.hpp"
 
 #include <cstddef>
 #include <gmock/gmock-matchers.h>

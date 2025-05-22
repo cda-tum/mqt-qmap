@@ -8,7 +8,7 @@
  * Licensed under the MIT License
  */
 
-#include "na/zoned/IndependentSetRouter.hpp"
+#include "../../../include/na/zoned/router/IndependentSetRouter.hpp"
 
 #include <cstddef>
 #include <gmock/gmock-matchers.h>

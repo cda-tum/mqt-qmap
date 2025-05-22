@@ -8,8 +8,8 @@
  * Licensed under the MIT License
  */
 
+#include "../../../include/na/zoned/scheduler/ASAPScheduler.hpp"
 #include "ir/operations/StandardOperation.hpp"
-#include "na/zoned/ASAPScheduler.hpp"
 
 #include <gmock/gmock-matchers.h>
 #include <gmock/gmock-more-matchers.h>

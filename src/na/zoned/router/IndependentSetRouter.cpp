@@ -8,7 +8,7 @@
  * Licensed under the MIT License
  */
 
-#include "na/zoned/IndependentSetRouter.hpp"
+#include "../../../../include/na/zoned/router/IndependentSetRouter.hpp"
 
 #include "ir/Definitions.hpp"
 #include "na/zoned/Architecture.hpp"

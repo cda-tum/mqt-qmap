@@ -11,15 +11,15 @@
 #pragma once
 
 #include "Architecture.hpp"
+#include "code_generator/CodeGenerator.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/Operation.hpp"
 #include "na/NAComputation.hpp"
-#include "na/zoned/ASAPScheduler.hpp"
-#include "na/zoned/AStarPlacer.hpp"
-#include "na/zoned/CodeGenerator.hpp"
-#include "na/zoned/IndependentSetRouter.hpp"
-#include "na/zoned/VertexMatchingPlacer.hpp"
-#include "na/zoned/VertexMatchingReuseAnalyzer.hpp"
+#include "placer/AStarPlacer.hpp"
+#include "placer/VertexMatchingPlacer.hpp"
+#include "reuse_analyzer/VertexMatchingReuseAnalyzer.hpp"
+#include "router/IndependentSetRouter.hpp"
+#include "scheduler/ASAPScheduler.hpp"
 
 #include <cassert>
 #include <chrono>

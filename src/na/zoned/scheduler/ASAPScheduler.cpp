@@ -8,7 +8,7 @@
  * Licensed under the MIT License
  */
 
-#include "na/zoned/ASAPScheduler.hpp"
+#include "../../../../include/na/zoned/scheduler/ASAPScheduler.hpp"
 
 #include "ir/Definitions.hpp"
 #include "ir/QuantumComputation.hpp"

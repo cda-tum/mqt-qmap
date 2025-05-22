@@ -24,7 +24,7 @@
 
 namespace na::zoned {
 /**
- * class to find a qubit layout based on vertex matching of a weighted
+ * Class to find a qubit layout based on vertex matching of a weighted
  * bipartite graph
  */
 class VertexMatchingPlacer {
@@ -48,8 +48,10 @@ public:
   struct Config {
 
     /**
-     * This flag indicates whether the  placement should use a window when
-     * selecting potential free sites
+     * This flag indicates whether the placement should use a window when
+     * selecting potential free sites, i.e., not all sites in a zone are
+     * considered only those that are within a window centered around the
+     * best candidate site for an atom.
      */
     bool useWindow = true;
     size_t windowSize = 10;
@@ -153,7 +155,7 @@ private:
       const std::pair<Placement, Placement>& placementsWithReuse) const
       -> std::pair<Placement, Placement>;
   /**
-   * generate gate mapping based on minimum weight matching for the first
+   * Generate gate mapping based on minimum weight matching for the first
    * layer of gates
    */
   [[nodiscard]] auto

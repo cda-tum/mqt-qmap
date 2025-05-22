@@ -8,7 +8,7 @@
  * Licensed under the MIT License
  */
 
-#include "na/zoned/AStarPlacer.hpp"
+#include "../../../../include/na/zoned/placer/AStarPlacer.hpp"
 
 #include "ir/Definitions.hpp"
 #include "na/zoned/Architecture.hpp"

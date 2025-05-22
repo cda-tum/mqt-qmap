@@ -8,7 +8,7 @@
  * Licensed under the MIT License
  */
 
-#include "na/zoned/VertexMatchingPlacer.hpp"
+#include "../../../../include/na/zoned/placer/VertexMatchingPlacer.hpp"
 
 #include "ir/Definitions.hpp"
 #include "na/zoned/Architecture.hpp"

@@ -9,8 +9,8 @@
 set(TARGET_NAME ${MQT_QMAP_TARGET_NAME}-na-zoned)
 
 if(NOT TARGET ${TARGET_NAME})
-  file(GLOB HEADERS ${MQT_QMAP_INCLUDE_BUILD_DIR}/na/zoned/*.hpp)
-  file(GLOB SOURCES *.cpp)
+  file(GLOB_RECURSE HEADERS ${MQT_QMAP_INCLUDE_BUILD_DIR}/na/zoned/*.hpp)
+  file(GLOB_RECURSE SOURCES *.cpp)
 
   add_library(${TARGET_NAME} ${HEADERS} ${SOURCES})
 

@@ -52,7 +52,7 @@ struct SLM {
   /// X,Y-coordinate of the left uppermost SLM.
   std::pair<std::size_t, std::size_t> location{0, 0};
   /**
-   * if the SLM is used in entanglement zone, a pointer to all entanglement
+   * If the SLM is used in entanglement zone, a pointer to all entanglement
    * SLMs in the same group.
    */
   const std::array<SLM, 2>* entanglementZone_ = nullptr;
@@ -300,7 +300,7 @@ public:
       -> const
       std::tuple<std::reference_wrapper<const SLM>, std::size_t, std::size_t>&;
   /**
-   * return the nearest entanglement site for two qubit in the storage zone
+   * Return the nearest entanglement site for two qubit in the storage zone
    * based on the position of two qubits
    */
   auto nearestEntanglementSite(const SLM& idx1, std::size_t r1, std::size_t c1,
@@ -308,7 +308,7 @@ public:
                                std::size_t c2) const -> const
       std::tuple<std::reference_wrapper<const SLM>, std::size_t, std::size_t>&;
   /**
-   * return the maximum/sum of the distance to move two qubits to one rydberg
+   * Return the maximum/sum of the distance to move two qubits to one rydberg
    * site. If the two qubits are in the same row, i.e., can be picked up
    * simultaneously, the maximum distance is returned. Otherwise, the
    * sum of the distances is returned.
