@@ -13,9 +13,9 @@
 #include "ir/Definitions.hpp"
 #include "na/zoned/Architecture.hpp"
 #include "na/zoned/Types.hpp"
+#include "na/zoned/reuse_analyzer/ReuseAnalyzerBase.hpp"
 
 #include <cstddef>
-#include <nlohmann/json.hpp>
 #include <optional>
 #include <unordered_set>
 #include <utility>
@@ -26,7 +26,7 @@ namespace na::zoned {
  * The class VertexMatchingReuseAnalyzer implements the default reuse analysis
  * for the zoned neutral atom compiler that uses a bipartite maximum matching.
  */
-class VertexMatchingReuseAnalyzer {
+class VertexMatchingReuseAnalyzer : public ReuseAnalyzerBase {
   friend class
       VertexMatchingReuseAnalyzerMaximumBipartiteMatchingTest_Direct_Test;
   friend class
@@ -56,7 +56,7 @@ public:
   VertexMatchingReuseAnalyzer(const Architecture& /* unused */,
                               const Config& /* unused */) {}
   /// Analyze the reuse of qubits in the given two-qubit gate layers.
-  [[nodiscard]] static auto
+  [[nodiscard]] auto
   analyzeReuse(const std::vector<TwoQubitGateLayer>& twoQubitGateLayers)
       -> std::vector<std::unordered_set<qc::Qubit>>;
 

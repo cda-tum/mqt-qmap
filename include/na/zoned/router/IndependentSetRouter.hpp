@@ -13,6 +13,7 @@
 #include "ir/Definitions.hpp"
 #include "na/zoned/Architecture.hpp"
 #include "na/zoned/Types.hpp"
+#include "na/zoned/router/RouterBase.hpp"
 
 #include <cstddef>
 #include <functional>
@@ -27,7 +28,7 @@ namespace na::zoned {
  * that forms groups of parallel movements by calculating a maximal independent
  * set.
  */
-class IndependentSetRouter {
+class IndependentSetRouter : public RouterBase {
   std::reference_wrapper<const Architecture> architecture_;
 
 public:

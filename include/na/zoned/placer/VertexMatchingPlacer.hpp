@@ -13,10 +13,10 @@
 #include "ir/Definitions.hpp"
 #include "na/zoned/Architecture.hpp"
 #include "na/zoned/Types.hpp"
+#include "na/zoned/placer/PlacerBase.hpp"
 
 #include <cstddef>
 #include <functional>
-#include <nlohmann/json.hpp>
 #include <optional>
 #include <unordered_set>
 #include <utility>
@@ -27,7 +27,7 @@ namespace na::zoned {
  * Class to find a qubit layout based on vertex matching of a weighted
  * bipartite graph
  */
-class VertexMatchingPlacer {
+class VertexMatchingPlacer : public PlacerBase {
   friend class
       VertexMatchingPlacerTest_MinimumWeightFullBipartiteMatching1_Test;
   friend class

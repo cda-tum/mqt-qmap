@@ -17,7 +17,6 @@
 #include "na/zoned/Types.hpp"
 
 #include <cstddef>
-#include <nlohmann/json.hpp>
 #include <vector>
 
 namespace na::zoned {

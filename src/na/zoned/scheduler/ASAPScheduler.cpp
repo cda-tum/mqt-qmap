@@ -8,7 +8,7 @@
  * Licensed under the MIT License
  */
 
-#include "../../../../include/na/zoned/scheduler/ASAPScheduler.hpp"
+#include "na/zoned/scheduler/ASAPScheduler.hpp"
 
 #include "ir/Definitions.hpp"
 #include "ir/QuantumComputation.hpp"
@@ -23,7 +23,6 @@
 #include <functional>
 #include <iostream>
 #include <memory>
-#include <nlohmann/json.hpp>
 #include <sstream>
 #include <stdexcept>
 #include <utility>

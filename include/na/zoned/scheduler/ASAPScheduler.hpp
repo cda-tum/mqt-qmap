@@ -13,9 +13,9 @@
 #include "ir/QuantumComputation.hpp"
 #include "na/zoned/Architecture.hpp"
 #include "na/zoned/Types.hpp"
+#include "na/zoned/scheduler/SchedulerBase.hpp"
 
 #include <functional>
-#include <nlohmann/json.hpp>
 #include <utility>
 #include <vector>
 
@@ -24,7 +24,7 @@ namespace na::zoned {
  * The class ASAPScheduler implements the as-soon-as-possible scheduling
  * strategy for the zoned neutral atom compiler.
  */
-class ASAPScheduler {
+class ASAPScheduler : public SchedulerBase {
   /// A reference to the zoned neutral atom architecture
   std::reference_wrapper<const Architecture> architecture_;
   /**

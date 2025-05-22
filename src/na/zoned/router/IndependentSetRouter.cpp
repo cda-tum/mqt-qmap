@@ -8,7 +8,7 @@
  * Licensed under the MIT License
  */
 
-#include "../../../../include/na/zoned/router/IndependentSetRouter.hpp"
+#include "na/zoned/router/IndependentSetRouter.hpp"
 
 #include "ir/Definitions.hpp"
 #include "na/zoned/Architecture.hpp"
@@ -17,7 +17,6 @@
 #include <cstddef>
 #include <functional>
 #include <iostream>
-#include <nlohmann/json.hpp>
 #include <set>
 #include <sstream>
 #include <tuple>
