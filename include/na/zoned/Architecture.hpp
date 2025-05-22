@@ -45,18 +45,18 @@ struct AOD {
 /// A 2D-array of SLM traps.
 struct SLM {
   std::size_t id = 0; ///< SLM id, used only in output
-  /// separation of individual sites in x and y direction.
+  /// Separation of individual sites in x and y direction.
   std::pair<std::size_t, std::size_t> siteSeparation{0, 0};
   std::size_t nRows = 0; ///< number of rows
   std::size_t nCols = 0; ///< number of columns
-  /// x,y-coordinate of the left uppermost SLM.
+  /// X,Y-coordinate of the left uppermost SLM.
   std::pair<std::size_t, std::size_t> location{0, 0};
   /**
    * if the SLM is used in entanglement zone, a pointer to all entanglement
    * SLMs in the same group.
    */
   const std::array<SLM, 2>* entanglementZone_ = nullptr;
-  /// only used for printing.
+  /// Only used for printing.
   std::optional<std::size_t> entanglementId_ = std::nullopt;
   /// Creates an SLM with default values.
   SLM() = default;
@@ -295,7 +295,7 @@ public:
   auto distance(const SLM& idx1, std::size_t r1, std::size_t c1,
                 const SLM& idx2, std::size_t r2, std::size_t c2) const
       -> double;
-  /// return the nearest storage site for an entanglement site
+  /// Return the nearest storage site for an entanglement site
   auto nearestStorageSite(const SLM& slm, std::size_t r, std::size_t c) const
       -> const
       std::tuple<std::reference_wrapper<const SLM>, std::size_t, std::size_t>&;

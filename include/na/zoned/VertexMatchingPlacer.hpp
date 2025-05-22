@@ -67,12 +67,15 @@ private:
   /// The configuration of the VertexMatchingPlacer
   Config config_;
 
-  // todo: Why is that?
+  /// This is multiplied with the cost of the movement without reuse to resemble
+  /// the additional cost of transferring the atoms from and to the AOD trap
   constexpr static double costAtomTransfer_ = 0.9999;
 
 public:
-  /// Create a VertexMatchingPlacer based on the given architecture and
-  /// configuration
+  /**
+   * Create a VertexMatchingPlacer based on the given architecture and
+   * configuration
+   */
   VertexMatchingPlacer(const Architecture& architecture, const Config& config);
   /**
    * This function defines the interface of the placer. It places the qubits for
@@ -91,7 +94,7 @@ public:
       -> std::vector<Placement>;
 
 private:
-  /// generate qubit initial layout
+  /// Generate qubit initial layout
   auto makeInitialPlacement(size_t nQubits) const -> Placement;
 
   /**
