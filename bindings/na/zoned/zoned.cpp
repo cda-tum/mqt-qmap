@@ -13,7 +13,7 @@
 #include "na/zoned/Architecture.hpp"
 #include "na/zoned/CodeGenerator.hpp"
 #include "na/zoned/Compiler.hpp"
-#include "na/zoned/VMPlacer.hpp"
+#include "na/zoned/VertexMatchingPlacer.hpp"
 
 #include <cstddef>
 #include <nlohmann/json.hpp>
