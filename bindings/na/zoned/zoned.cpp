@@ -16,12 +16,14 @@
 #include "na/zoned/placer/VertexMatchingPlacer.hpp"
 
 #include <cstddef>
+// The header <nlohmann/json.hpp> is used, but clang-tidy confuses it with the
+// wrong forward header <nlohmann/json_fwd.hpp>
+// NOLINTNEXTLINE(misc-include-cleaner)
+#include <nlohmann/json.hpp>
 #include <pybind11/attr.h>
 #include <pybind11/cast.h>
 #include <pybind11/detail/common.h>
 #include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
-#include <pybind11_json/pybind11_json.hpp>
 #include <spdlog/common.h>
 #include <string>
 
@@ -98,6 +100,9 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
       "from_json_string",
       [](const na::zoned::Architecture& arch,
          const std::string& json) -> na::zoned::RoutingAgnosticCompiler {
+        // The correct header <nlohmann/json.hpp> is included, but clang-tidy
+        // confuses it with the wrong forward header <nlohmann/json_fwd.hpp>
+        // NOLINTNEXTLINE(misc-include-cleaner)
         return {arch, nlohmann::json::parse(json)};
       },
       "arch"_a, "json"_a, R"pbdoc(
@@ -202,6 +207,9 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
       "from_json_string",
       [](const na::zoned::Architecture& arch,
          const std::string& json) -> na::zoned::RoutingAwareCompiler {
+        // The correct header <nlohmann/json.hpp> is included, but clang-tidy
+        // confuses it with the wrong forward header <nlohmann/json_fwd.hpp>
+        // NOLINTNEXTLINE(misc-include-cleaner)
         return {arch, nlohmann::json::parse(json)};
       },
       "arch"_a, "json"_a, R"pbdoc(

@@ -37,14 +37,17 @@
 #include "sc/heuristic/HeuristicMapper.hpp"
 #include "sc/utils.hpp"
 
+#include <cstddef>
 #include <cstdint>
 #include <exception>
 #include <memory>
 #include <nlohmann/json.hpp>
 #include <plog/Severity.h>
+#include <pybind11/attr.h>
+#include <pybind11/cast.h>
+#include <pybind11/detail/common.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
-#include <pybind11/stl.h>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -53,6 +56,7 @@
 namespace py = pybind11;
 using namespace pybind11::literals;
 
+namespace {
 // c++ binding function
 std::pair<qc::QuantumComputation, MappingResults>
 map(const qc::QuantumComputation& circ, Architecture& arch,
@@ -83,6 +87,7 @@ map(const qc::QuantumComputation& circ, Architecture& arch,
 
   return {std::move(qcMapped), results};
 }
+} // namespace
 
 PYBIND11_MODULE(pyqmap, m, py::mod_gil_not_used()) {
   m.doc() = "pybind11 for the MQT QMAP quantum circuit mapping tool";

@@ -8,15 +8,18 @@
  * Licensed under the MIT License
  */
 
+#include "ir/QuantumComputation.hpp"
+#include "ir/operations/OpType.hpp"
 #include "na/nasp/CodeGenerator.hpp"
 #include "na/nasp/Solver.hpp"
 
+#include <algorithm>
+#include <cctype>
 #include <cstdint>
-#include <nlohmann/json.hpp>
 #include <pybind11/cast.h>
+#include <pybind11/detail/common.h>
 #include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
-#include <pybind11_json/pybind11_json.hpp>
+#include <string>
 
 namespace py = pybind11;
 using namespace pybind11::literals;
