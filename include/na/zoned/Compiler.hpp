@@ -220,16 +220,4 @@ template <> struct adl_serializer<std::chrono::microseconds> {
     j = ms.count();
   }
 };
-template <> struct adl_serializer<spdlog::level::level_enum> {
-  static void to_json(json& j, const spdlog::level::level_enum& level) {
-    j = spdlog::level::to_string_view(level).data();
-  }
-  static void from_json(const json& j, spdlog::level::level_enum& level) {
-    // transform the string to lower case
-    std::string str = j.get<std::string>();
-    std::transform(str.begin(), str.end(), str.begin(),
-                   [](unsigned char c) { return std::tolower(c); });
-    level = spdlog::level::from_str(str);
-  }
-};
 NLOHMANN_JSON_NAMESPACE_END
