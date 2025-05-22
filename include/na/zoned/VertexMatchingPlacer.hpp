@@ -48,15 +48,19 @@ public:
   struct Config {
 
     /**
-     * this flag indicates whether the  placement should use a window when
+     * This flag indicates whether the  placement should use a window when
      * selecting potential free sites
      */
     bool useWindow = true;
     size_t windowSize = 10;
 
     /**
-     * this flag indicates whether the placement between gates is dynamic,
-     * gates
+     * This flag indicates whether the placement between gates is dynamic.
+     * @details If this flag is true, then the next placement in the storage
+     * zone is computed via the minimal vertex matching algorithm. If this
+     * flag is false, then the initial placement for the placement in the
+     * storage through all layers and only the placement in the entanglement
+     * zone is computed via the minimal vertex matching algorithm.
      */
     bool dynamicPlacement = true;
     NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(Config, useWindow, windowSize,
@@ -67,8 +71,10 @@ private:
   /// The configuration of the VertexMatchingPlacer
   Config config_;
 
-  /// This is multiplied with the cost of the movement without reuse to resemble
-  /// the additional cost of transferring the atoms from and to the AOD trap
+  /**
+   * This is multiplied with the cost of the movement without reuse to resemble
+   * the additional cost of transferring the atoms from and to the AOD trap
+   */
   constexpr static double costAtomTransfer_ = 0.9999;
 
 public:
