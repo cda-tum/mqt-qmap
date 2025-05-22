@@ -184,12 +184,11 @@ TEST_F(ASAPSchedulerScheduleTest, Barrier) {
                   ::testing::IsEmpty(),
                   ::testing::ElementsAre(::testing::RefEq(
                       static_cast<qc::StandardOperation&>(*qc.at(1)))),
-                  ::testing::IsEmpty(), ::testing::IsEmpty()));
+                  ::testing::IsEmpty()));
   EXPECT_THAT(
       twoQubitGateLayers,
       ::testing::ElementsAre(::testing::UnorderedElementsAre(
                                  ::testing::UnorderedElementsAre(0U, 1U)),
-                             ::testing::IsEmpty(),
                              ::testing::UnorderedElementsAre(
                                  ::testing::UnorderedElementsAre(2U, 3U))));
 }

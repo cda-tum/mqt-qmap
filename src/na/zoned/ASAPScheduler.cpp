@@ -61,10 +61,9 @@ auto ASAPScheduler::schedule(const qc::QuantumComputation& qc) const
       if (op->getNqubits() < qc.getNqubits()) {
         throw std::invalid_argument("Only global barriers are allowed.");
       }
-      // add the barrier to the max. next layer and set the next layer for
-      // all qubits to this layer
-      auto newNextLayerForQubit = *std::max_element(nextLayerForQubit.cbegin(),
-                                                    nextLayerForQubit.cend());
+      // set the next layer for all qubits to the currently last layer
+      assert(twoQubitGateLayers.size() + 1 == singleQubitGateLayers.size());
+      const auto newNextLayerForQubit = twoQubitGateLayers.size();
       for (qc::Qubit q = 0; q < qc.getNqubits(); ++q) {
         nextLayerForQubit[q] = newNextLayerForQubit;
       }
