@@ -99,7 +99,11 @@ However, the controlled z-gates can only be executed between nearby atoms in the
 This entanglement zone is spatially separated from the storage zone, where all atoms not involved in a cz-gate are
 stored.
 
-![Zoned Neutral Atom Architecture](images/zones.pdf)
+```{image} images/zones.pdf
+:alt: Zoned Neutral Atom Architecture
+:width: 80%
+:align: center
+```
 
 To find an optimized sequence of target-specific instructions, we use the zoned neutral atom compiler.
 This compiler requires first a specification of the architecture.
