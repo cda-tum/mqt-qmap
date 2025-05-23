@@ -24,6 +24,8 @@
 #include <pybind11/cast.h>
 #include <pybind11/detail/common.h>
 #include <pybind11/pybind11.h>
+// NOLINTNEXTLINE(misc-include-cleaner)
+#include <pybind11_json/pybind11_json.hpp>
 #include <spdlog/common.h>
 #include <string>
 

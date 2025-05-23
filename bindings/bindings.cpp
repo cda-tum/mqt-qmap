@@ -48,6 +48,8 @@
 #include <pybind11/detail/common.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
+// NOLINTNEXTLINE(misc-include-cleaner)
+#include <pybind11/stl.h>
 #include <sstream>
 #include <stdexcept>
 #include <string>
