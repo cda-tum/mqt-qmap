@@ -4,6 +4,10 @@ This document describes breaking changes and how to upgrade. For a complete list
 
 ## [Unreleased]
 
+This minor release initiates the efforts to re-structure the Python bindings and make the more modular.
+Even tough this is not a breaking change, it is worth mentioning to developers of MQT QMAP that all Python code (except tests) has been moved to the top-level `python` directory.
+Furthermore, the C++ code for the Python bindings has been moved to the top-level `bindings` directory.
+
 ## [3.0.0]
 
 This major release introduces several breaking changes, including the removal of deprecated features.
