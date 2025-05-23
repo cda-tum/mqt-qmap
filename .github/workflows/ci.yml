@@ -130,6 +130,7 @@ jobs:
       contents: read
       id-token: write
 
+  # to properly link python bindings, the target must be enabled and pybind11 must be installed
   cpp-linter:
     name: 🇨‌ Lint
     needs: change-detection
