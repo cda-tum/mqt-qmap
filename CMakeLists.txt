@@ -74,7 +74,9 @@ endif()
 
 option(BUILD_MQT_QMAP_TESTS "Also build tests for the MQT QMAP project" ${MQT_QMAP_MASTER_PROJECT})
 
-include(cmake/ExternalDependencies.cmake)
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+include(ExternalDependencies)
+include(AddMQTQMAPBinding)
 
 # set the include directory for the build tree
 set(MQT_QMAP_INCLUDE_BUILD_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
