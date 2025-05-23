@@ -44,9 +44,6 @@ set_property(
            CRITICAL
            OFF)
 add_compile_definitions(SPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_${MQT_QMAP_LOG_LEVEL})
-# todo: this might not be the right place to put this but required for spdlog and python bindings on
-# linux
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 option(BUILD_MQT_QMAP_BINDINGS "Build the MQT QMAP Python bindings" OFF)
 if(BUILD_MQT_QMAP_BINDINGS)
