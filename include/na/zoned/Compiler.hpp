@@ -116,8 +116,11 @@ public:
 #endif // SPDLOG_ACTIVE_LEVEL <= SPDLOG_LEVEL_DEBUG
 
     const auto& schedulingStart = std::chrono::system_clock::now();
-    const auto& [singleQubitGateLayers, twoQubitGateLayers] =
-        SELF.schedule(qComp);
+    // CodeQL was not very happy about the structural binding here, hence I
+    // removed it.
+    const auto& schedule = SELF.schedule(qComp);
+    const auto& singleQubitGateLayers = schedule.first;
+    const auto& twoQubitGateLayers = schedule.second;
     statistics_.schedulingTime =
         std::chrono::duration_cast<std::chrono::microseconds>(
             std::chrono::system_clock::now() - schedulingStart);

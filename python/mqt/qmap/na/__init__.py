@@ -7,13 +7,3 @@
 # Licensed under the MIT License
 
 """The MQT QMAP's Neutral Atom Package."""
-
-from __future__ import annotations
-
-from . import state_preparation, zoned
-
-__all__ = ["state_preparation", "zoned"]
-
-
-def __dir__() -> list[str]:
-    return __all__
