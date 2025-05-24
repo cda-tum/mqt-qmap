@@ -6,4 +6,4 @@
 #
 # Licensed under the MIT License
 
-"""The MQT QMAP's Neutral Atom Package."""
+"""The MQT QMAP Neutral Atom Package."""
