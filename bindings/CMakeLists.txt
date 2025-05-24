@@ -25,29 +25,19 @@ list(
   ${BASEPOINT}/../../core/lib
   ${BASEPOINT}/../../core/lib64)
 
-pybind11_add_module(
+add_mqt_qmap_binding(
   pyqmap
-  # Prefer thin LTO if available
-  THIN_LTO
-  # Optimize the bindings for size
-  OPT_SIZE
-  # Source code goes here
-  bindings.cpp)
+  bindings.cpp
+  LINK_LIBS
+  MQT::QMapSCExact
+  MQT::QMapSCHeuristic
+  MQT::QMapCliffordSynthesis
+  MQT::QMapHybrid
+  MQT::NASP
+  MQT::QMapNAZoned
+  MQT::CoreQASM
+  pybind11_json)
 target_compile_definitions(pyqmap PRIVATE Z3_FOUND)
-target_link_libraries(
-  pyqmap
-  PRIVATE MQT::QMapSCExact
-          MQT::QMapSCHeuristic
-          MQT::QMapCliffordSynthesis
-          MQT::QMapHybrid
-          MQT::NASP
-          MQT::CoreQASM
-          MQT::ProjectOptions
-          MQT::ProjectWarnings
-          pybind11_json)
 
-# Install directive for scikit-build-core
-install(
-  TARGETS pyqmap
-  DESTINATION .
-  COMPONENT mqt-qmap_Python)
+# add all modules
+add_subdirectory(na)

@@ -7,6 +7,17 @@ This project adheres to [Semantic Versioning], with the exception that minor rel
 
 ## [Unreleased]
 
+### Added
+
+- ✨ Add new compilers for zoned neutral atom architectures (a routing-agnostic and routing-aware compiler) ([#624]) ([**@ystade**])
+- ✨ Add a new CMake function `add_mqt_qmap_binding` to add a Python binding library ([#624]) ([**@ystade**])
+
+### Changed
+
+- ♻️ Move the C++ code for the Python bindings to the top-level `bindings` directory ([#624]) ([**@ystade**])
+- ♻️ Move all Python code (no tests) to the top-level `python` directory ([#624]) ([**@ystade**])
+- ♻️ Restructure the Python bindings for neutral atom tools into separate modules ([#624]) ([**@ystade**])
+
 ## [3.0.0] - 2025-05-08
 
 _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#300)._
