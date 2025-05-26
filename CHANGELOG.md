@@ -7,6 +7,8 @@ This project adheres to [Semantic Versioning], with the exception that minor rel
 
 ## [Unreleased]
 
+## [3.1.0] - 2025-05-26
+
 ### Added
 
 - ✨ Add new compilers for zoned neutral atom architectures (a routing-agnostic and routing-aware compiler) ([#624]) ([**@ystade**])
@@ -48,12 +50,14 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- Version links -->
 
-[unreleased]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.0.0...HEAD
+[unreleased]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.1.0...HEAD
+[3.1.0]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.0.0...v3.1.0
 [3.0.0]: https://github.com/munich-quantum-toolkit/qmap/compare/v2.8.0...v3.0.0
 [2.8.0]: https://github.com/munich-quantum-toolkit/qmap/releases/tag/v2.8.0
 
 <!-- PR links -->
 
+[#624]: https://github.com/munich-quantum-toolkit/qmap/pulls/624
 [#621]: https://github.com/munich-quantum-toolkit/qmap/pulls/621
 [#614]: https://github.com/munich-quantum-toolkit/qmap/pulls/614
 [#610]: https://github.com/munich-quantum-toolkit/qmap/pulls/610
