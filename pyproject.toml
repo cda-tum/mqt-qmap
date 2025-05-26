@@ -197,6 +197,7 @@ line-length = 120
 namespace-packages = ["mqt"]
 preview = true
 unsafe-fixes = true
+src = ["python"]
 
 [tool.ruff.lint]
 extend-select = [

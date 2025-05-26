@@ -14,6 +14,7 @@ from pathlib import Path
 
 import pytest
 from mqt.core import load
+
 from mqt.qmap.na.state_preparation import NAStatePreparationSolver, generate_code, get_ops_for_solver
 
 # get root directory of the project
