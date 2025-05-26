@@ -6,11 +6,14 @@
 #
 # Licensed under the MIT License
 
-if(TARGET MQT::QMapNA)
-  file(GLOB NA_TEST_SOURCES *.cpp)
-  package_add_test(mqt-qmap-na-test MQT::QMapNA ${NA_TEST_SOURCES})
-endif()
-
-add_subdirectory(nalac)
-add_subdirectory(nasp)
-add_subdirectory(zoned)
+add_mqt_qmap_binding(
+  ${MQT_QMAP_TARGET_NAME}-na-zoned-bindings
+  zoned.cpp
+  MODULE_NAME
+  zoned
+  INSTALL_DIR
+  ./na
+  LINK_LIBS
+  MQT::QMapNAZoned
+  MQT::CoreQASM
+  pybind11_json)
