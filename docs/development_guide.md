@@ -280,8 +280,8 @@ See the [Working on the Documentation](#working-on-the-documentation) section fo
 
 We use [pybind11](https://pybind11.readthedocs.io/en/stable) to expose large parts of the C++ core library to Python.
 This allows to keep the performance critical parts of the code in C++ while providing a convenient interface for Python users.
-All code related to C++-Python bindings is contained in the {code}`src/python` directory.
-The Python package itself lives in the {code}`src/mqt/qmap` directory.
+All code related to C++-Python bindings is contained in the {code}`bindings` directory.
+The Python package itself lives in the {code}`python/mqt/qmap` directory.
 
 ::::::{tab-set}
 :sync-group: installer

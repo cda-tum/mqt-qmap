@@ -99,7 +99,11 @@ However, the controlled z-gates can only be executed between nearby atoms in the
 This entanglement zone is spatially separated from the storage zone, where all atoms not involved in a cz-gate are
 stored.
 
-![Zoned Neutral Atom Architecture](images/zones.pdf)
+```{image} images/zones.pdf
+:alt: Zoned Neutral Atom Architecture
+:width: 80%
+:align: center
+```
 
 To find an optimized sequence of target-specific instructions, we use the zoned neutral atom compiler.
 This compiler requires first a specification of the architecture.
@@ -108,7 +112,7 @@ This compiler requires first a specification of the architecture.
 from json import loads as parse_json
 from mqt.qmap.na.zoned import ZonedNeutralAtomArchitecture
 
-arch = ZonedNeutralAtomArchitecture(parse_json("""{
+arch = ZonedNeutralAtomArchitecture.from_json_string("""{
   "name": "Architecture with one entanglement and one storage zone",
   "operation_duration": {"rydberg_gate": 0.36, "single_qubit_gate": 52, "atom_transfer": 15},
   "operation_fidelity": {"rydberg_gate": 0.995, "single_qubit_gate": 0.9997, "atom_transfer": 0.999},
@@ -130,7 +134,7 @@ arch = ZonedNeutralAtomArchitecture(parse_json("""{
   }],
   "aods": [{"id": 0, "site_separation": 2, "r": 100, "c": 100}],
   "rydberg_range": [[[30, 62], [270, 132]]]
-}"""))
+}""")
 ```
 
 In the following, we will first create a compiler with default settings.

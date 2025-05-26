@@ -18,21 +18,12 @@ project(
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 # set the logging level
-if(CMAKE_BUILD_TYPE STREQUAL "Release")
-  set(MQT_QMAP_LOG_LEVEL
-      INFO
-      CACHE
-        STRING
-        "Set the active log level for spdlog (possible values: TRACE, DEBUG, INFO, WARN, ERROR, CRITICAL, OFF)"
-  )
-else()
-  set(MQT_QMAP_LOG_LEVEL
-      DEBUG
-      CACHE
-        STRING
-        "Set the active log level for spdlog (possible values: TRACE, DEBUG, INFO, WARN, ERROR, CRITICAL, OFF)"
-  )
-endif()
+set(MQT_QMAP_LOG_LEVEL
+    DEBUG
+    CACHE
+      STRING
+      "Set the active log level for spdlog (possible values: TRACE, DEBUG, INFO, WARN, ERROR, CRITICAL, OFF)"
+)
 set_property(
   CACHE MQT_QMAP_LOG_LEVEL
   PROPERTY STRINGS
@@ -83,7 +74,9 @@ endif()
 
 option(BUILD_MQT_QMAP_TESTS "Also build tests for the MQT QMAP project" ${MQT_QMAP_MASTER_PROJECT})
 
-include(cmake/ExternalDependencies.cmake)
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+include(ExternalDependencies)
+include(AddMQTQMAPBinding)
 
 # set the include directory for the build tree
 set(MQT_QMAP_INCLUDE_BUILD_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")

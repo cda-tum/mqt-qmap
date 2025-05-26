@@ -7,6 +7,19 @@ This project adheres to [Semantic Versioning], with the exception that minor rel
 
 ## [Unreleased]
 
+## [3.1.0] - 2025-05-26
+
+### Added
+
+- ✨ Add new compilers for zoned neutral atom architectures (a routing-agnostic and routing-aware compiler) ([#624]) ([**@ystade**])
+- ✨ Add a new CMake function `add_mqt_qmap_binding` to add a Python binding library ([#624]) ([**@ystade**])
+
+### Changed
+
+- ♻️ Move the C++ code for the Python bindings to the top-level `bindings` directory ([#624]) ([**@ystade**])
+- ♻️ Move all Python code (no tests) to the top-level `python` directory ([#624]) ([**@ystade**])
+- ♻️ Restructure the Python bindings for neutral atom tools into separate modules ([#624]) ([**@ystade**])
+
 ## [3.0.0] - 2025-05-08
 
 _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#300)._
@@ -37,18 +50,20 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- Version links -->
 
-[unreleased]: https://github.com/munich-quantum-toolkit/qcec/compare/v3.0.0...HEAD
-[3.0.0]: https://github.com/munich-quantum-toolkit//compare/v2.8.0...v3.0.0
-[2.8.0]: https://github.com/munich-quantum-toolkit//releases/tag/v2.8.0
+[unreleased]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.1.0...HEAD
+[3.1.0]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.0.0...v3.1.0
+[3.0.0]: https://github.com/munich-quantum-toolkit/qmap/compare/v2.8.0...v3.0.0
+[2.8.0]: https://github.com/munich-quantum-toolkit/qmap/releases/tag/v2.8.0
 
 <!-- PR links -->
 
-[#621]: https://github.com/munich-quantum-toolkit//pulls/621
-[#614]: https://github.com/munich-quantum-toolkit//pulls/614
-[#610]: https://github.com/munich-quantum-toolkit//pulls/610
-[#609]: https://github.com/munich-quantum-toolkit//pulls/609
-[#608]: https://github.com/munich-quantum-toolkit//pulls/608
-[#418]: https://github.com/munich-quantum-toolkit//pulls/418
+[#624]: https://github.com/munich-quantum-toolkit/qmap/pulls/624
+[#621]: https://github.com/munich-quantum-toolkit/qmap/pulls/621
+[#614]: https://github.com/munich-quantum-toolkit/qmap/pulls/614
+[#610]: https://github.com/munich-quantum-toolkit/qmap/pulls/610
+[#609]: https://github.com/munich-quantum-toolkit/qmap/pulls/609
+[#608]: https://github.com/munich-quantum-toolkit/qmap/pulls/608
+[#418]: https://github.com/munich-quantum-toolkit/qmap/pulls/418
 
 <!-- Contributor -->
 
