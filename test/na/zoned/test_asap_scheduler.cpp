@@ -179,12 +179,14 @@ TEST_F(ASAPSchedulerScheduleTest, Barrier) {
   qc.cz(2, 3);
   const auto& [singleQubitGateLayers, twoQubitGateLayers] =
       scheduler.schedule(qc);
-  EXPECT_THAT(singleQubitGateLayers,
-              ::testing::ElementsAre(
-                  ::testing::IsEmpty(),
-                  ::testing::ElementsAre(::testing::RefEq(
-                      static_cast<qc::StandardOperation&>(*qc.at(1)))),
-                  ::testing::IsEmpty()));
+  EXPECT_THAT(
+      singleQubitGateLayers,
+      ::testing::ElementsAre(
+          ::testing::IsEmpty(),
+          ::testing::ElementsAre(
+              ::testing::RefEq(static_cast<qc::StandardOperation&>(*qc.at(1))),
+              ::testing::RefEq(static_cast<qc::StandardOperation&>(*qc.at(2)))),
+          ::testing::IsEmpty()));
   EXPECT_THAT(
       twoQubitGateLayers,
       ::testing::ElementsAre(::testing::UnorderedElementsAre(
