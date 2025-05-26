@@ -16,13 +16,14 @@ from typing import TYPE_CHECKING, Optional
 
 import pytest
 import rustworkx as rx
+from qiskit.providers.fake_provider import GenericBackendV2
+
 from mqt.qmap.pyqmap import Architecture
 from mqt.qmap.subarchitectures import (
     SubarchitectureOrder,
     ibm_guadalupe_subarchitectures,
     rigetti_16_subarchitectures,
 )
-from qiskit.providers.fake_provider import GenericBackendV2
 
 if TYPE_CHECKING:
     from mqt.qmap._compat.typing import TypeAlias
