@@ -10,9 +10,10 @@
 
 from __future__ import annotations
 
-from mqt import qmap
 from qiskit import QuantumCircuit
 from qiskit.providers.fake_provider import Fake5QV1
+
+from mqt import qmap
 
 if __name__ == "__main__":
     qc = QuantumCircuit(3)

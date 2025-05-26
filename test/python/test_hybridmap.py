@@ -14,6 +14,7 @@ from pathlib import Path
 
 import pytest
 from mqt.core import load
+
 from mqt.qmap.pyqmap import HybridMapperParameters, HybridNAMapper, NeutralAtomHybridArchitecture
 
 arch_dir = Path(__file__).parent.parent / "hybridmap" / "architectures"

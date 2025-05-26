@@ -15,6 +15,8 @@ from pathlib import Path
 
 import pytest
 from mqt.qcec import verify
+from qiskit import QuantumCircuit
+
 from mqt.qmap.compile import compile  # noqa: A004
 from mqt.qmap.pyqmap import (
     Arch,
@@ -29,7 +31,6 @@ from mqt.qmap.pyqmap import (
     SwapReduction,
 )
 from mqt.qmap.visualization import SearchVisualizer
-from qiskit import QuantumCircuit
 
 
 @pytest.fixture
