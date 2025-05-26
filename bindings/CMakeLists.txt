@@ -41,6 +41,3 @@ target_compile_definitions(pyqmap PRIVATE Z3_FOUND)
 
 # add all modules
 add_subdirectory(na)
-
-# add all modules
-add_subdirectory(na)
