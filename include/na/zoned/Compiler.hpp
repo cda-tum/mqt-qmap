@@ -31,6 +31,17 @@
 
 namespace na::zoned {
 #define SELF (*static_cast<ConcreteType*>(this))
+
+/** @brief Compiler class that combines various components to compile quantum
+ * circuits for neutral atom architectures.
+ *
+ * @details This class is a template that allows for different implementations
+ * of the scheduler, reuse analyzer, placer, router, and code generator. It
+ * provides a unified interface to compile quantum computations into
+ * NAComputation objects. The components are linked together at compile time,
+ * allowing for better performance than having the components as members of the
+ * compiler and setting them at runtime.
+ */
 template <class ConcreteType, class Scheduler, class ReuseAnalyzer,
           class Placer, class Router, class CodeGenerator>
 class Compiler : protected Scheduler,
@@ -41,6 +52,10 @@ class Compiler : protected Scheduler,
   friend ConcreteType;
 
 public:
+  /**
+   * Collection of the configuration parameters for the different components
+   * of the compiler.
+   */
   struct Config {
     typename Scheduler::Config schedulerConfig{};
     typename ReuseAnalyzer::Config reuseAnalyzerConfig{};
@@ -53,6 +68,10 @@ public:
                                                 placerConfig, routerConfig,
                                                 codeGeneratorConfig, logLevel);
   };
+  /**
+   * Collection of statistics collected during the compilation process for the
+   * different components.
+   */
   struct Statistics {
     std::chrono::microseconds schedulingTime;
     std::chrono::microseconds reuseAnalysisTime;
@@ -72,6 +91,13 @@ private:
   nlohmann::json config_;
   Statistics statistics_;
 
+  /**
+   * Construct a Compiler instance with the given architecture and
+   * configuration.
+   *
+   * @param architecture The architecture to compile for.
+   * @param config The configuration for the compiler.
+   */
   Compiler(const Architecture& architecture, const Config& config)
       : Scheduler(architecture, config.schedulerConfig),
         ReuseAnalyzer(architecture, config.reuseAnalyzerConfig),
@@ -82,10 +108,23 @@ private:
     spdlog::set_level(config.logLevel);
   }
 
+  /**
+   * Construct a Compiler instance with the given architecture and
+   * default configuration.
+   *
+   * @param architecture The architecture to compile for.
+   */
   explicit Compiler(const Architecture& architecture)
       : Compiler(architecture, {}) {}
 
 public:
+  /**
+   * Compile a quantum computation into a neutral atom computation.
+   *
+   * @param qComp is the quantum computation to compile.
+   * @return an NAComputation object that represents the compiled quantum
+   * circuit.
+   */
   [[nodiscard]] auto compile(const qc::QuantumComputation& qComp)
       -> NAComputation {
     SPDLOG_INFO("*** MQT QMAP Zoned Neutral Atom Compiler ***");
@@ -188,6 +227,7 @@ public:
     SPDLOG_INFO("Total time: {}us", statistics_.totalTime.count());
     return code;
   }
+  /// @return the statistics collected during the compilation process.
   [[nodiscard]] auto getStatistics() const -> const Statistics& {
     return statistics_;
   }
