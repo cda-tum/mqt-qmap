@@ -7,6 +7,12 @@ This project adheres to [Semantic Versioning], with the exception that minor rel
 
 ## [Unreleased]
 
+## [3.1.2] - 2025-05-27
+
+### Fixed
+
+- 🐛 Entirely deactivate PDF export in documentation build ([#660]) ([**@ystade**])
+
 ## [3.1.1] - 2025-05-27
 
 ### Fixed
@@ -56,7 +62,8 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- Version links -->
 
-[unreleased]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.1.1...HEAD
+[unreleased]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.1.2...HEAD
+[3.1.1]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.1.1...v3.1.2
 [3.1.1]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.1.0...v3.1.1
 [3.1.0]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.0.0...v3.1.0
 [3.0.0]: https://github.com/munich-quantum-toolkit/qmap/compare/v2.8.0...v3.0.0
@@ -64,6 +71,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- PR links -->
 
+[#659]: https://github.com/munich-quantum-toolkit/qmap/pulls/660
 [#659]: https://github.com/munich-quantum-toolkit/qmap/pulls/659
 [#624]: https://github.com/munich-quantum-toolkit/qmap/pulls/624
 [#621]: https://github.com/munich-quantum-toolkit/qmap/pulls/621
