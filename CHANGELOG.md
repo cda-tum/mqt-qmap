@@ -11,7 +11,7 @@ This project adheres to [Semantic Versioning], with the exception that minor rel
 
 ### Fixed
 
-- 🐛 Deactivate PDF export in the documentation build ([#624]) ([**@ystade**])
+- 🐛 Deactivate PDF export in the documentation build ([#659]) ([**@ystade**])
 
 ## [3.1.0] - 2025-05-26
 
