@@ -1,7 +1,7 @@
 version: 2
 
 formats:
-  - pdf
+  #  - pdf
   - htmlzip
 
 build:
