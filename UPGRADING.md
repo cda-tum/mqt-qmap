@@ -4,7 +4,7 @@ This document describes breaking changes and how to upgrade. For a complete list
 
 ## [Unreleased]
 
-## [3.1.1]
+## [3.1.0]
 
 This minor release initiates the efforts to re-structure the Python bindings and make them more modular.
 Even tough this is not a breaking change, it is worth mentioning to developers of MQT QMAP that all Python code (except tests) has been moved to the top-level `python` directory.
@@ -43,6 +43,6 @@ Most modern operating systems should have this version available in their packag
 Alternatively, CMake can be conveniently installed from PyPI using the [`cmake`](https://pypi.org/project/cmake/) package.
 
 [MQT SyReC]: https://github.com/cda-tum/mqt-syrec
-[unreleased]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.1.1...HEAD
-[3.1.1]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.0.0...v3.1.1
+[unreleased]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.1.0...HEAD
+[3.1.0]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.0.0...v3.1.0
 [3.0.0]: https://github.com/munich-quantum-toolkit/qmap/compare/v2.8.0...v3.0.0

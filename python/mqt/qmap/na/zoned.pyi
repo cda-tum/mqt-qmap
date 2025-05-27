@@ -12,6 +12,7 @@ from mqt.core.ir import QuantumComputation
 
 class ZonedNeutralAtomArchitecture:
     """Class representing a Zoned Neutral Atom Architecture."""
+
     @classmethod
     def from_json_file(cls, filename: str) -> ZonedNeutralAtomArchitecture:
         """Create an architecture from a JSON file.
@@ -41,6 +42,7 @@ class ZonedNeutralAtomArchitecture:
 
 class RoutingAgnosticCompiler:
     """MQT QMAP's routing-agnostic Zoned Neutral Atom Compiler."""
+
     def __init__(
         self,
         arch: ZonedNeutralAtomArchitecture,
@@ -95,6 +97,7 @@ class RoutingAgnosticCompiler:
 
 class RoutingAwareCompiler:
     """MQT QMAP's routing-aware Zoned Neutral Atom Compiler."""
+
     def __init__(
         self,
         arch: ZonedNeutralAtomArchitecture,

@@ -153,6 +153,7 @@ autoapi_options = [
     "show-module-summary",
 ]
 autoapi_keep_files = True
+autoapi_python_class_content = "both"
 add_module_names = False
 toc_object_entries_show_parents = "hide"
 python_use_unqualified_type_names = True
