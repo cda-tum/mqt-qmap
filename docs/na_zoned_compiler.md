@@ -159,8 +159,8 @@ print(code)
 ```
 
 ```{note}
-The A* search in the placer of the routing aware compiler is quite memory intensive.
-Right now the maximum number of nodes considered in the A* search is limited to 50M.
+The A* search in the placer of the routing-aware compiler is quite memory intensive.
+Right now, the maximum number of nodes considered in the A* search is limited to 50M.
 If this limit is hit, you will get an error message. You can freely adapt this limit
 by setting the argument `max_nodes` in the constructor of the `RoutingAwareCompiler`, see below.
 ```
