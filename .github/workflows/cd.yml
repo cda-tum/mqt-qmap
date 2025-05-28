@@ -1,5 +1,4 @@
 name: CD 🚀
-# dummy change, remove before merge
 on:
   release:
     types: [published]
