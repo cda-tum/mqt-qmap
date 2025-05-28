@@ -17,11 +17,9 @@
 #include <cassert>
 #include <cstddef>
 #include <deque>
-#include <iostream>
 #include <numeric>
 #include <optional>
 #include <queue>
-#include <sstream>
 #include <stack>
 #include <unordered_map>
 #include <unordered_set>
@@ -166,7 +164,8 @@ auto VertexMatchingReuseAnalyzer::maximumBipartiteMatching(
     for (std::size_t freeSource = 0; freeSource < freeSources.size();
          ++freeSource) {
       if (freeSources[freeSource]) {
-        std::stack stack(std::deque{freeSource});
+        std::stack<std::size_t, std::deque<std::size_t>> stack(
+            std::deque<std::size_t>{freeSource});
         // this vector tracks the predecessors of each source, i.e., the sink
         // AND the source coming before the source in the augmenting path
         std::vector<std::optional<std::pair<std::size_t, std::size_t>>> parents(

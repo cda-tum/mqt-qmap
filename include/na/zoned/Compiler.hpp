@@ -57,11 +57,17 @@ public:
    * of the compiler.
    */
   struct Config {
+    /// Configuration for the scheduler
     typename Scheduler::Config schedulerConfig{};
+    /// Configuration for the reuse analyzer
     typename ReuseAnalyzer::Config reuseAnalyzerConfig{};
+    /// Configuration for the placer
     typename Placer::Config placerConfig{};
+    /// Configuration for the router
     typename Router::Config routerConfig{};
+    /// Configuration for the code generator
     typename CodeGenerator::Config codeGeneratorConfig{};
+    /// Log level for the compiler
     spdlog::level::level_enum logLevel = spdlog::level::info;
     NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(Config, schedulerConfig,
                                                 reuseAnalyzerConfig,
@@ -73,12 +79,12 @@ public:
    * different components.
    */
   struct Statistics {
-    std::chrono::microseconds schedulingTime;
-    std::chrono::microseconds reuseAnalysisTime;
-    std::chrono::microseconds placementTime;
-    std::chrono::microseconds routingTime;
-    std::chrono::microseconds codeGenerationTime;
-    std::chrono::microseconds totalTime;
+    int64_t schedulingTime;     ///< Time taken for scheduling in us
+    int64_t reuseAnalysisTime;  ///< Time taken for reuse analysis in us
+    int64_t placementTime;      ///< Time taken for placement in us
+    int64_t routingTime;        ///< Time taken for routing in us
+    int64_t codeGenerationTime; ///< Time taken for code generation in us
+    int64_t totalTime;          ///< Total time taken for the compilation in us
     NLOHMANN_DEFINE_TYPE_INTRUSIVE_ONLY_SERIALIZE(Statistics, schedulingTime,
                                                   reuseAnalysisTime,
                                                   placementTime, routingTime,
@@ -162,9 +168,9 @@ public:
     const auto& twoQubitGateLayers = schedule.second;
     statistics_.schedulingTime =
         std::chrono::duration_cast<std::chrono::microseconds>(
-            std::chrono::system_clock::now() - schedulingStart);
-    SPDLOG_INFO("Time for scheduling: {}us",
-                statistics_.schedulingTime.count());
+            std::chrono::system_clock::now() - schedulingStart)
+            .count();
+    SPDLOG_INFO("Time for scheduling: {}us", statistics_.schedulingTime);
 #if SPDLOG_ACTIVE_LEVEL <= SPDLOG_LEVEL_DEBUG
     SPDLOG_DEBUG("Number of single-qubit gate layers: {}",
                  singleQubitGateLayers.size());
@@ -192,24 +198,26 @@ public:
     const auto& reuseQubits = SELF.analyzeReuse(twoQubitGateLayers);
     statistics_.reuseAnalysisTime =
         std::chrono::duration_cast<std::chrono::microseconds>(
-            std::chrono::system_clock::now() - reuseAnalysisStart);
-    SPDLOG_INFO("Time for reuse analysis: {}us",
-                statistics_.reuseAnalysisTime.count());
+            std::chrono::system_clock::now() - reuseAnalysisStart)
+            .count();
+    SPDLOG_INFO("Time for reuse analysis: {}us", statistics_.reuseAnalysisTime);
 
     const auto& placementStart = std::chrono::system_clock::now();
     const auto& placement =
         SELF.place(qComp.getNqubits(), twoQubitGateLayers, reuseQubits);
     statistics_.placementTime =
         std::chrono::duration_cast<std::chrono::microseconds>(
-            std::chrono::system_clock::now() - placementStart);
-    SPDLOG_INFO("Time for placement: {}us", statistics_.placementTime.count());
+            std::chrono::system_clock::now() - placementStart)
+            .count();
+    SPDLOG_INFO("Time for placement: {}us", statistics_.placementTime);
 
     const auto& routingStart = std::chrono::system_clock::now();
     const auto& routing = SELF.route(placement);
     statistics_.routingTime =
         std::chrono::duration_cast<std::chrono::microseconds>(
-            std::chrono::system_clock::now() - routingStart);
-    SPDLOG_INFO("Time for routing: {}us", statistics_.routingTime.count());
+            std::chrono::system_clock::now() - routingStart)
+            .count();
+    SPDLOG_INFO("Time for routing: {}us", statistics_.routingTime);
 
     const auto& codeGenerationStart = std::chrono::system_clock::now();
     NAComputation code =
@@ -217,14 +225,16 @@ public:
     assert(code.validate().first);
     statistics_.codeGenerationTime =
         std::chrono::duration_cast<std::chrono::microseconds>(
-            std::chrono::system_clock::now() - codeGenerationStart);
+            std::chrono::system_clock::now() - codeGenerationStart)
+            .count();
     SPDLOG_INFO("Time for code generation: {}us",
-                statistics_.codeGenerationTime.count());
+                statistics_.codeGenerationTime);
 
     statistics_.totalTime =
         std::chrono::duration_cast<std::chrono::microseconds>(
-            std::chrono::system_clock::now() - schedulingStart);
-    SPDLOG_INFO("Total time: {}us", statistics_.totalTime.count());
+            std::chrono::system_clock::now() - schedulingStart)
+            .count();
+    SPDLOG_INFO("Total time: {}us", statistics_.totalTime);
     return code;
   }
   /// @return the statistics collected during the compilation process.
@@ -256,11 +266,3 @@ public:
       : Compiler(architecture) {}
 };
 } // namespace na::zoned
-
-NLOHMANN_JSON_NAMESPACE_BEGIN
-template <> struct adl_serializer<std::chrono::microseconds> {
-  static void to_json(json& j, const std::chrono::microseconds& ms) {
-    j = ms.count();
-  }
-};
-NLOHMANN_JSON_NAMESPACE_END

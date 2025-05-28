@@ -7,6 +7,12 @@ This project adheres to [Semantic Versioning], with the exception that minor rel
 
 ## [Unreleased]
 
+## [3.1.3] - 2025-05-28
+
+### Fixed
+
+- 🐛 Fix the CD pipeline by changing the statistics struct in the zoned neutral atom compiler ([#661]) ([**@ystade**])
+
 ## [3.1.2] - 2025-05-27
 
 ### Fixed
@@ -63,7 +69,8 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- Version links -->
 
-[unreleased]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.1.2...HEAD
+[unreleased]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.1.3...HEAD
+[3.1.3]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.1.2...v3.1.3
 [3.1.2]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.1.1...v3.1.2
 [3.1.1]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.1.0...v3.1.1
 [3.1.0]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.0.0...v3.1.0
@@ -72,6 +79,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- PR links -->
 
+[#661]: https://github.com/munich-quantum-toolkit/qmap/pulls/661
 [#660]: https://github.com/munich-quantum-toolkit/qmap/pulls/660
 [#659]: https://github.com/munich-quantum-toolkit/qmap/pulls/659
 [#624]: https://github.com/munich-quantum-toolkit/qmap/pulls/624
