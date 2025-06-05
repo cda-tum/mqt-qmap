@@ -39,7 +39,7 @@ class Configuration:
 
 def create_circuit_tests() -> list[Configuration]:
     """Create test cases for Clifford synthesis."""
-    path = Path(__file__).resolve().parent.parent / "cliffordsynthesis" / "circuits.json"
+    path = Path(__file__).resolve().parent.parent.parent / "cliffordsynthesis" / "circuits.json"
     with path.open() as f:
         circuits = json.load(f)
     return [Configuration(**c) for c in circuits]
@@ -47,7 +47,7 @@ def create_circuit_tests() -> list[Configuration]:
 
 def create_tableau_tests() -> list[Configuration]:
     """Create test cases for tableau synthesis."""
-    path = Path(__file__).resolve().parent.parent / "cliffordsynthesis" / "tableaus.json"
+    path = Path(__file__).resolve().parent.parent.parent / "cliffordsynthesis" / "tableaus.json"
     with path.open() as f:
         tableaus = json.load(f)
     return [Configuration(**t) for t in tableaus]
