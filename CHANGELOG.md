@@ -1,3 +1,5 @@
+<!-- Entries in each category are sorted by merge time, with the latest PRs appearing first. -->
+
 # Changelog
 
 All notable changes to this project will be documented in this file.
@@ -6,6 +8,11 @@ The format is based on a mixture of [Keep a Changelog] and [Common Changelog].
 This project adheres to [Semantic Versioning], with the exception that minor releases may include breaking changes.
 
 ## [Unreleased]
+
+### Changed
+
+- ♻️ Restructure the Python code to introduce modules ([#665]) ([**@denialhaag**])
+- ♻️ Restructure the C++ code for the Python bindings to mirror the introduced Python modules ([#665]) ([**@denialhaag**])
 
 ## [3.1.3] - 2025-05-28
 
