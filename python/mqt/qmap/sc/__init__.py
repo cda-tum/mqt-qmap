@@ -6,11 +6,14 @@
 #
 # Licensed under the MIT License
 
-"""Subarchitectures module for backwards compatibility."""
+"""Super conducting module."""
 
 from __future__ import annotations
 
-from mqt.qmap.sc.subarchitectures import (
+from .compile import compile  # noqa: A004
+from .load_architecture import load_architecture
+from .load_calibration import load_calibration
+from .subarchitectures import (
     SubarchitectureOrder,
     ibm_guadalupe_subarchitectures,
     rigetti_16_subarchitectures,
@@ -18,7 +21,10 @@ from mqt.qmap.sc.subarchitectures import (
 
 __all__ = [
     "SubarchitectureOrder",
+    "compile",
     "ibm_guadalupe_subarchitectures",
+    "load_architecture",
+    "load_calibration",
     "rigetti_16_subarchitectures",
 ]
 
