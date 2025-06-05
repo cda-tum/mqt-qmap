@@ -10,20 +10,16 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from os import PathLike
-
-    from mqt.core.ir import QuantumComputation
     from qiskit.circuit import QuantumCircuit
     from qiskit.providers import Backend
     from qiskit.providers.models import BackendProperties
     from qiskit.transpiler.target import Target
 
+    from . import CircuitInputType
     from .visualization import SearchVisualizer
-
-    CircuitInputType = Union[QuantumComputation, str, PathLike[str], QuantumCircuit]
 
 from mqt.core import load
 from mqt.core.plugins.qiskit import mqt_to_qiskit
