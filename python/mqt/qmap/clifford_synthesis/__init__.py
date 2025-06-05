@@ -16,8 +16,7 @@ from mqt.qmap.clifford_synthesis.clifford_synthesis import (
     SynthesisResults,
     Tableau,
 )
-
-from .util import optimize_clifford, synthesize_clifford
+from mqt.qmap.clifford_synthesis.util import optimize_clifford, synthesize_clifford
 
 __all__ = [
     "CliffordSynthesizer",

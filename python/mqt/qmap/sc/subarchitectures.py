@@ -31,7 +31,7 @@ if TYPE_CHECKING:
     from qiskit.providers import BackendV1, BackendV2
 
     from mqt.qmap._compat.typing import TypeAlias
-    from mqt.qmap.pyqmap import Architecture
+    from mqt.qmap.sc.sc import Architecture
 
 
 with contextlib.suppress(TypeError):
