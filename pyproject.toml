@@ -91,7 +91,12 @@ ninja.version = ">=1.10"
 build-dir = "build/{wheel_tag}/{build_type}"
 
 # Only build the Python bindings target
-build.targets = ["pyqmap", "mqt-qmap-na-zoned-bindings", "mqt-qmap-na-nasp-bindings"]
+build.targets = [
+  "pyqmap",
+  "mqt-qmap-clifford_synthesis-bindings",
+  "mqt-qmap-na-zoned-bindings",
+  "mqt-qmap-na-nasp-bindings",
+]
 
 # Only install the Python package component
 install.components = ["mqt-qmap_Python"]
