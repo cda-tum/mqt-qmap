@@ -28,12 +28,9 @@
 #include "sc/heuristic/HeuristicMapper.hpp"
 #include "sc/utils.hpp"
 
-#include <cstddef>
 #include <cstdint>
 #include <exception>
 #include <memory>
-#include <nlohmann/json.hpp>
-#include <pybind11/attr.h>
 #include <pybind11/cast.h>
 #include <pybind11/detail/common.h>
 #include <pybind11/pybind11.h>
