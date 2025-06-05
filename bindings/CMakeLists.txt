@@ -40,4 +40,5 @@ add_mqt_qmap_binding(
 target_compile_definitions(pyqmap PRIVATE Z3_FOUND)
 
 # add all modules
+add_subdirectory(clifford_synthesis)
 add_subdirectory(na)

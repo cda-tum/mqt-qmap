@@ -10,12 +10,13 @@
 
 from __future__ import annotations
 
-from ..pyqmap import (
+from mqt.qmap.clifford_synthesis.clifford_synthesis import (
     CliffordSynthesizer,
     SynthesisConfiguration,
     SynthesisResults,
     Tableau,
 )
+
 from .util import optimize_clifford, synthesize_clifford
 
 __all__ = [
