@@ -58,11 +58,13 @@ if TYPE_CHECKING:
 from ._version import version as __version__
 from .clifford_synthesis import optimize_clifford, synthesize_clifford
 from .sc import (
+    Architecture,
     SubarchitectureOrder,
     compile,  # noqa: A004
 )
 
 __all__ = [
+    "Architecture",
     "SubarchitectureOrder",
     "__version__",
     "compile",

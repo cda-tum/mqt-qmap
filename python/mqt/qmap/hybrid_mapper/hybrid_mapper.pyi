@@ -6,7 +6,7 @@
 #
 # Licensed under the MIT License
 
-"""Python bindings module for MQT QMAP."""
+"""Python bindings for hybrid mapper module."""
 
 from typing import ClassVar, overload
 
