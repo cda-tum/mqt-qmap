@@ -42,3 +42,4 @@ target_compile_definitions(pyqmap PRIVATE Z3_FOUND)
 # add all modules
 add_subdirectory(clifford_synthesis)
 add_subdirectory(na)
+add_subdirectory(sc)

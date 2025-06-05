@@ -10,21 +10,51 @@
 
 from __future__ import annotations
 
-from .compile import compile  # noqa: A004
-from .load_architecture import load_architecture
-from .load_calibration import load_calibration
-from .subarchitectures import (
+from mqt.qmap.sc.compile import compile  # noqa: A004
+from mqt.qmap.sc.load_architecture import load_architecture
+from mqt.qmap.sc.load_calibration import load_calibration
+from mqt.qmap.sc.sc import (
+    Arch,
+    Architecture,
+    CommanderGrouping,
+    Configuration,
+    EarlyTermination,
+    Encoding,
+    Heuristic,
+    InitialLayout,
+    Layering,
+    LookaheadHeuristic,
+    MappingResults,
+    Method,
+    SwapReduction,
+    map,  # noqa: A004
+)
+from mqt.qmap.sc.subarchitectures import (
     SubarchitectureOrder,
     ibm_guadalupe_subarchitectures,
     rigetti_16_subarchitectures,
 )
 
 __all__ = [
+    "Arch",
+    "Architecture",
+    "CommanderGrouping",
+    "Configuration",
+    "EarlyTermination",
+    "Encoding",
+    "Heuristic",
+    "InitialLayout",
+    "Layering",
+    "LookaheadHeuristic",
+    "MappingResults",
+    "Method",
     "SubarchitectureOrder",
+    "SwapReduction",
     "compile",
     "ibm_guadalupe_subarchitectures",
     "load_architecture",
     "load_calibration",
+    "map",
     "rigetti_16_subarchitectures",
 ]
 
