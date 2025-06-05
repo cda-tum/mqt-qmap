@@ -7,23 +7,21 @@
 # Licensed under the MIT License
 
 add_mqt_qmap_binding(
-  ${MQT_QMAP_TARGET_NAME}-sc-bindings
-  sc.cpp
+  ${MQT_QMAP_TARGET_NAME}-hybrid_mapper-bindings
+  hybrid_mapper.cpp
   MODULE_NAME
-  sc
+  hybrid_mapper
   INSTALL_DIR
-  ./sc
+  ./hybrid_mapper
   LINK_LIBS
-  MQT::QMapSCExact
-  MQT::QMapSCHeuristic
+  MQT::QMapHybrid
   MQT::CoreQASM
   pybind11_json)
-target_compile_definitions(${MQT_QMAP_TARGET_NAME}-sc-bindings PRIVATE Z3_FOUND)
 
 # install the Python stub files in editable mode for better IDE support
 if(SKBUILD_STATE STREQUAL "editable")
   install(
-    FILES ${PROJECT_SOURCE_DIR}/python/mqt/qmap/sc/sc.pyi
-    DESTINATION ./sc
+    FILES ${PROJECT_SOURCE_DIR}/python/mqt/qmap/hybrid_mapper/hybrid_mapper.pyi
+    DESTINATION ./hybrid_mapper
     COMPONENT ${MQT_QMAP_TARGET_NAME}_Python)
 endif()
