@@ -6,27 +6,16 @@
 #
 # Licensed under the MIT License
 
-"""Main entry point for the compilation module."""
+"""Compile a circuit."""
 
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from qiskit.circuit import QuantumCircuit
-    from qiskit.providers import Backend
-    from qiskit.providers.models import BackendProperties
-    from qiskit.transpiler.target import Target
-
-    from . import CircuitInputType
-    from .visualization import SearchVisualizer
-
 from mqt.core import load
 from mqt.core.plugins.qiskit import mqt_to_qiskit
 
-from .load_architecture import load_architecture
-from .load_calibration import load_calibration
-from .pyqmap import (
+from mqt.qmap.pyqmap import (
     Arch,
     Architecture,
     CommanderGrouping,
@@ -42,14 +31,17 @@ from .pyqmap import (
     SwapReduction,
     map,  # noqa: A004
 )
+from mqt.qmap.sc.load_architecture import load_architecture
+from mqt.qmap.sc.load_calibration import load_calibration
 
-__all__ = [
-    "compile",
-]
+if TYPE_CHECKING:
+    from qiskit.circuit import QuantumCircuit
+    from qiskit.providers import Backend
+    from qiskit.providers.models import BackendProperties
+    from qiskit.transpiler.target import Target
 
-
-def __dir__() -> list[str]:
-    return __all__
+    from mqt.qmap import CircuitInputType
+    from mqt.qmap.visualization import SearchVisualizer
 
 
 def compile(  # noqa: A001
