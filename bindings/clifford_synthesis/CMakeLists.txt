@@ -6,7 +6,6 @@
 #
 # Licensed under the MIT License
 
-
 add_mqt_qmap_binding(
   ${MQT_QMAP_TARGET_NAME}-clifford_synthesis-bindings
   clifford_synthesis.cpp
