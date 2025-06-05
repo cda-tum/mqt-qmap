@@ -11,7 +11,6 @@
 from __future__ import annotations
 
 import sys
-from typing import TYPE_CHECKING, Union
 
 # under Windows, make sure to add the appropriate DLL directory to the PATH
 if sys.platform == "win32":
@@ -46,14 +45,6 @@ if sys.platform == "win32":
     _dll_patch()
     del _dll_patch
 
-
-if TYPE_CHECKING:
-    from os import PathLike
-
-    from mqt.core.ir import QuantumComputation
-    from qiskit.circuit import QuantumCircuit
-
-    CircuitInputType = Union[QuantumComputation, str, PathLike[str], QuantumCircuit]
 
 from ._version import version as __version__
 from .clifford_synthesis import optimize_clifford, synthesize_clifford

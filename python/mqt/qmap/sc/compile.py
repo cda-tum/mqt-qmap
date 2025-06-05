@@ -40,7 +40,7 @@ if TYPE_CHECKING:
     from qiskit.providers.models import BackendProperties
     from qiskit.transpiler.target import Target
 
-    from mqt.qmap import CircuitInputType
+    from mqt.qmap.types import CircuitInputType
     from mqt.qmap.visualization import SearchVisualizer
 
 
