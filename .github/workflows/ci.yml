@@ -137,12 +137,12 @@ jobs:
     if: fromJSON(needs.change-detection.outputs.run-cpp-linter)
     uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-cpp-linter.yml@v1.11
     with:
-      setup-z3: true
       clang-version: 20
-      setup-python: true
-      install-pkgs: "pybind11==3.0.0"
-      cmake-args: "-DBUILD_MQT_QMAP_BINDINGS=ON"
+      cmake-args: -DBUILD_MQT_QMAP_BINDINGS=ON
       files-changed-only: false
+      install-pkgs: "pybind11==3.0.0"
+      setup-python: true
+      setup-z3: true
 
   # run extensive Python tests whenever this is on a PR and the PR has the `extensive-python-ci` label
   python-tests:
