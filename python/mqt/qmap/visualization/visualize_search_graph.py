@@ -1923,7 +1923,7 @@ def visualize_search_graph(
         if current_node_layout_visualized == point_inds[0]:
             return
         current_node_layout_visualized = point_inds[0]
-        node_index = list(search_graph.nodes())[current_node_layout_visualized]  # type: ignore[index, union-attr]
+        node_index = list(search_graph.nodes())[current_node_layout_visualized]  # type: ignore[union-attr]
 
         # this function is only called if hide_layout==False, therefore all variables are defined
         # since mypy's type inference fails in this regard, we need to use "type: ignore[arg-type]" here
@@ -1939,7 +1939,7 @@ def visualize_search_graph(
             arch_x_arrow_spacing,  # type: ignore[arg-type]
             arch_y_arrow_spacing,  # type: ignore[arg-type]
             show_shared_swaps,
-            current_node_layout_visualized,  # type: ignore[arg-type]
+            current_node_layout_visualized,
             search_node_traces[0] if not use3d else None,
             full_plotly_settings,
         )
@@ -1960,6 +1960,7 @@ def visualize_search_graph(
             data_y = search_node_scatter_data_y[current_layer][:timestep]
             if draw_stems:
                 # line trace data: begin, end, None, begin, end, None, ...
+                assert search_node_stem_trace is not None
                 search_node_stem_trace.x = search_node_stem_scatter_data_x[current_layer][: timestep * 3]
                 search_node_stem_trace.y = search_node_stem_scatter_data_y[current_layer][: timestep * 3]
                 search_node_stem_trace.z = search_node_stem_scatter_data_z[current_layer][: timestep * 3]
