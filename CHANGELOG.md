@@ -79,16 +79,16 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- PR links -->
 
-[#661]: https://github.com/munich-quantum-toolkit/qmap/pulls/661
-[#660]: https://github.com/munich-quantum-toolkit/qmap/pulls/660
-[#659]: https://github.com/munich-quantum-toolkit/qmap/pulls/659
-[#624]: https://github.com/munich-quantum-toolkit/qmap/pulls/624
-[#621]: https://github.com/munich-quantum-toolkit/qmap/pulls/621
-[#614]: https://github.com/munich-quantum-toolkit/qmap/pulls/614
-[#610]: https://github.com/munich-quantum-toolkit/qmap/pulls/610
-[#609]: https://github.com/munich-quantum-toolkit/qmap/pulls/609
-[#608]: https://github.com/munich-quantum-toolkit/qmap/pulls/608
-[#418]: https://github.com/munich-quantum-toolkit/qmap/pulls/418
+[#661]: https://github.com/munich-quantum-toolkit/qmap/pull/661
+[#660]: https://github.com/munich-quantum-toolkit/qmap/pull/660
+[#659]: https://github.com/munich-quantum-toolkit/qmap/pull/659
+[#624]: https://github.com/munich-quantum-toolkit/qmap/pull/624
+[#621]: https://github.com/munich-quantum-toolkit/qmap/pull/621
+[#614]: https://github.com/munich-quantum-toolkit/qmap/pull/614
+[#610]: https://github.com/munich-quantum-toolkit/qmap/pull/610
+[#609]: https://github.com/munich-quantum-toolkit/qmap/pull/609
+[#608]: https://github.com/munich-quantum-toolkit/qmap/pull/608
+[#418]: https://github.com/munich-quantum-toolkit/qmap/pull/418
 
 <!-- Contributor -->
 
