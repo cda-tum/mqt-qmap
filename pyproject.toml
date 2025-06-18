@@ -11,7 +11,7 @@ requires = [
   "scikit-build-core>=0.11.2",
   "setuptools-scm>=8.3.1",
   "pybind11>=2.13.6",
-  "mqt.core~=3.0.0",
+  "mqt.core @ git+https://github.com/munich-quantum-toolkit/core.git@a06d0fd",
 ]
 build-backend = "scikit_build_core.build"
 
@@ -51,7 +51,7 @@ classifiers = [
 ]
 requires-python = ">=3.9"
 dependencies = [
-    "mqt.core>=3.0.0",
+    "mqt.core @ git+https://github.com/munich-quantum-toolkit/core.git@a06d0fd",
     "qiskit[qasm3-import]>=1.0.0",
     "rustworkx[all]>=0.16.0",
     "importlib_resources>=5.0; python_version < '3.10'",
@@ -376,7 +376,7 @@ build = [
   "pybind11>=2.13.6",
   "scikit-build-core>=0.11.2",
   "setuptools-scm>=8.3.1",
-  "mqt.core~=3.0.0",
+  "mqt.core @ git+https://github.com/munich-quantum-toolkit/core.git@a06d0fd",
 ]
 docs = [
   "networkx>=3.2.1",

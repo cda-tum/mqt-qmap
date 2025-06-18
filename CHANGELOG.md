@@ -14,6 +14,10 @@ This project adheres to [Semantic Versioning], with the exception that minor rel
 - ♻️ Restructure the Python code to introduce modules ([#665]) ([**@denialhaag**])
 - ♻️ Restructure the C++ code for the Python bindings to mirror the introduced Python modules ([#665]) ([**@denialhaag**])
 
+### Removed
+
+- 🔥 Remove CMake function `add_mqt_qmap_binding` ([#665]) ([**@denialhaag**])
+
 ## [3.1.3] - 2025-05-28
 
 ### Fixed
