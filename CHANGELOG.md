@@ -16,6 +16,10 @@ This project adheres to [Semantic Versioning], with the exception that minor rel
 - **Breaking**: ⬆️ Bump minimum required MQT Core version to `3.1.0` ([#694]) ([**@denialhaag**])
 - **Breaking**: ⬆️ Bump minimum required `pybind11` version to `3.0.0` ([#694]) ([**@denialhaag**])
 
+### Removed
+
+- 🔥 Remove CMake function `add_mqt_qmap_binding` ([#665]) ([**@denialhaag**])
+
 ## [3.1.3] - 2025-05-28
 
 ### Fixed
