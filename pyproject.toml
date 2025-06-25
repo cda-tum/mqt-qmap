@@ -138,7 +138,13 @@ write_to = "python/mqt/qmap/_version.py"
 [tool.pytest.ini_options]
 minversion = "7.2"
 testpaths = ["test/python"]
-addopts = ["-ra", "--strict-markers", "--strict-config", "--showlocals"]
+addopts = [
+  "-ra",
+  "--strict-markers",
+  "--strict-config",
+  "--showlocals",
+  "--numprocesses=auto", # Automatically use all available CPU cores for parallel testing
+]
 log_cli_level = "INFO"
 xfail_strict = true
 filterwarnings = [
@@ -173,6 +179,9 @@ report.exclude_also = [
     'raise NotImplementedError',
     'def __dir__()',  # Ignore __dir__ method that exists mainly for better IDE support
     '@overload'  # Overloads are only for static typing
+]
+run.disable_warnings = [
+  "no-sysmon",
 ]
 
 [tool.mypy]
@@ -397,6 +406,8 @@ test = [
   "ipywidgets>=8.1.7",
   "pytest>=8.3.5",
   "pytest-cov>=6.1.1",
+  "pytest-sugar>=1.0.0",
+  "pytest-xdist>=3.7.0",
   "mqt.qcec>=3.0.0",
 ]
 dev = [
