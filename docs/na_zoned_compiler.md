@@ -19,6 +19,7 @@ Zoned neutral atom architectures execute operations in designated spatially sepa
 The zones facilitate higher coherence times and overall fidelity of the quantum computation.
 However, the zones also require the rearrangement of atoms during the quantum computation.
 MQT QMAP provides two tools to compile a quantum circuit to target-specific instructions for zoned quantum computing architectures based on neutral atoms:
+
 - a reuse-aware compiler based on {cite:p}`linReuseAwareCompilationZoned2024`, and
 - a routing-aware compiler based on {cite:p}`stade2025routingawareplacementzonedneutral`.
 
