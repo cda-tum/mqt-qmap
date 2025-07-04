@@ -44,8 +44,9 @@ If you use *QMAP* in your work, we would appreciate if you cited
 - {cite:p}`willeMappingQuantumCircuits2019` when using the exact mapper,
 - {cite:p}`peham2023DepthOptimalSynthesis` when using the Clifford circuit synthesis approach,
 - {cite:p}`schmid2024HybridCircuitMapping` when using the hybrid mapper for neutral atom quantum computers,
-- {cite:p}`stadeAbstractModelEfficient2024` when using the neutral atom logical array compiler (NALAC), and
-- {cite:p}`stadeOptimalStatePreparation2024` when using the optimal state preparation for neutral atoms (NASP).
+- {cite:p}`stadeAbstractModelEfficient2024` when using the neutral atom logical array compiler (NALAC),
+- {cite:p}`stadeOptimalStatePreparation2024` when using the optimal state preparation for neutral atoms (NASP), and
+- {cite:p}`stade2025routingawareplacementzonedneutral` when using the routing-aware placement for zoned neutral atom devices.
 
 Furthermore, if you use any of the particular algorithms such as
 

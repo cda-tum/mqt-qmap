@@ -130,9 +130,17 @@ _Quantum Science and Technology_, 2024.
 L. Schmid, S. Park, S. Kang, and R. Wille. Hybrid Circuit Mapping: Leveraging the Full Spectrum of Computational Capabilities of Neutral Atom Quantum Computers.
 In _Design Automation Conference (DAC)_, 2024.
 
-[[11]](https://arxiv.org/pdf/2405.08068.pdf)
+[[11]](https://www.cda.cit.tum.de/files/eda/2024_qce_an_abstract_model_and_efficient_routing_for_logical_entangling_gates_on_Zoned_neutral_atom_architectures.pdf)
 Y. Stade, L. Schmid, L. Burgholzer, and R. Wille. An Abstract Model and Efficient Routing for Logical Entangling Gates on Zoned Neutral Atom Architectures.
 _arXiv:2405.08068_, 2024.
+
+[[12]](https://www.cda.cit.tum.de/files/eda/2025_date_optimal_state_preparation_for_logical_arrays_on_zoned_neutral_atom_quantum_computers.pdf)
+Y. Stade, L. Schmid, L. Burgholzer, and R. Wille. Optimal State Preparation for Logical Arrays on Zoned Neutral Atom Quantum Computers.
+_arXiv:2411.09738_, 2024.
+
+[[13]](https://www.cda.cit.tum.de/files/eda/2025_iccad_routing-aware_placement_zoned_neutral_atom.pdf)
+Y. Stade, W.-H. Lin, J. Cong, and R. Wille. Routing-Aware Placement for Zoned Neutral Atom-based Quantum Computing.
+_arXiv:2505.22715_, 2025.
 
 [^1]: The _[Munich Quantum Toolkit (MQT)](https://mqt.readthedocs.io)_ is a collection of software tools for quantum computing developed by the [Chair for Design Automation](https://www.cda.cit.tum.de/) at the [Technical University of Munich](https://www.tum.de/) as well as the [Munich Quantum Software Company (MQSC)](https://munichquantum.software). Among others, it is part of the [Munich Quantum Software Stack (MQSS)](https://www.munich-quantum-valley.de/research/research-areas/mqss) ecosystem, which is being developed as part of the [Munich Quantum Valley (MQV)](https://www.munich-quantum-valley.de) initiative.
 
