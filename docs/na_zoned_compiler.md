@@ -18,8 +18,15 @@ hardware execution.
 Zoned neutral atom architectures execute operations in designated spatially separated zones.
 The zones facilitate higher coherence times and overall fidelity of the quantum computation.
 However, the zones also require the rearrangement of atoms during the quantum computation.
-This tool provides a routing-aware placement method to improve the efficiency of atom rearrangements during quantum
-computation.
+MQT QMAP provides two tools to compile a quantum circuit to target-specific instructions for zoned quantum computing architectures based on neutral atoms:
+- a reuse-aware compiler based on {cite:p}`linReuseAwareCompilationZoned2024`, and
+- a routing-aware compiler based on {cite:p}`stade2025routingawareplacementzonedneutral`.
+
+:::{note}
+The second, i.e., routing-aware compiler also implements the reuse-aware compilation approach.
+Specifically, it exchanges the placement component of the reuse-aware compiler with a routing-aware placer.
+Hence, in the following, the first compiler is referred to as the _routing-agnostic compiler_ and the second one as the _routing-aware compiler_.
+:::
 
 ## Example: GHZ State on Neutral Atom Architecture
 
@@ -105,8 +112,8 @@ stored.
 :align: center
 ```
 
-To find an optimized sequence of target-specific instructions, we use the zoned neutral atom compiler.
-This compiler requires first a specification of the architecture.
+To find an optimized sequence of target-specific instructions, we use one of the zoned neutral atom compilers.
+Each compiler requires first a specification of the architecture.
 
 ```{code-cell} ipython3
 from mqt.qmap.na.zoned import ZonedNeutralAtomArchitecture
@@ -140,9 +147,11 @@ In the following, we will first create a compiler with default settings.
 Those can later be fine-tuned to fit the needs of the user, see further down.
 
 ```{code-cell} ipython3
-from mqt.qmap.na.zoned import RoutingAwareCompiler
+from mqt.qmap.na.zoned import RoutingAgnosticCompiler, RoutingAwareCompiler
 
 compiler = RoutingAwareCompiler(arch)
+# or if you want to use the routing-agnostic compiler:
+# compiler = RoutingAgnosticCompiler(arch)
 ```
 
 Now, the created compiler can be used to compile the circuit from above.
