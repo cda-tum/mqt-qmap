@@ -140,7 +140,7 @@ In _Design, Automation and Test in Europe_, 2024.
 
 [[13]](https://www.cda.cit.tum.de/files/eda/2025_iccad_routing-aware_placement_zoned_neutral_atom.pdf)
 Y. Stade, W.-H. Lin, J. Cong, and R. Wille. Routing-Aware Placement for Zoned Neutral Atom-based Quantum Computing.
-In \_Int'l Conference on CAD, 2025.
+In _Int'l Conference on CAD_, 2025.
 
 [^1]: The _[Munich Quantum Toolkit (MQT)](https://mqt.readthedocs.io)_ is a collection of software tools for quantum computing developed by the [Chair for Design Automation](https://www.cda.cit.tum.de/) at the [Technical University of Munich](https://www.tum.de/) as well as the [Munich Quantum Software Company (MQSC)](https://munichquantum.software). Among others, it is part of the [Munich Quantum Software Stack (MQSS)](https://www.munich-quantum-valley.de/research/research-areas/mqss) ecosystem, which is being developed as part of the [Munich Quantum Valley (MQV)](https://www.munich-quantum-valley.de) initiative.
 
