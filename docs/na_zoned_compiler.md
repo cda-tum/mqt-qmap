@@ -20,8 +20,8 @@ The zones facilitate higher coherence times and overall fidelity of the quantum 
 However, the zones also require the rearrangement of atoms during the quantum computation.
 MQT QMAP provides two tools to compile a quantum circuit to target-specific instructions for zoned quantum computing architectures based on neutral atoms:
 
-- a reuse-aware compiler based on _Reuse-Aware Compilation for Zoned Quantum Architectures Based on Neutral Atoms_ (W.-H. Lin et al., 2025), and
-- a routing-aware compiler based on {cite:p}`stade2025routingawareplacementzonedneutral`.
+- a reuse-aware compiler based on {cite:p}`linReuseAwareCompilationZoned2025`, and
+- a routing-aware compiler based on {cite:p}`stadeAbstractModelEfficient2025`.
 
 :::{note}
 The second, i.e., routing-aware compiler also implements the reuse-aware compilation approach.
