@@ -132,11 +132,11 @@ In _Design Automation Conference (DAC)_, 2024.
 
 [[11]](https://www.cda.cit.tum.de/files/eda/2024_qce_an_abstract_model_and_efficient_routing_for_logical_entangling_gates_on_Zoned_neutral_atom_architectures.pdf)
 Y. Stade, L. Schmid, L. Burgholzer, and R. Wille. An Abstract Model and Efficient Routing for Logical Entangling Gates on Zoned Neutral Atom Architectures.
-_arXiv:2405.08068_, 2024.
+In _IEEE Int'l Conference on Quantum Computing and Engineering (QCE)_, 2024.
 
 [[12]](https://www.cda.cit.tum.de/files/eda/2025_date_optimal_state_preparation_for_logical_arrays_on_zoned_neutral_atom_quantum_computers.pdf)
 Y. Stade, L. Schmid, L. Burgholzer, and R. Wille. Optimal State Preparation for Logical Arrays on Zoned Neutral Atom Quantum Computers.
-_arXiv:2411.09738_, 2024.
+In _Design Automation and Test in Europe (DATE)_, 2024.
 
 [[13]](https://www.cda.cit.tum.de/files/eda/2025_iccad_routing-aware_placement_zoned_neutral_atom.pdf)
 Y. Stade, W.-H. Lin, J. Cong, and R. Wille. Routing-Aware Placement for Zoned Neutral Atom-based Quantum Computing.
