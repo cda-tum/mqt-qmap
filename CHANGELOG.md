@@ -7,6 +7,11 @@ This project adheres to [Semantic Versioning], with the exception that minor rel
 
 ## [Unreleased]
 
+### Changed
+
+- **Breaking**: ⬆️ Bump minimum required MQT Core version to `3.1.0` ([#694]) ([**@denialhaag**])
+- **Breaking**: ⬆️ Bump minimum required `pybind11` version to `3.0.0` ([#694]) ([**@denialhaag**])
+
 ## [3.1.3] - 2025-05-28
 
 ### Fixed
@@ -79,6 +84,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- PR links -->
 
+[#694]: https://github.com/munich-quantum-toolkit/qmap/pull/694
 [#661]: https://github.com/munich-quantum-toolkit/qmap/pull/661
 [#660]: https://github.com/munich-quantum-toolkit/qmap/pull/660
 [#659]: https://github.com/munich-quantum-toolkit/qmap/pull/659
@@ -94,6 +100,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 [**@burgholzer**]: https://github.com/burgholzer
 [**@ystade**]: https://github.com/ystade
+[**@denialhaag**]: https://github.com/denialhaag
 
 <!-- General links -->
 

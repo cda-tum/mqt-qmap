@@ -140,7 +140,7 @@ jobs:
       setup-z3: true
       clang-version: 20
       setup-python: true
-      install-pkgs: "pybind11==2.13.6"
+      install-pkgs: "pybind11==3.0.0"
       cmake-args: "-DBUILD_MQT_QMAP_BINDINGS=ON"
 
   # run extensive Python tests whenever this is on a PR and the PR has the `extensive-python-ci` label

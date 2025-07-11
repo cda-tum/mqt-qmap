@@ -44,15 +44,15 @@ if(BUILD_MQT_QMAP_BINDINGS)
   endif()
 
   # add pybind11 library
-  find_package(pybind11 2.13.6 CONFIG REQUIRED)
+  find_package(pybind11 3.0.0 CONFIG REQUIRED)
 endif()
 
 # cmake-format: off
-set(MQT_CORE_MINIMUM_VERSION 3.0.0
+set(MQT_CORE_MINIMUM_VERSION 3.1.0
     CACHE STRING "MQT Core minimum version")
-set(MQT_CORE_VERSION 3.0.2
+set(MQT_CORE_VERSION 3.1.0
     CACHE STRING "MQT Core version")
-set(MQT_CORE_REV "9b6e01482cc77f48c828d988407ee4f8e4e93b56"
+set(MQT_CORE_REV "1f95d92320b116497d6f516a085fbe3bb8693960"
     CACHE STRING "MQT Core identifier (tag, branch or commit hash)")
 set(MQT_CORE_REPO_OWNER "munich-quantum-toolkit"
     CACHE STRING "MQT Core repository owner (change when using a fork)")
