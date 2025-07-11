@@ -1534,7 +1534,6 @@ wheels = [
 
 [[package]]
 name = "mqt-core"
-<<<<<<< HEAD
 version = "3.1.0"
 source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/34/96/34903a5f86afac8f8e97f07ef26b7b834fa0929b5f3781429680923287f7/mqt_core-3.1.0.tar.gz", hash = "sha256:fe305ae2a7c6b5e9b662aaf758a5bbd2a19d615ce1e114f4f86ddfcd6ad6e15e", size = 490325, upload-time = "2025-07-11T09:24:42.017Z" }
@@ -1576,10 +1575,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/1a/a8/ab705cf7e8022d20e526cc38cd705650a55b9a9fb0f829c07aa09a43f9fd/mqt_core-3.1.0-cp39-cp39-win_amd64.whl", hash = "sha256:0eaed0c2e8a8945f6ee20f6034481482957b5383b08b072d0acf9d5258cd8a2b", size = 2368368, upload-time = "2025-07-11T09:24:39.035Z" },
     { url = "https://files.pythonhosted.org/packages/07/f2/fad491d34fe88941e67593b77f1b5f3ca46ecd7406d86d639dbc3b898ab0/mqt_core-3.1.0-cp39-cp39-win_arm64.whl", hash = "sha256:8a4e3c49440dd5258fa51ad9f695a279448311fce8e36ad74bd580fb8eb4f78c", size = 2455731, upload-time = "2025-07-11T09:24:40.63Z" },
 ]
-=======
-version = "3.0.3.dev94+ga06d0fdf"
-source = { git = "https://github.com/munich-quantum-toolkit/core.git?rev=a06d0fd#a06d0fdfd1baaea82a313c1e184249a0480570d2" }
->>>>>>> ff1808d1 (Reuse bindings macro)
 
 [[package]]
 name = "mqt-qcec"
@@ -1734,11 +1729,7 @@ requires-dist = [
     { name = "distinctipy", marker = "extra == 'visualization'", specifier = ">=1.3.4" },
     { name = "importlib-resources", marker = "python_full_version < '3.10'", specifier = ">=5.0" },
     { name = "ipywidgets", marker = "extra == 'visualization'", specifier = ">=8.1.7" },
-<<<<<<< HEAD
     { name = "mqt-core", specifier = "~=3.1.0" },
-=======
-    { name = "mqt-core", git = "https://github.com/munich-quantum-toolkit/core.git?rev=a06d0fd" },
->>>>>>> ff1808d1 (Reuse bindings macro)
     { name = "networkx", marker = "extra == 'visualization'", specifier = ">=3.2.1" },
     { name = "plotly", marker = "extra == 'visualization'", specifier = ">=6.0.1" },
     { name = "qiskit", extras = ["qasm3-import"], specifier = ">=1.0.0" },
@@ -1750,13 +1741,8 @@ provides-extras = ["visualization"]
 
 [package.metadata.requires-dev]
 build = [
-<<<<<<< HEAD
     { name = "mqt-core", specifier = "~=3.1.0" },
     { name = "pybind11", specifier = ">=3.0.0" },
-=======
-    { name = "mqt-core", git = "https://github.com/munich-quantum-toolkit/core.git?rev=a06d0fd" },
-    { name = "pybind11", specifier = ">=2.13.6" },
->>>>>>> ff1808d1 (Reuse bindings macro)
     { name = "scikit-build-core", specifier = ">=0.11.2" },
     { name = "setuptools-scm", specifier = ">=8.3.1" },
 ]
@@ -1764,13 +1750,8 @@ dev = [
     { name = "distinctipy", specifier = ">=1.3.4" },
     { name = "furo", specifier = ">=2024.8.6" },
     { name = "ipywidgets", specifier = ">=8.1.7" },
-<<<<<<< HEAD
     { name = "mqt-core", specifier = "~=3.1.0" },
     { name = "mqt-qcec", specifier = ">=3.1.0" },
-=======
-    { name = "mqt-core", git = "https://github.com/munich-quantum-toolkit/core.git?rev=a06d0fd" },
-    { name = "mqt-qcec", specifier = ">=3.0.0" },
->>>>>>> ff1808d1 (Reuse bindings macro)
     { name = "myst-nb", specifier = ">=1.2.0" },
     { name = "networkx", specifier = ">=3.2.1" },
     { name = "plotly", specifier = ">=6.0.1" },
