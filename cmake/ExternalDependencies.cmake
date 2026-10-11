@@ -66,7 +66,7 @@ else()
 endif()
 
 # cmake-format: off
-set(MQT_CORE_MINIMUM_VERSION 3.10.0
+set(MQT_CORE_MINIMUM_VERSION 3.11.0
     CACHE STRING "MQT Core minimum version")
 set(MQT_CORE_VERSION 3.11.0
     CACHE STRING "MQT Core version")

@@ -12,6 +12,7 @@ releases may include breaking changes.
 
 ### Changed
 
+- ⬆️ Update `mqt-core` to version 3.11.0 ([#1188]) ([**@denialhaag**])
 - ⬆️ Update `clang-tidy` to version 23 ([#1176]) ([**@denialhaag**])
 
 ## [3.10.0] - 2026-09-12
@@ -346,6 +347,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- PR links -->
 
+[#1188]: https://github.com/munich-quantum-toolkit/qmap/pull/1188
 [#1176]: https://github.com/munich-quantum-toolkit/qmap/pull/1176
 [#1158]: https://github.com/munich-quantum-toolkit/qmap/pull/1158
 [#1154]: https://github.com/munich-quantum-toolkit/qmap/pull/1154
