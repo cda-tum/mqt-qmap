@@ -254,6 +254,7 @@ repair-wheel-command = [
   libmqt-core-qasm.so.3.11\
   """,
 ]
+test-environment = { GLIBC_TUNABLES = "glibc.rtld.optional_static_tls=65536" }
 
 [tool.cibuildwheel.macos]
 environment = { MACOSX_DEPLOYMENT_TARGET = "13.3" }
